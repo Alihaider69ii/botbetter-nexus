@@ -1,16 +1,31 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { ThemeProvider } from "@/components/botbetter/ThemeProvider";
+import { TopNav, ScreenKey } from "@/components/botbetter/TopNav";
+import { Landing } from "@/components/botbetter/screens/Landing";
+import { Dashboard } from "@/components/botbetter/screens/Dashboard";
+import { NexusChat } from "@/components/botbetter/screens/NexusChat";
+import { AgentDetail } from "@/components/botbetter/screens/AgentDetail";
+import { Connections } from "@/components/botbetter/screens/Connections";
+import { CreateAgent } from "@/components/botbetter/screens/CreateAgent";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [screen, setScreen] = useState<ScreenKey>("landing");
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen bg-background text-foreground">
+        <TopNav active={screen} onChange={setScreen} />
+        <div key={screen} className="fade-in">
+          {screen === "landing" && <Landing onNavigate={setScreen} />}
+          {screen === "dashboard" && <Dashboard active={screen} onNavigate={setScreen} />}
+          {screen === "chat" && <NexusChat active={screen} onNavigate={setScreen} />}
+          {screen === "agent" && <AgentDetail active={screen} onNavigate={setScreen} />}
+          {screen === "connections" && <Connections active={screen} onNavigate={setScreen} />}
+          {screen === "create" && <CreateAgent active={screen} onNavigate={setScreen} />}
+        </div>
+      </div>
+    </ThemeProvider>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
