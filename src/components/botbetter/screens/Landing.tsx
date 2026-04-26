@@ -1,5 +1,5 @@
 import { agents } from "@/data/agents";
-import { ScreenKey } from "./TopNav";
+import { ScreenKey } from "../TopNav";
 import { ArrowRight, Check, MessageSquare, Mail, Calendar, Send, Slack, Sparkles } from "lucide-react";
 
 const apps = [
