@@ -2,7 +2,7 @@ import { Moon, Sun, Sparkles } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { cn } from "@/lib/utils";
 
-export type ScreenKey = "landing" | "dashboard" | "chat" | "agent" | "connections" | "create";
+export type ScreenKey = "landing" | "dashboard" | "chat" | "agent" | "agent-chat" | "connections" | "create";
 
 const tabs: { key: ScreenKey; label: string }[] = [
   { key: "landing", label: "Landing" },

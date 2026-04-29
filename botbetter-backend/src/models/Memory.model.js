@@ -81,10 +81,9 @@ const memorySchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Auto update updatedAt
-memorySchema.pre("save", function (next) {
+// Auto update updatedAt — no next() needed in Mongoose 9
+memorySchema.pre("save", function () {
   this.updatedAt = new Date();
-  next();
 });
 
 // Get history for specific agent
