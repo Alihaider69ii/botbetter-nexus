@@ -37,6 +37,13 @@ const agentCapabilities: Record<string, string[]> = {
     "Review and optimize resume for ATS systems",
     "Track progress across multiple practice sessions",
   ],
+  Cracky: [
+    "Create personalized study plans for NEET, JEE, UPSC, CA, GATE, SSC, Banking",
+    "Practice MCQs with instant Hinglish explanations and concept revision",
+    "Identify weak chapters from test scores and target them first",
+    "Track daily study streak, completed topics, and score history",
+    "Generate topic-wise mock tests and predict exam score",
+  ],
   Sellio: [
     "Generate product titles + descriptions for Meesho/Amazon",
     "Optimize pricing based on competitor data",
@@ -80,6 +87,12 @@ const agentSamples: Record<string, { from: "user" | "bot"; text: string }[]> = {
     { from: "bot", text: "Let's go! 🎯 Razorpay PM interview ke liye ready karta hoon.\n\nPehla question (Behavioral):\n\n\"Tell me about a time you prioritized user needs over engineering constraints. What did you decide and why?\"\n\nSTAR format mein answer karein — main real-time feedback dunga 💬" },
     { from: "user", text: "Hamare payment gateway mein latency issue tha — users drop off kar rahe the. Maine feature release postpone karke pehle infra fix kiya" },
     { from: "bot", text: "Solid answer! 💪 Strengths:\n✅ User-first thinking clearly shown\n✅ Data-backed decision (drop-off = real metric)\n✅ Trade-off acknowledged\n\n💡 Improve karo: Add the result — \"latency 2s se 300ms ho gayi, conversion 18% badha\" — numbers bahut powerful hote hain interviews mein.\n\nNext question?" },
+  ],
+  Cracky: [
+    { from: "user", text: "NEET 2025 ke liye 6 months bacha hai — full plan batao" },
+    { from: "bot", text: "NEET 2025 — 6 months mein crack karo! 🎯\n\nCutoff target: 720 mein 550+ ✅\n\n📊 Subject priority:\n• Biology (90q) — most scoring, aim 80+\n• Chemistry (45q) — Organic + P-block focus\n• Physics (45q) — Mechanics + Thermodynamics\n\n🗓️ 6-Month Roadmap:\n📅 Month 1-2: NCERT + concepts complete\n📅 Month 3-4: Previous year papers (2015-2024)\n📅 Month 5: Daily mock tests\n📅 Month 6: Weak topics revision\n\nWeak chapter scan karein?" },
+    { from: "user", text: "Organic Chemistry confusing hai" },
+    { from: "bot", text: "Organic clear kar deta hoon! 🧪\n\nNEET ke top 5 Organic topics:\n1️⃣ Named reactions — 30+ syllabus mein hain\n2️⃣ Reaction mechanisms — SN1, SN2, E1, E2\n3️⃣ Functional group tests\n4️⃣ Stereochemistry basics\n5️⃣ Polymers & Biomolecules\n\n💡 Daily 30 min Organic = 8-10 marks guaranteed!\n\nNamed reactions se start karein? Main flashcards + 10 MCQ bhejta hoon 📚" },
   ],
   Sellio: [
     { from: "user", text: "Cotton printed saree ka title improve karo" },

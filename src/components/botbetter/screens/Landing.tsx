@@ -18,7 +18,7 @@ export const Landing = ({
   const others = agents.slice(1);
 
   const CX = 280, CY = 240, R = 160;
-  const agentAngles = [-90, -18, 54, 126, 198];
+  const agentAngles = [-90, -30, 30, 90, 150, 210];
   const agentPositions = others.map((agent, i) => {
     const angle = agentAngles[i] * Math.PI / 180;
     return { ...agent, x: CX + R * Math.cos(angle), y: CY + R * Math.sin(angle) };
@@ -318,7 +318,7 @@ export const Landing = ({
                 <div className="mt-1 font-bold text-white text-sm tracking-widest">NEXUS</div>
                 <div className="text-[11px] text-gray-400 mt-0.5">One platform. All agents. Every task.</div>
                 <div className="flex justify-center gap-2 mt-3 flex-wrap">
-                  {["Buddy", "Prepify", "Sellio", "Creato", "Finio"].map((a) => (
+                  {["Buddy", "Prepify", "Sellio", "Cracky", "Creato", "Finio"].map((a) => (
                     <span
                       key={a}
                       className="px-2 py-0.5 rounded-full text-[10px] font-medium"

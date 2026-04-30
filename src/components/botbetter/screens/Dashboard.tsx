@@ -347,7 +347,7 @@ export const Dashboard = ({
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {agents.map((a, i) => (
-              <AgentCard key={a.name} agent={a} active={i < 4} onClick={() => onNavigate("agent")} />
+              <AgentCard key={a.name} agent={a} active={i < 5} onClick={() => onNavigate("agent")} />
             ))}
           </div>
         </div>

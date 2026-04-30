@@ -49,6 +49,13 @@ const agentSeeds: Record<string, Msg[]> = {
     { from: "user", text: "Dono chahiye — tax bhi bachana hai aur grow bhi karna hai" },
     { from: "bot", text: "Perfect split! 💡\n\n₹3,000/month → ELSS (Parag Parikh)\n• Tax benefit: ₹10,800/year saved (30% slab)\n• 3-year lock-in, 13% avg returns\n\n₹2,000/month → Mirae Asset Large Cap\n• Pure growth, no lock-in, liquidity ke liye\n\n🎯 10 saal mein estimated corpus: ₹15.2 Lakhs+\n\nKYC process shuru karoon?" },
   ],
+  Cracky: [
+    { from: "bot", text: "Jai ho! 📚 Main Cracky hoon — aapka exam cracker AI. NEET, JEE, UPSC, CA — personalized study plan, MCQ practice, weak topic tracking — sab handle karunga! Batao konsa exam prepare kar rahe ho?" },
+    { from: "user", text: "NEET 2025 ke liye prepare kar raha hoon — Physics mein weak hoon" },
+    { from: "bot", text: "NEET Physics weak? Let's fix that! 🎯\n\nSabse pehle batao — kaunsa chapter sabse zyada problem deta hai?\n\n📌 Common weak areas:\n• Electrostatics\n• Mechanics (Laws of Motion)\n• Optics\n• Modern Physics\n\nChapter batao — main personalized plan + MCQ set banata hoon! 📝" },
+    { from: "user", text: "Electrostatics bahut confusing lagti hai" },
+    { from: "bot", text: "Electrostatics clear karte hain! ⚡\n\n✅ 7-Day Electrostatics Plan:\n\n📅 Day 1-2: Coulomb's Law + Electric Field\n📅 Day 3: Electric Potential + Work done\n📅 Day 4: Capacitors theory\n📅 Day 5: Capacitor numericals\n📅 Day 6: Mixed MCQ practice (50 questions)\n📅 Day 7: Mock test + revision\n\n💡 NEET pe 2-3 questions Electrostatics se guaranteed aate hain!\n\nAbhi Day 1 se shuru karein? Main 10 concept MCQ bhejta hoon! 🚀" },
+  ],
   Nexus: [
     { from: "bot", text: "Hey! Main Nexus hoon ⚡ — aapka master AI agent. Koi bhi kaam batao — main sahi specialist ko route karunga aur kaam karwa ke dunga." },
     { from: "user", text: "Kal presentation hai, client ko proposal bhi bhejna hai" },
@@ -64,6 +71,7 @@ const chatHistory: Record<string, string[]> = {
   Sellio: ["Saree listings optimize", "Competitor price analysis", "Customer reply drafts"],
   Creato: ["Diwali reel ideas", "YouTube script draft", "Instagram caption pack"],
   Finio: ["SIP planning ₹5k/month", "Tax saving ELSS options", "Monthly budget review"],
+  Cracky: ["NEET Physics electrostatics", "JEE Maths integration practice", "UPSC GS Paper 2 prep"],
   Nexus: ["Interview + email tasks", "Plan launch week", "Budget review June"],
 };
 
