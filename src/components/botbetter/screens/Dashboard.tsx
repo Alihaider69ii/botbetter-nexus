@@ -98,7 +98,7 @@ export const Dashboard = ({
       label: "ACTIVE AGENTS",
       value: loadingStats ? "—" : String(stats.activeAgents.length || agents.length),
       icon: Activity,
-      sub: loadingStats ? "" : `${stats.plan.toUpperCase()} PLAN`,
+      sub: loadingStats ? "" : `${stats.activeAgents.length || agents.length} active`,
     },
     {
       label: "MESSAGES TODAY",
@@ -138,7 +138,7 @@ export const Dashboard = ({
             <div>
               <h2 className="text-lg font-semibold">Hey, {user.name.split(" ")[0]} 👋</h2>
               <p className="text-[13px] text-muted-foreground mt-0.5">
-                {user.email} · {user.plan.toUpperCase()} plan
+                {user.email}
               </p>
             </div>
             <button

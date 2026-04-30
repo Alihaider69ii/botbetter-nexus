@@ -2,20 +2,23 @@ import { ReactNode } from "react";
 import { LayoutDashboard, Bot, Compass, Plug, BarChart3, Plus, Settings, LogOut, Sparkles } from "lucide-react";
 import { ScreenKey } from "./TopNav";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 export const DashShell = ({
   active,
   onNavigate,
   title,
-  user = "Ali — Pro",
   children,
 }: {
   active: ScreenKey;
   onNavigate: (s: ScreenKey) => void;
   title: string;
-  user?: string;
   children: ReactNode;
 }) => {
+  const { user } = useAuth();
+  const displayName = user?.name?.split(" ")[0] ?? "You";
+  const initial = displayName[0]?.toUpperCase() ?? "U";
+
   const items: { label: string; icon: any; key?: ScreenKey }[] = [
     { label: "Dashboard", icon: LayoutDashboard, key: "dashboard" },
     { label: "My Agents", icon: Bot, key: "agent" },
@@ -57,15 +60,6 @@ export const DashShell = ({
             );
           })}
         </nav>
-        <div className="p-3 border-t border-sidebar-border">
-          <div className="rounded-lg border border-border p-3 bg-card">
-            <div className="label-xs text-muted-foreground">PLAN</div>
-            <div className="text-[13px] font-medium mt-0.5">Pro — ₹499/mo</div>
-            <button className="mt-2 w-full text-[12px] py-1.5 rounded-md bg-primary text-primary-foreground">
-              Upgrade
-            </button>
-          </div>
-        </div>
       </aside>
 
       {/* Main */}
@@ -76,9 +70,9 @@ export const DashShell = ({
             <div className="text-[14px] font-medium leading-tight">{title}</div>
           </div>
           <div className="flex items-center gap-2.5">
-            <span className="text-[13px] text-muted-foreground hidden sm:inline">{user}</span>
+            <span className="text-[13px] text-muted-foreground hidden sm:inline">{displayName}</span>
             <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground grid place-items-center text-[12px] font-medium">
-              A
+              {initial}
             </div>
           </div>
         </div>
