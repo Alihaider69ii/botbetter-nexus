@@ -6,6 +6,7 @@ const { connect } = require("./src/config/db");
 const config = require("./src/config/env");
 const authRoutes = require("./src/routes/auth.routes");
 const agentRoutes = require("./src/routes/agent.routes");
+const adminRoutes = require("./src/routes/admin.routes");
 const { apiLimiter } = require("./src/middleware/rateLimit.middleware");
 const { errorHandler } = require("./src/middleware/error.middleware");
 
@@ -31,6 +32,7 @@ app.use("/api", apiLimiter);
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api", agentRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
