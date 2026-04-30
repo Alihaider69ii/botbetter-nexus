@@ -7,6 +7,7 @@ const config = require("./src/config/env");
 const authRoutes = require("./src/routes/auth.routes");
 const agentRoutes = require("./src/routes/agent.routes");
 const adminRoutes = require("./src/routes/admin.routes");
+const userRoutes = require("./src/routes/user.routes");
 const { apiLimiter } = require("./src/middleware/rateLimit.middleware");
 const { errorHandler } = require("./src/middleware/error.middleware");
 
@@ -33,6 +34,7 @@ app.use("/api", apiLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api", agentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/user", userRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

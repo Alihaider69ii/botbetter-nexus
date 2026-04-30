@@ -1,6 +1,13 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+function makeReferralCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -33,30 +40,39 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["nexus", "buddy", "prepify", "sellio", "creato", "finio", "cracky", "flexai"],
   }],
-  tokensUsed: {
-    type: Number,
-    default: 0,
-  },
-  messagesCount: {
-    type: Number,
-    default: 0,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  tokensUsed: { type: Number, default: 0 },
+  messagesCount: { type: Number, default: 0 },
+
+  // Beta daily limits
+  dailyMessageCount: { type: Number, default: 0 },
+  dailyMessageLimit: { type: Number, default: 50 },
+  lastResetDate: { type: Date, default: Date.now },
+  bonusMessages: { type: Number, default: 0 },
+
+  // Referral
+  referralCode: { type: String, unique: true, sparse: true },
+  referralCount: { type: Number, default: 0 },
+  referredBy: { type: String, default: null },
+
+  createdAt: { type: Date, default: Date.now },
 });
 
-// Hash password before saving
-// Mongoose 9+ async pre-hooks must NOT call next() — just return or throw
+userSchema.statics.generateUniqueReferralCode = async function () {
+  let code, exists;
+  do {
+    code = makeReferralCode();
+    exists = await this.findOne({ referralCode: code });
+  } while (exists);
+  return code;
+};
+
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 12);
 });
 
-// Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 module.exports = mongoose.model("User", userSchema);

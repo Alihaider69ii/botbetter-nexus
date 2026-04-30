@@ -3,34 +3,23 @@ const User = require("../models/User.model");
 const { getMemory } = require("../models/Memory.model");
 const config = require("../config/env");
 
-// Generate JWT token
-const generateToken = (id) => {
-  return jwt.sign({ id }, config.JWT_SECRET, {
-    expiresIn: config.JWT_EXPIRES_IN,
-  });
-};
+const generateToken = (id) => jwt.sign({ id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
 
-// @route  POST /api/auth/signup
+// @route POST /api/auth/signup
 const signup = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already registered",
-      });
+      return res.status(400).json({ success: false, message: "Email already registered" });
     }
 
-    // Create user
-    const user = await User.create({ name, email, password });
+    const referralCode = await User.generateUniqueReferralCode();
+    const user = await User.create({ name, email, password, referralCode });
 
-    // Create memory for user
     await getMemory(user._id);
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -42,6 +31,9 @@ const signup = async (req, res, next) => {
         name: user.name,
         email: user.email,
         plan: user.plan,
+        referralCode: user.referralCode,
+        dailyMessageLimit: user.dailyMessageLimit,
+        bonusMessages: user.bonusMessages,
       },
     });
   } catch (err) {
@@ -49,38 +41,25 @@ const signup = async (req, res, next) => {
   }
 };
 
-// @route  POST /api/auth/login
+// @route POST /api/auth/login
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password required",
-      });
+      return res.status(400).json({ success: false, message: "Email and password required" });
     }
 
-    // Check user exists
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(200).json({
@@ -94,6 +73,9 @@ const login = async (req, res, next) => {
         plan: user.plan,
         activeAgents: user.activeAgents,
         connectedApps: user.connectedApps,
+        referralCode: user.referralCode,
+        dailyMessageLimit: user.dailyMessageLimit,
+        bonusMessages: user.bonusMessages,
       },
     });
   } catch (err) {
@@ -101,7 +83,7 @@ const login = async (req, res, next) => {
   }
 };
 
-// @route  GET /api/auth/me
+// @route GET /api/auth/me
 const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
@@ -116,6 +98,11 @@ const getMe = async (req, res, next) => {
         connectedApps: user.connectedApps,
         tokensUsed: user.tokensUsed,
         messagesCount: user.messagesCount,
+        referralCode: user.referralCode,
+        referralCount: user.referralCount,
+        bonusMessages: user.bonusMessages,
+        dailyMessageLimit: user.dailyMessageLimit,
+        dailyMessageCount: user.dailyMessageCount,
       },
     });
   } catch (err) {
