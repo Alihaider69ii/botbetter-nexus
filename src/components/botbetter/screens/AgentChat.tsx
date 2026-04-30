@@ -2,13 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { agents } from "@/data/agents";
 import { ScreenKey } from "../TopNav";
 import { DashShell } from "../DashShell";
-import { Send, ArrowLeft, Plus, Mic, Paperclip, Settings2, Loader2, AlertCircle } from "lucide-react";
-import { chatAPI } from "@/services/api";
+import {
+  Send, ArrowLeft, Plus, Mic, Paperclip, Settings2,
+  Loader2, AlertCircle, Copy, Share2,
+} from "lucide-react";
+import { chatAPI, userAPI, ApiError, type LimitStatusResponse } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 
 type Msg = { from: "user" | "bot"; text: string };
 
-// ── Seed conversations shown before real history loads ────────────────────────
+// ── Seed conversations ────────────────────────────────────────────────────────
 
 const agentSeeds: Record<string, Msg[]> = {
   Buddy: [
@@ -64,9 +67,116 @@ const chatHistory: Record<string, string[]> = {
   Nexus: ["Interview + email tasks", "Plan launch week", "Budget review June"],
 };
 
-// ── Agents that have live AI backend ─────────────────────────────────────────
-// Only "sellio" and "cracky" are live; all others fall back to demo mode
 const LIVE_AGENTS = new Set(["sellio", "cracky"]);
+
+// ── Countdown timer helper ────────────────────────────────────────────────────
+
+function formatCountdown(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+// ── Limit reached modal ───────────────────────────────────────────────────────
+
+function LimitModal({
+  resetTime,
+  referralCode,
+  onClose,
+}: {
+  resetTime: Date;
+  referralCode: string;
+  onClose: () => void;
+}) {
+  const [seconds, setSeconds] = useState(() =>
+    Math.max(0, Math.floor((resetTime.getTime() - Date.now()) / 1000))
+  );
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setSeconds(Math.max(0, Math.floor((resetTime.getTime() - Date.now()) / 1000)));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [resetTime]);
+
+  const copy = () => {
+    navigator.clipboard.writeText(referralCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const shareText = encodeURIComponent(
+    `BotBetter AI try karo — India ka smartest AI agent platform! 🤖\nMera referral code use karo signup pe: ${referralCode}\nHum dono ko +20 free messages milenge! 🎁\nhttps://botbetter.in`
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 space-y-5 shadow-2xl">
+        {/* Header */}
+        <div className="text-center space-y-1">
+          <div className="text-4xl">🌙</div>
+          <h2 className="text-lg font-semibold mt-2">Aaj ki limit ho gayi!</h2>
+          <p className="text-[13px] text-muted-foreground">
+            Kal reset hogi — 24 ghante baad
+          </p>
+        </div>
+
+        {/* Countdown */}
+        <div className="rounded-xl border border-border bg-secondary/50 p-4 text-center">
+          <div className="label-xs text-muted-foreground mb-1">RESET IN</div>
+          <div className="text-3xl font-mono font-medium tracking-widest text-primary">
+            {formatCountdown(seconds)}
+          </div>
+        </div>
+
+        {/* Referral */}
+        <div className="space-y-3">
+          <div className="text-center text-[13px] text-muted-foreground">
+            Dost ko refer karo — dono ko <span className="text-emerald-400 font-medium">+20 messages</span> milenge! 🎁
+          </div>
+
+          <div className="flex items-center gap-2 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3">
+            <span className="flex-1 text-center font-mono text-lg font-bold tracking-widest text-primary">
+              {referralCode}
+            </span>
+            <button
+              onClick={copy}
+              className="shrink-0 h-8 w-8 grid place-items-center rounded-lg border border-border hover:bg-secondary transition"
+            >
+              <Copy className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {copied && (
+            <p className="text-center text-[12px] text-emerald-400">✓ Code copied!</p>
+          )}
+
+          <a
+            href={`https://wa.me/?text=${shareText}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#25D366] text-white text-[13px] font-medium hover:opacity-90 transition"
+          >
+            <Share2 className="h-4 w-4" />
+            Share on WhatsApp
+          </a>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export const AgentChat = ({
   active,
@@ -92,33 +202,36 @@ export const AgentChat = ({
   const [sendError, setSendError] = useState("");
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
+  // Daily limit state
+  const [limitStatus, setLimitStatus] = useState<LimitStatusResponse | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitResetTime, setLimitResetTime] = useState<Date | null>(null);
+
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when messages update
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs]);
 
-  // Load real history on mount if logged in and agent is live
+  // Load history
   useEffect(() => {
     if (!user || !isLive || historyLoaded) return;
     chatAPI
       .getHistory(agentName)
       .then((data) => {
         if (data.history.length > 0) {
-          const restored: Msg[] = data.history.map((m) => ({
-            from: m.role === "user" ? "user" : "bot",
-            text: m.content,
-          }));
-          setMsgs(restored);
+          setMsgs(data.history.map((m) => ({ from: m.role === "user" ? "user" : "bot", text: m.content })));
         }
         setHistoryLoaded(true);
       })
-      .catch(() => {
-        // History unavailable — keep seed messages, don't show error
-        setHistoryLoaded(true);
-      });
+      .catch(() => setHistoryLoaded(true));
   }, [user, isLive, agentName, historyLoaded]);
+
+  // Fetch daily limit status
+  useEffect(() => {
+    if (!user || !isLive) return;
+    userAPI.getLimitStatus().then(setLimitStatus).catch(() => null);
+  }, [user, isLive]);
 
   const send = async () => {
     const text = input.trim();
@@ -130,7 +243,6 @@ export const AgentChat = ({
     setSending(true);
 
     if (!user || !isLive) {
-      // Demo mode — no backend call
       setTimeout(() => {
         setMsgs((m) => [
           ...m,
@@ -149,15 +261,28 @@ export const AgentChat = ({
     try {
       const data = await chatAPI.sendMessage(agentName, text);
       setMsgs((m) => [...m, { from: "bot", text: data.reply }]);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to get response";
-      // Show upgrade prompt if limit reached
-      if (msg.toLowerCase().includes("limit")) {
-        setSendError("Message limit reached. Please upgrade your plan.");
-      } else {
-        setSendError(msg);
+
+      // Update local limit counter
+      if (limitStatus) {
+        setLimitStatus((prev) =>
+          prev
+            ? { ...prev, messagesUsed: prev.messagesUsed + 1, messagesLeft: Math.max(0, prev.messagesLeft - 1) }
+            : prev
+        );
       }
-      setMsgs((m) => [...m, { from: "bot", text: `Sorry, something went wrong: ${msg}` }]);
+    } catch (err) {
+      if (err instanceof ApiError && err.data.limitReached) {
+        const resetTime = new Date(err.data.resetTime as string);
+        setLimitResetTime(resetTime);
+        setShowLimitModal(true);
+        // Remove the user message that was optimistically added
+        setMsgs((m) => m.slice(0, -1));
+        setInput(text);
+      } else {
+        const msg = err instanceof Error ? err.message : "Failed to get response";
+        setSendError(msg.toLowerCase().includes("limit") ? "Message limit reached. Please upgrade your plan." : msg);
+        setMsgs((m) => [...m, { from: "bot", text: `Sorry, something went wrong. Please try again!` }]);
+      }
     } finally {
       setSending(false);
     }
@@ -165,8 +290,24 @@ export const AgentChat = ({
 
   const history = chatHistory[a.name] ?? [];
 
+  // Progress bar
+  const pctUsed = limitStatus && limitStatus.totalLimit > 0
+    ? limitStatus.messagesUsed / limitStatus.totalLimit
+    : 0;
+  const pctLeft = 1 - pctUsed;
+  const barColor = pctLeft > 0.5 ? "#10b981" : pctLeft > 0.25 ? "#f59e0b" : "#ef4444";
+  const textColor = pctLeft > 0.5 ? "text-emerald-400" : pctLeft > 0.25 ? "text-amber-400" : "text-red-400";
+
   return (
     <DashShell active={active} onNavigate={onNavigate} title={`${a.name} Chat`}>
+      {showLimitModal && limitResetTime && (
+        <LimitModal
+          resetTime={limitResetTime}
+          referralCode={limitStatus?.referralCode ?? user?.referralCode ?? "—"}
+          onClose={() => setShowLimitModal(false)}
+        />
+      )}
+
       <div className="flex h-[calc(100vh-7rem)] min-h-0">
         {/* Sidebar */}
         <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border bg-sidebar/50">
@@ -191,9 +332,7 @@ export const AgentChat = ({
               <button
                 key={t}
                 className={`w-full text-left px-2.5 py-2 rounded-lg text-[13px] transition ${
-                  i === 0
-                    ? "bg-primary/10 text-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent"
+                  i === 0 ? "bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-sidebar-accent"
                 }`}
               >
                 {t}
@@ -201,7 +340,6 @@ export const AgentChat = ({
             ))}
           </div>
 
-          {/* Agent info */}
           <div className="p-3 border-t border-border">
             <div
               className="flex items-center gap-2.5 p-2.5 rounded-xl"
@@ -261,6 +399,26 @@ export const AgentChat = ({
             </button>
           </div>
 
+          {/* Daily limit bar */}
+          {user && isLive && limitStatus && (
+            <div className="px-4 py-2 border-b border-border bg-background/60 shrink-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className={`text-[11px] font-medium ${textColor}`}>
+                  {limitStatus.messagesLeft} messages remaining today
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {limitStatus.messagesUsed} / {limitStatus.totalLimit}
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-border overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, pctUsed * 100)}%`, background: barColor }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Demo mode banner */}
           {!isLive && (
             <div className="px-4 py-2 flex items-center gap-2 border-b border-border bg-amber-500/5 text-[12px] text-amber-400">
@@ -293,7 +451,6 @@ export const AgentChat = ({
               )
             )}
 
-            {/* Typing indicator */}
             {sending && (
               <div className="flex gap-3 fade-in">
                 <div
@@ -317,10 +474,7 @@ export const AgentChat = ({
             <div className="px-4 py-2 flex items-center gap-2 border-t border-border bg-red-500/5 text-[12px] text-red-400">
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {sendError}
-              <button
-                onClick={() => setSendError("")}
-                className="ml-auto text-[11px] underline"
-              >
+              <button onClick={() => setSendError("")} className="ml-auto text-[11px] underline">
                 Dismiss
               </button>
             </div>
@@ -342,11 +496,7 @@ export const AgentChat = ({
                   }
                 }}
                 rows={1}
-                placeholder={
-                  !user
-                    ? "Log in to chat with a live agent..."
-                    : `Ask ${a.name} anything...`
-                }
+                placeholder={!user ? "Log in to chat with a live agent..." : `Ask ${a.name} anything...`}
                 className="flex-1 resize-none bg-transparent outline-none text-[14px] py-1.5 px-1 max-h-32"
                 disabled={sending}
               />
@@ -359,17 +509,12 @@ export const AgentChat = ({
                 className="h-8 w-8 grid place-items-center rounded-lg text-white transition hover:opacity-90 disabled:opacity-50"
                 style={{ background: a.color }}
               >
-                {sending
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Send className="h-4 w-4" />}
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
             {!user && (
               <p className="text-center text-[11px] text-muted-foreground mt-2">
-                <button
-                  onClick={() => onNavigate("landing")}
-                  className="text-primary hover:underline"
-                >
+                <button onClick={() => onNavigate("landing")} className="text-primary hover:underline">
                   Log in
                 </button>
                 {" "}to unlock real AI responses from {a.name}

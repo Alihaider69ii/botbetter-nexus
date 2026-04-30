@@ -1,5 +1,18 @@
 const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? "";
 
+// ── Custom error that carries the raw response body ───────────────────────────
+
+export class ApiError extends Error {
+  status: number;
+  data: Record<string, unknown>;
+  constructor(message: string, status: number, data: Record<string, unknown>) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data;
+  }
+}
+
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
 
 async function request<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
@@ -18,11 +31,11 @@ async function request<T = unknown>(path: string, options: RequestInit = {}): Pr
   try {
     data = await res.json();
   } catch {
-    throw new Error(`Server error (${res.status})`);
+    throw new ApiError(`Server error (${res.status})`, res.status, {});
   }
 
   if (!res.ok) {
-    throw new Error(data.message ?? `Request failed (${res.status})`);
+    throw new ApiError(data.message ?? `Request failed (${res.status})`, res.status, data);
   }
 
   return data as T;
@@ -39,6 +52,11 @@ export interface AuthUser {
   connectedApps?: string[];
   tokensUsed?: number;
   messagesCount?: number;
+  referralCode?: string;
+  referralCount?: number;
+  bonusMessages?: number;
+  dailyMessageLimit?: number;
+  dailyMessageCount?: number;
 }
 
 export interface AuthResponse {
@@ -66,6 +84,7 @@ export interface ChatResponse {
   agent: string;
   reply: string;
   messagesLeft: number | string;
+  resetTime?: string;
 }
 
 export interface HistoryResponse {
@@ -85,6 +104,24 @@ export interface StatsResponse {
     connectedApps: string[];
     totalChats: number;
   };
+}
+
+export interface LimitStatusResponse {
+  success: boolean;
+  messagesUsed: number;
+  messagesLeft: number;
+  totalLimit: number;
+  resetTime: string;
+  referralCode: string;
+  referralCount: number;
+  bonusMessages: number;
+}
+
+export interface ApplyReferralResponse {
+  success: boolean;
+  message: string;
+  bonusMessages: number;
+  totalDailyLimit: number;
 }
 
 // ── Auth API ──────────────────────────────────────────────────────────────────
@@ -122,4 +159,16 @@ export const chatAPI = {
 
 export const statsAPI = {
   getStats: () => request<StatsResponse>("/api/stats"),
+};
+
+// ── User API ──────────────────────────────────────────────────────────────────
+
+export const userAPI = {
+  getLimitStatus: () => request<LimitStatusResponse>("/api/user/limit-status"),
+
+  applyReferral: (code: string) =>
+    request<ApplyReferralResponse>("/api/user/apply-referral", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
 };
