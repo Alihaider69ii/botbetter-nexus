@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 // ── Agent capabilities per agent ──────────────────────────────────────────────
-
 const agentCapabilities: Record<string, string[]> = {
   Nexus: [
     "Route tasks intelligently across all specialist agents",
@@ -67,8 +66,6 @@ const agentCapabilities: Record<string, string[]> = {
   ],
 };
 
-// ── Sample conversations per agent ────────────────────────────────────────────
-
 const agentSamples: Record<string, { from: "user" | "bot"; text: string }[]> = {
   Nexus: [
     { from: "user", text: "Kal presentation hai, client ko proposal bhi bhejna hai aur LinkedIn post bhi" },
@@ -114,8 +111,6 @@ const agentSamples: Record<string, { from: "user" | "bot"; text: string }[]> = {
   ],
 };
 
-// ── All connectors with categories ────────────────────────────────────────────
-
 type Connector = {
   name: string;
   Icon: React.FC<{ className?: string; style?: React.CSSProperties }>;
@@ -124,43 +119,35 @@ type Connector = {
 };
 
 const ALL_CONNECTORS: Connector[] = [
-  // Productivity
   { name: "Gmail", Icon: Mail, color: "#EA4335", category: "productivity" },
   { name: "Google Calendar", Icon: Calendar, color: "#1967D2", category: "productivity" },
   { name: "Google Drive", Icon: HardDrive, color: "#0F9D58", category: "productivity" },
   { name: "Notion", Icon: FileText, color: "#888", category: "productivity" },
   { name: "Slack", Icon: Slack, color: "#E01E5A", category: "productivity" },
   { name: "Microsoft Teams", Icon: Users, color: "#6264A7", category: "productivity" },
-  // Social
   { name: "Instagram DM", Icon: Camera, color: "#E1306C", category: "social" },
   { name: "Twitter / X", Icon: Twitter, color: "#1DA1F2", category: "social" },
   { name: "LinkedIn", Icon: Linkedin, color: "#0A66C2", category: "social" },
   { name: "YouTube", Icon: Youtube, color: "#FF0000", category: "social" },
-  // E-commerce
   { name: "Shopify", Icon: ShoppingBag, color: "#96BF48", category: "ecommerce" },
   { name: "WooCommerce", Icon: ShoppingCart, color: "#7F54B3", category: "ecommerce" },
   { name: "Meesho", Icon: Tag, color: "#F43397", category: "ecommerce" },
   { name: "Amazon Seller", Icon: Package, color: "#FF9900", category: "ecommerce" },
-  // Communication
   { name: "WhatsApp Business", Icon: MessageSquare, color: "#25D366", category: "communication" },
   { name: "Telegram", Icon: Send, color: "#2AABEE", category: "communication" },
   { name: "Discord", Icon: MessageCircle, color: "#5865F2", category: "communication" },
-  // Creative
   { name: "Canva", Icon: Palette, color: "#00C4CC", category: "creative" },
   { name: "Figma", Icon: Globe, color: "#A259FF", category: "creative" },
   { name: "Adobe Express", Icon: Zap, color: "#FF0000", category: "creative" },
-  // Business
   { name: "Razorpay", Icon: CreditCard, color: "#3395FF", category: "business" },
   { name: "Stripe", Icon: CreditCard, color: "#635BFF", category: "business" },
   { name: "Zoho CRM", Icon: Users, color: "#E42527", category: "business" },
   { name: "HubSpot", Icon: BarChart2, color: "#FF7A59", category: "business" },
-  // Developer
   { name: "GitHub", Icon: Github, color: "#888", category: "developer" },
   { name: "Vercel", Icon: Globe, color: "#aaa", category: "developer" },
   { name: "Railway", Icon: Server, color: "#aaa", category: "developer" },
   { name: "Webhook", Icon: Link2, color: "#7C6BFF", category: "developer" },
   { name: "REST API", Icon: Code2, color: "#7C6BFF", category: "developer" },
-  // AI Tools
   { name: "Vibe Prospecting", Icon: Target, color: "#7C6BFF", category: "ai" },
   { name: "Zapier", Icon: Zap, color: "#FF4A00", category: "ai" },
   { name: "Make.com", Icon: RefreshCw, color: "#6D00CC", category: "ai" },
@@ -179,8 +166,6 @@ const CATEGORIES = [
   { id: "ai", label: "AI Tools" },
 ];
 
-// ── ConnectorModal ─────────────────────────────────────────────────────────────
-
 const ConnectorModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -193,47 +178,44 @@ const ConnectorModal = ({ open, onClose }: { open: boolean; onClose: () => void 
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
-        {/* Modal header */}
-        <div className="px-6 pt-6 pb-4 border-b border-border">
-          <div className="flex items-center justify-between mb-4">
+      <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden bg-white border-2 border-slate-100 rounded-3xl">
+        <div className="px-8 pt-8 pb-6 border-b-2 border-slate-100 bg-slate-50">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-semibold">Add Connectors</h2>
-              <p className="text-[13px] text-muted-foreground mt-0.5">
+              <h2 className="text-2xl font-bold text-slate-900">Add Connectors</h2>
+              <p className="text-sm font-medium text-slate-500 mt-1">
                 Connect your tools to supercharge your agent
               </p>
             </div>
             <button
               onClick={onClose}
-              className="h-8 w-8 grid place-items-center rounded-lg border border-border hover:bg-secondary transition"
+              className="h-10 w-10 grid place-items-center rounded-xl bg-white border-2 border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
           </div>
-          {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search connectors..."
+              placeholder="SEARCH CONNECTORS..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary/50 transition"
+              className="w-full pl-12 pr-5 py-4 rounded-2xl border-2 border-slate-200 bg-white text-sm font-bold tracking-widest text-slate-900 outline-none focus:border-[#6C00FF] transition-colors shadow-sm placeholder:text-slate-400 placeholder:font-bold"
             />
           </div>
         </div>
 
-        {/* Category tabs */}
-        <div className="px-6 py-3 border-b border-border overflow-x-auto scrollbar-thin">
-          <div className="flex gap-1.5 min-w-max">
+        <div className="px-8 py-4 border-b-2 border-slate-100 bg-white overflow-x-auto scrollbar-thin">
+          <div className="flex gap-2 min-w-max">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition whitespace-nowrap ${
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold tracking-widest uppercase transition-all whitespace-nowrap ${
                   activeCategory === cat.id
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border text-muted-foreground hover:text-foreground"
+                    ? "bg-[#6C00FF] text-white shadow-md"
+                    : "border-2 border-slate-200 text-slate-500 hover:border-[#6C00FF] hover:text-[#6C00FF]"
                 }`}
               >
                 {cat.label}
@@ -242,34 +224,32 @@ const ConnectorModal = ({ open, onClose }: { open: boolean; onClose: () => void 
           </div>
         </div>
 
-        {/* Connector grid */}
-        <div className="p-5 overflow-y-auto max-h-[400px] scrollbar-thin">
+        <div className="p-8 bg-white overflow-y-auto max-h-[500px] scrollbar-thin">
           {filtered.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground text-[13px]">
+             <div className="text-center py-16 text-slate-500 font-bold tracking-widest uppercase text-sm">
               No connectors found for "{search}"
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {filtered.map(({ name, Icon, color }) => (
                 <div
                   key={name}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-secondary/40 transition"
+                  className="flex flex-col items-center justify-center p-5 rounded-2xl border-2 border-slate-100 bg-white hover:-translate-y-1 hover:shadow-md transition-all text-center gap-3"
+                  style={{ hover: { borderColor: `${color}50` } } as any}
                 >
                   <div
-                    className="h-9 w-9 rounded-lg grid place-items-center shrink-0"
-                    style={{ background: `${color}18`, border: `1px solid ${color}30` }}
+                    className="h-14 w-14 rounded-2xl grid place-items-center shrink-0 shadow-sm"
+                    style={{ background: `${color}15`, border: `2px solid ${color}30` }}
                   >
-                    <Icon className="h-4 w-4" style={{ color }} />
+                    <Icon className="h-6 w-6" style={{ color }} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[12px] font-medium truncate">{name}</div>
-                    <button
-                      className="text-[11px] font-semibold transition hover:opacity-80"
-                      style={{ color: "#7C6BFF" }}
-                    >
-                      Connect →
-                    </button>
-                  </div>
+                  <div className="text-sm font-bold text-slate-900">{name}</div>
+                  <button
+                    className="text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-lg transition-colors mt-1"
+                    style={{ background: `${color}10`, color: color }}
+                  >
+                    Connect
+                  </button>
                 </div>
               ))}
             </div>
@@ -279,8 +259,6 @@ const ConnectorModal = ({ open, onClose }: { open: boolean; onClose: () => void 
     </Dialog>
   );
 };
-
-// ── AgentDetail ────────────────────────────────────────────────────────────────
 
 export const AgentDetail = ({
   active,
@@ -300,7 +278,6 @@ export const AgentDetail = ({
 
   const handleChatNow = () => {
     if (agentIdx === 0) {
-      // Nexus → existing Nexus Chat
       onNavigate("chat");
     } else {
       onChatWithAgent(agentIdx);
@@ -309,180 +286,153 @@ export const AgentDetail = ({
 
   return (
     <DashShell active={active} onNavigate={onNavigate} title="Agent Detail">
-      <div className="p-4 sm:p-6 max-w-5xl">
+      <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
+        
         {/* Agent picker */}
-        <div className="flex flex-wrap gap-1.5 mb-5">
+        <div className="flex flex-wrap gap-2">
           {agents.map((x, i) => (
             <button
               key={x.name}
               onClick={() => setAgentIdx(i)}
-              className={`inline-flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-full border transition ${
+              className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2.5 rounded-xl border-2 transition-all ${
                 i === agentIdx
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border text-muted-foreground hover:text-foreground"
+                  ? "bg-[#6C00FF] text-white border-[#6C00FF] shadow-md"
+                  : "bg-white border-slate-200 text-slate-500 hover:border-purple-300 hover:text-purple-600"
               }`}
             >
-              <span>{x.emoji}</span> {x.name}
+              <span className="text-base">{x.emoji}</span> {x.name}
             </button>
           ))}
         </div>
 
         {/* Header */}
-        <div
-          className="rounded-2xl border bg-card p-6 sm:p-8"
-          style={{ borderLeftColor: a.color, borderLeftWidth: 4 }}
-        >
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
+        <div className="bento-card relative overflow-hidden p-8 sm:p-10">
+          <div className="absolute top-0 left-0 bottom-0 w-2" style={{ backgroundColor: a.color }} />
+          <div className="flex flex-wrap items-start justify-between gap-6 pl-4">
+            <div className="flex items-center gap-6">
               <div
-                className="h-14 w-14 rounded-2xl grid place-items-center text-2xl"
-                style={{ background: `${a.color}22`, border: `1px solid ${a.color}40` }}
+                className="h-20 w-20 rounded-3xl grid place-items-center text-4xl shadow-md"
+                style={{ background: `${a.color}15`, border: `2px solid ${a.color}30` }}
               >
                 {a.emoji}
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl">{a.name}</h2>
-                  <span className="inline-flex items-center gap-1 label-xs text-emerald-500">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 pulse-dot" /> ACTIVE
+                <div className="flex items-center gap-3">
+                  <h2 className="text-3xl font-bold text-slate-900">{a.name}</h2>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest border border-emerald-100">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
                   </span>
                 </div>
-                <div className="label-xs text-muted-foreground mt-0.5">{a.role.toUpperCase()}</div>
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-500 mt-2">{a.role}</div>
               </div>
             </div>
-            {/* CTA buttons */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-border bg-card text-[13px] hover:bg-secondary transition">
-                Connect to app <ArrowRight className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-3 flex-wrap">
+              <button className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border-2 border-slate-200 bg-white text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                Connect to App <ArrowRight className="h-4 w-4" />
               </button>
               <button
                 onClick={handleChatNow}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium transition hover:opacity-90"
-                style={{ background: "#7C6BFF", color: "white" }}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                style={{ background: a.color }}
               >
-                Chat Now <ArrowRight className="h-3.5 w-3.5" />
+                Chat Now <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           </div>
-          <p className="text-muted-foreground text-[14px] mt-4 max-w-2xl">{a.desc}</p>
+          <p className="text-base font-medium text-slate-600 mt-6 pl-4 leading-relaxed max-w-3xl">{a.desc}</p>
         </div>
 
-        {/* Capabilities */}
-        <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-          <div className="label-xs text-muted-foreground">CAPABILITIES</div>
-          <h3 className="text-lg mt-1 mb-4">What {a.name} can do</h3>
-          <ul className="space-y-2">
-            {caps.map((c) => (
-              <li key={c} className="flex items-start gap-2 text-[13px]">
-                <span
-                  className="h-4 w-4 rounded grid place-items-center mt-0.5 shrink-0"
-                  style={{ background: `${a.color}22`, color: a.color }}
-                >
-                  <Check className="h-3 w-3" />
-                </span>
-                {c}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Connectors — collapsed, opens modal */}
-        <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="label-xs text-muted-foreground">CONNECTORS</div>
-              <h3 className="text-base font-medium mt-0.5">Connect {a.name} to your apps</h3>
-              <p className="text-[12px] text-muted-foreground mt-1">
-                30+ integrations — WhatsApp, Gmail, Slack, Shopify, GitHub and more.
-              </p>
-            </div>
-            <button
-              onClick={() => setConnectorModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium transition hover:opacity-90 shrink-0"
-              style={{ background: "#7C6BFF", color: "white" }}
-            >
-              <Plus className="h-3.5 w-3.5" /> Add Connectors
-            </button>
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Capabilities */}
+          <div className="bento-card p-8">
+            <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-1">CAPABILITIES</div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-6">What {a.name} can do</h3>
+            <ul className="space-y-4">
+              {caps.map((c) => (
+                <li key={c} className="flex items-start gap-3 text-sm font-medium text-slate-700">
+                  <span
+                    className="h-6 w-6 rounded-lg grid place-items-center shrink-0 mt-0.5"
+                    style={{ background: `${a.color}15`, color: a.color }}
+                  >
+                    <Check className="h-4 w-4" />
+                  </span>
+                  <span className="leading-relaxed">{c}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Quick preview chips */}
-          <div className="flex flex-wrap gap-1.5 mt-4">
-            {[
-              { name: "WhatsApp", Icon: MessageSquare, color: "#25D366" },
-              { name: "Gmail", Icon: Mail, color: "#EA4335" },
-              { name: "Telegram", Icon: Send, color: "#2AABEE" },
-              { name: "Slack", Icon: Slack, color: "#E01E5A" },
-              { name: "Canva", Icon: Palette, color: "#00C4CC" },
-            ].map(({ name, Icon, color }) => (
-              <div
-                key={name}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[12px] text-muted-foreground"
-                style={{ borderColor: `${color}35`, background: `${color}08` }}
-              >
-                <Icon className="h-3 w-3" style={{ color }} />
-                {name}
+          {/* Connectors */}
+          <div className="bento-card p-8 flex flex-col">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-1">CONNECTORS</div>
+                <h3 className="text-2xl font-bold text-slate-900">Connect {a.name}</h3>
+                <p className="text-sm font-medium text-slate-500 mt-2">
+                  30+ integrations — WhatsApp, Gmail, Slack, Shopify, GitHub and more.
+                </p>
               </div>
-            ))}
-            <div className="inline-flex items-center px-2.5 py-1 rounded-full border border-border text-[12px] text-muted-foreground">
-              +25 more
+              <button
+                onClick={() => setConnectorModalOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-transform hover:-translate-y-0.5 shrink-0"
+                style={{ background: "#6C00FF" }}
+              >
+                <Plus className="h-4 w-4" /> Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-auto">
+              {[
+                { name: "WhatsApp", Icon: MessageSquare, color: "#25D366" },
+                { name: "Gmail", Icon: Mail, color: "#EA4335" },
+                { name: "Telegram", Icon: Send, color: "#2AABEE" },
+                { name: "Slack", Icon: Slack, color: "#E01E5A" },
+                { name: "Canva", Icon: Palette, color: "#00C4CC" },
+              ].map(({ name, Icon, color }) => (
+                <div
+                  key={name}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 text-xs font-bold"
+                  style={{ borderColor: `${color}30`, background: `${color}10`, color: color }}
+                >
+                  <Icon className="h-4 w-4" />
+                  {name}
+                </div>
+              ))}
+              <div className="inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-slate-200 text-xs font-bold text-slate-500">
+                +25 more
+              </div>
             </div>
           </div>
         </div>
 
         {/* Use With */}
-        <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-          <div className="label-xs text-muted-foreground mb-1">USE WITH</div>
-          <h3 className="text-lg mt-1 mb-4">Use without opening BotBetter</h3>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {/* WhatsApp */}
-            <div
-              className="rounded-xl p-5 flex gap-4"
-              style={{ background: "rgba(37,211,102,0.05)", border: "1px solid rgba(37,211,102,0.2)" }}
-            >
-              <div
-                className="h-11 w-11 rounded-xl grid place-items-center shrink-0"
-                style={{ background: "rgba(37,211,102,0.12)", border: "1px solid rgba(37,211,102,0.25)" }}
-              >
-                <MessageSquare className="h-6 w-6" style={{ color: "#25D366" }} />
+        <div className="bento-card p-8">
+          <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-1">USE WITH</div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-6">Use without opening BotBetter</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="rounded-2xl p-6 flex gap-5 border-2 border-[#25D366]/20 bg-[#25D366]/5">
+              <div className="h-14 w-14 rounded-2xl grid place-items-center shrink-0 bg-[#25D366]/10 border-2 border-[#25D366]/20">
+                <MessageSquare className="h-7 w-7 text-[#25D366]" />
               </div>
               <div>
-                <div className="font-semibold text-[14px]" style={{ color: "#25D366" }}>
-                  Use via WhatsApp
-                </div>
-                <p className="text-[12px] text-muted-foreground mt-1.5 leading-relaxed">
+                <div className="font-bold text-lg text-[#25D366]">Use via WhatsApp</div>
+                <p className="text-sm font-medium text-slate-600 mt-2 leading-relaxed">
                   No need to open BotBetter. Just send a command — your agent works in the background and gets it done.
                 </p>
-                <button
-                  className="mt-3 text-[12px] font-semibold px-4 py-1.5 rounded-full transition hover:opacity-90"
-                  style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.3)" }}
-                >
+                <button className="mt-4 text-xs font-bold uppercase tracking-widest px-5 py-2 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors">
                   Setup WhatsApp →
                 </button>
               </div>
             </div>
-
-            {/* Telegram */}
-            <div
-              className="rounded-xl p-5 flex gap-4"
-              style={{ background: "rgba(42,171,238,0.05)", border: "1px solid rgba(42,171,238,0.2)" }}
-            >
-              <div
-                className="h-11 w-11 rounded-xl grid place-items-center shrink-0"
-                style={{ background: "rgba(42,171,238,0.12)", border: "1px solid rgba(42,171,238,0.25)" }}
-              >
-                <Send className="h-6 w-6" style={{ color: "#2AABEE" }} />
+            <div className="rounded-2xl p-6 flex gap-5 border-2 border-[#2AABEE]/20 bg-[#2AABEE]/5">
+              <div className="h-14 w-14 rounded-2xl grid place-items-center shrink-0 bg-[#2AABEE]/10 border-2 border-[#2AABEE]/20">
+                <Send className="h-7 w-7 text-[#2AABEE]" />
               </div>
               <div>
-                <div className="font-semibold text-[14px]" style={{ color: "#2AABEE" }}>
-                  Use via Telegram
-                </div>
-                <p className="text-[12px] text-muted-foreground mt-1.5 leading-relaxed">
+                <div className="font-bold text-lg text-[#2AABEE]">Use via Telegram</div>
+                <p className="text-sm font-medium text-slate-600 mt-2 leading-relaxed">
                   No need to open BotBetter. Just send a command — your agent works in the background and gets it done.
                 </p>
-                <button
-                  className="mt-3 text-[12px] font-semibold px-4 py-1.5 rounded-full transition hover:opacity-90"
-                  style={{ background: "rgba(42,171,238,0.15)", color: "#2AABEE", border: "1px solid rgba(42,171,238,0.3)" }}
-                >
+                <button className="mt-4 text-xs font-bold uppercase tracking-widest px-5 py-2 rounded-xl bg-[#2AABEE]/10 text-[#2AABEE] hover:bg-[#2AABEE]/20 transition-colors">
                   Setup Telegram →
                 </button>
               </div>
@@ -491,44 +441,40 @@ export const AgentDetail = ({
         </div>
 
         {/* Sample conversation */}
-        <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-          <div className="label-xs text-muted-foreground">SAMPLE CONVERSATION</div>
-          <h3 className="text-lg mt-1 mb-4">See {a.name} in action</h3>
-          <div className="space-y-3">
+        <div className="bento-card p-8">
+          <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-1">SAMPLE CONVERSATION</div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-8">See {a.name} in Action</h3>
+          <div className="space-y-4 bg-slate-50 p-6 rounded-2xl border-2 border-slate-100">
             {sample.map((m, i) =>
               m.from === "user" ? (
                 <div key={i} className="flex justify-end">
-                  <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-primary text-primary-foreground px-4 py-2.5 text-[13px]">
+                  <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC] text-white px-5 py-3 text-sm font-medium shadow-sm">
                     {m.text}
                   </div>
                 </div>
               ) : (
-                <div key={i} className="flex gap-2">
+                <div key={i} className="flex gap-3">
                   <div
-                    className="h-8 w-8 rounded-lg grid place-items-center text-sm shrink-0 mt-0.5"
-                    style={{ background: `${a.color}22`, border: `1px solid ${a.color}40` }}
+                    className="h-10 w-10 rounded-xl grid place-items-center text-lg shrink-0 shadow-sm"
+                    style={{ background: `${a.color}15`, border: `2px solid ${a.color}30` }}
                   >
                     {a.emoji}
                   </div>
-                  <div className="max-w-[75%] rounded-2xl rounded-tl-sm border border-border bg-background px-4 py-2.5 text-[13px] whitespace-pre-line">
+                  <div className="max-w-[80%] rounded-2xl rounded-tl-sm border-2 border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 whitespace-pre-line shadow-sm">
                     {m.text}
                   </div>
                 </div>
               )
             )}
           </div>
-
-          {/* CTA below sample */}
-          <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
-            <p className="text-[12px] text-muted-foreground">
-              Ready to try it yourself?
-            </p>
+          <div className="mt-8 pt-6 border-t-2 border-slate-100 flex items-center justify-between">
+            <p className="text-sm font-bold text-slate-500">Ready to try it yourself?</p>
             <button
               onClick={handleChatNow}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium transition hover:opacity-90"
-              style={{ background: `${a.color}18`, border: `1px solid ${a.color}35`, color: a.color }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all text-white"
+              style={{ background: a.color }}
             >
-              Start chatting with {a.name} <ArrowRight className="h-3.5 w-3.5" />
+              Start chatting with {a.name} <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>

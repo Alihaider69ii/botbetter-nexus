@@ -38,25 +38,25 @@ export const Connections = ({ active, onNavigate }: { active: ScreenKey; onNavig
   const available = apps.filter((a) => !a.connected);
 
   const Card = ({ app }: { app: App }) => (
-    <div className="rounded-xl border border-border bg-card p-4 flex flex-col">
+    <div className="bento-card p-5 flex flex-col hover:-translate-y-1">
       <div className="flex items-start justify-between">
-        <div className="h-9 w-9 rounded-lg bg-secondary grid place-items-center">
-          <app.icon className="h-4 w-4" />
+        <div className={`h-12 w-12 rounded-2xl grid place-items-center ${app.connected ? 'bg-emerald-50' : 'bg-purple-50'}`}>
+          <app.icon className={`h-6 w-6 ${app.connected ? 'text-emerald-600' : 'text-purple-600'}`} />
         </div>
         {app.connected && (
-          <span className="inline-flex items-center gap-1 label-xs text-emerald-500 border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> CONNECTED
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest border border-emerald-100">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
           </span>
         )}
       </div>
-      <div className="text-[14px] font-medium mt-3">{app.name}</div>
-      <p className="text-[12px] text-muted-foreground mt-1 flex-1">{app.what}</p>
+      <div className="text-lg font-bold text-slate-900 mt-4">{app.name}</div>
+      <p className="text-sm font-medium text-slate-500 mt-1 flex-1">{app.what}</p>
       <button
         onClick={() => toggle(app.name)}
-        className={`mt-4 text-[12px] py-1.5 rounded-full ${
+        className={`mt-5 text-[11px] font-bold uppercase tracking-widest py-2.5 rounded-xl transition-all ${
           app.connected
-            ? "border border-border hover:bg-secondary"
-            : "bg-primary text-primary-foreground"
+            ? "border-2 border-slate-100 text-slate-600 hover:bg-slate-50"
+            : "bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
         }`}
       >
         {app.connected ? "Disconnect" : "Connect"}
@@ -66,15 +66,15 @@ export const Connections = ({ active, onNavigate }: { active: ScreenKey; onNavig
 
   return (
     <DashShell active={active} onNavigate={onNavigate} title="Connections">
-      <div className="p-4 sm:p-6 max-w-6xl space-y-8">
+      <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-10">
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="label-xs text-muted-foreground">CONNECTED</div>
-              <h3 className="text-lg">Active integrations ({connected.length})</h3>
+              <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-1">CONNECTED</div>
+              <h3 className="text-2xl font-bold text-slate-900">Active Integrations ({connected.length})</h3>
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {connected.map((a) => (
               <Card key={a.name} app={a} />
             ))}
@@ -82,9 +82,9 @@ export const Connections = ({ active, onNavigate }: { active: ScreenKey; onNavig
         </div>
 
         <div>
-          <div className="label-xs text-muted-foreground">AVAILABLE</div>
-          <h3 className="text-lg mb-3">Add new connections</h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-1">AVAILABLE</div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-4">Add New Connections</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {available.map((a) => (
               <Card key={a.name} app={a} />
             ))}
@@ -92,36 +92,36 @@ export const Connections = ({ active, onNavigate }: { active: ScreenKey; onNavig
         </div>
 
         {/* API */}
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-          <div className="label-xs text-muted-foreground">DEVELOPER ACCESS</div>
-          <h3 className="text-lg mt-1">API + webhooks</h3>
-          <p className="text-[13px] text-muted-foreground mt-1">
-            Use Nexus and individual agents from your own backend.
+        <div className="bento-card p-6 sm:p-8 bg-gradient-to-br from-slate-50 to-white">
+          <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-1">DEVELOPER ACCESS</div>
+          <h3 className="text-2xl font-bold text-slate-900 mt-1">API & Webhooks</h3>
+          <p className="text-sm font-medium text-slate-500 mt-2">
+            Use Nexus and individual agents from your own backend programmatically.
           </p>
 
-          <div className="mt-5 space-y-3">
+          <div className="mt-8 space-y-6">
             <div>
-              <div className="label-xs text-muted-foreground mb-1.5">API KEY</div>
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
-                <code className="text-[12px] flex-1 truncate font-mono">bb_live_sk_8f4x...92ab</code>
+              <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-2">API KEY</div>
+              <div className="flex items-center gap-3 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 shadow-sm">
+                <code className="text-sm flex-1 truncate font-mono font-bold text-slate-700">bb_live_sk_8f4x...92ab</code>
                 <button
                   onClick={() => copy("bb_live_sk_8f4x92ab")}
-                  className="inline-flex items-center gap-1 text-[12px] px-2 py-1 rounded-md border border-border hover:bg-secondary"
+                  className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors shrink-0"
                 >
-                  {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                   {copied ? "Copied" : "Copy"}
                 </button>
               </div>
             </div>
             <div>
-              <div className="label-xs text-muted-foreground mb-1.5">WEBHOOK URL</div>
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
-                <code className="text-[12px] flex-1 truncate font-mono">https://api.botbetter.ai/v1/hooks/u_a1b2</code>
+              <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-2">WEBHOOK URL</div>
+              <div className="flex items-center gap-3 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 shadow-sm">
+                <code className="text-sm flex-1 truncate font-mono font-bold text-slate-700">https://api.botbetter.ai/v1/hooks/u_a1b2</code>
                 <button
                   onClick={() => copy("https://api.botbetter.ai/v1/hooks/u_a1b2")}
-                  className="inline-flex items-center gap-1 text-[12px] px-2 py-1 rounded-md border border-border hover:bg-secondary"
+                  className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors shrink-0"
                 >
-                  <Copy className="h-3.5 w-3.5" /> Copy
+                  <Copy className="h-4 w-4" /> Copy
                 </button>
               </div>
             </div>

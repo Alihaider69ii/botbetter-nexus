@@ -33,14 +33,14 @@ export const DashShell = ({
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] w-full">
       {/* Sidebar */}
-      <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-border bg-sidebar">
-        <div className="h-14 px-4 flex items-center gap-2 border-b border-sidebar-border">
-          <div className="h-6 w-6 rounded-md bg-primary grid place-items-center">
-            <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+      <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-slate-200 bg-slate-50">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-slate-200">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#6C00FF] to-[#FF3CAC] grid place-items-center shadow-md shadow-purple-500/20">
+            <Sparkles className="h-4 w-4 text-white" />
           </div>
-          <span className="font-medium text-[14px]">BotBetter</span>
+          <span className="font-bold text-[16px] text-slate-900 tracking-tight">BotBetter</span>
         </div>
-        <nav className="flex-1 p-2 space-y-0.5">
+        <nav className="flex-1 p-4 space-y-1">
           {items.map((it) => {
             const isActive = it.key === active;
             return (
