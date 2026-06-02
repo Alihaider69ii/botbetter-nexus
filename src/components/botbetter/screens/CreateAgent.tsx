@@ -40,36 +40,36 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
 
   return (
     <DashShell active={active} onNavigate={onNavigate} title="Create Agent">
-      <div className="p-4 sm:p-6 max-w-4xl">
+      <div className="p-4 sm:p-8 max-w-4xl mx-auto">
         {/* Progress */}
-        <div className="mb-6">
+        <div className="mb-8">
           <div className="flex items-center gap-2">
             {steps.map((s, i) => {
               const idx = i + 1;
               const done = step > idx;
               const current = step === idx;
               return (
-                <div key={s} className="flex items-center gap-2 flex-1">
+                <div key={s} className="flex items-center gap-3 flex-1">
                   <div
                     className={cn(
-                      "h-7 w-7 rounded-full grid place-items-center text-[12px] shrink-0 transition",
-                      done && "bg-primary text-primary-foreground",
-                      current && "bg-primary/20 text-primary border border-primary",
-                      !done && !current && "border border-border text-muted-foreground"
+                      "h-8 w-8 rounded-full grid place-items-center text-xs font-bold shrink-0 transition-all shadow-sm",
+                      done && "bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC] text-white",
+                      current && "bg-purple-100 text-[#6C00FF] border-2 border-[#6C00FF]",
+                      !done && !current && "border-2 border-slate-200 bg-white text-slate-400"
                     )}
                   >
-                    {done ? <Check className="h-3.5 w-3.5" /> : idx}
+                    {done ? <Check className="h-4 w-4" /> : idx}
                   </div>
                   <span
                     className={cn(
-                      "label-xs hidden sm:inline",
-                      current ? "text-foreground" : "text-muted-foreground"
+                      "text-xs font-bold uppercase tracking-widest hidden sm:inline",
+                      current ? "text-slate-900" : "text-slate-400"
                     )}
                   >
-                    {s.toUpperCase()}
+                    {s}
                   </span>
                   {i < steps.length - 1 && (
-                    <div className={cn("h-px flex-1", done ? "bg-primary" : "bg-border")} />
+                    <div className={cn("h-1 flex-1 rounded-full", done ? "bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC]" : "bg-slate-200")} />
                   )}
                 </div>
               );
@@ -78,12 +78,12 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
         </div>
 
         {/* Steps */}
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-7 fade-in">
+        <div className="bento-card p-6 sm:p-10 animate-fade-in">
           {step === 1 && (
             <>
-              <div className="label-xs text-muted-foreground">STEP 1</div>
-              <h3 className="text-xl mt-1 mb-5">Choose a category</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="text-xs font-bold tracking-wider text-purple-600 uppercase mb-2">STEP 1</div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-8">Choose a Category</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {categories.map((c) => {
                   const sel = c.name === category;
                   return (
@@ -91,12 +91,14 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
                       key={c.name}
                       onClick={() => setCategory(c.name)}
                       className={cn(
-                        "rounded-xl border p-5 text-left transition",
-                        sel ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                        "rounded-2xl border-2 p-6 text-left transition-all hover:-translate-y-1 flex flex-col items-start gap-4",
+                        sel ? "border-purple-400 bg-purple-50 shadow-md" : "border-slate-100 bg-white hover:border-purple-200 hover:shadow-sm"
                       )}
                     >
-                      <c.icon className="h-5 w-5" style={{ color: sel ? "hsl(var(--primary))" : undefined }} />
-                      <div className="text-[14px] font-medium mt-3">{c.name}</div>
+                      <div className={cn("h-12 w-12 rounded-xl grid place-items-center", sel ? "bg-[#6C00FF] text-white" : "bg-slate-100 text-slate-500")}>
+                        <c.icon className="h-6 w-6" />
+                      </div>
+                      <div className={cn("text-lg font-bold", sel ? "text-[#6C00FF]" : "text-slate-700")}>{c.name}</div>
                     </button>
                   );
                 })}
@@ -106,29 +108,29 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
 
           {step === 2 && (
             <>
-              <div className="label-xs text-muted-foreground">STEP 2</div>
-              <h3 className="text-xl mt-1 mb-5">Name + personality</h3>
-              <div className="space-y-4">
+              <div className="text-xs font-bold tracking-wider text-purple-600 uppercase mb-2">STEP 2</div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-8">Name & Personality</h3>
+              <div className="space-y-8">
                 <div>
-                  <div className="label-xs text-muted-foreground mb-1.5">AGENT NAME</div>
+                  <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-3">AGENT NAME</div>
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-[14px] outline-none focus:border-primary"
+                    className="w-full rounded-2xl border-2 border-slate-200 bg-white px-5 py-4 text-lg font-bold text-slate-900 outline-none focus:border-purple-500 transition-colors shadow-sm"
                   />
                 </div>
                 <div>
-                  <div className="label-xs text-muted-foreground mb-1.5">PERSONALITY</div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-3">PERSONALITY</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {personalities.map((p) => (
                       <button
                         key={p}
                         onClick={() => setPersonality(p)}
                         className={cn(
-                          "py-2 rounded-lg border text-[13px] transition",
+                          "py-3 rounded-xl border-2 text-sm font-bold transition-all",
                           personality === p
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border hover:border-primary/40"
+                            ? "border-purple-500 bg-purple-50 text-purple-700 shadow-sm"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-purple-300"
                         )}
                       >
                         {p}
@@ -142,21 +144,21 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
 
           {step === 3 && (
             <>
-              <div className="label-xs text-muted-foreground">STEP 3</div>
-              <h3 className="text-xl mt-1 mb-5">Language + instructions</h3>
-              <div className="space-y-4">
+              <div className="text-xs font-bold tracking-wider text-purple-600 uppercase mb-2">STEP 3</div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-8">Language & Instructions</h3>
+              <div className="space-y-8">
                 <div>
-                  <div className="label-xs text-muted-foreground mb-1.5">LANGUAGE</div>
-                  <div className="flex gap-2">
+                  <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-3">LANGUAGE</div>
+                  <div className="flex gap-3">
                     {langs.map((l) => (
                       <button
                         key={l}
                         onClick={() => setLang(l)}
                         className={cn(
-                          "px-4 py-2 rounded-full border text-[13px] transition",
+                          "px-6 py-3 rounded-xl border-2 text-sm font-bold transition-all",
                           lang === l
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border hover:border-primary/40"
+                            ? "border-purple-500 bg-purple-50 text-purple-700 shadow-sm"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-purple-300"
                         )}
                       >
                         {l}
@@ -165,12 +167,12 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
                   </div>
                 </div>
                 <div>
-                  <div className="label-xs text-muted-foreground mb-1.5">SYSTEM INSTRUCTIONS</div>
+                  <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-3">SYSTEM INSTRUCTIONS</div>
                   <textarea
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
                     rows={5}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-[14px] outline-none focus:border-primary resize-none"
+                    className="w-full rounded-2xl border-2 border-slate-200 bg-white px-5 py-4 text-base font-medium text-slate-700 outline-none focus:border-purple-500 transition-colors resize-none shadow-sm"
                   />
                 </div>
               </div>
@@ -179,9 +181,9 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
 
           {step === 4 && (
             <>
-              <div className="label-xs text-muted-foreground">STEP 4</div>
-              <h3 className="text-xl mt-1 mb-5">Pick tools</h3>
-              <div className="grid sm:grid-cols-2 gap-2">
+              <div className="text-xs font-bold tracking-wider text-purple-600 uppercase mb-2">STEP 4</div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-8">Pick Tools</h3>
+              <div className="grid sm:grid-cols-2 gap-4">
                 {tools.map((t) => {
                   const on = activeTools.includes(t.name);
                   return (
@@ -189,20 +191,20 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
                       key={t.name}
                       onClick={() => toggleTool(t.name)}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-3 rounded-lg border text-[13px] transition",
-                        on ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                        "flex items-center gap-4 px-5 py-4 rounded-2xl border-2 text-left transition-all",
+                        on ? "border-purple-400 bg-purple-50 shadow-sm" : "border-slate-100 bg-white hover:border-purple-200"
                       )}
                     >
                       <div
                         className={cn(
-                          "h-5 w-5 rounded grid place-items-center border",
-                          on ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                          "h-6 w-6 rounded-md grid place-items-center border-2 transition-colors",
+                          on ? "bg-[#6C00FF] border-[#6C00FF] text-white" : "border-slate-300 bg-white"
                         )}
                       >
-                        {on && <Check className="h-3 w-3" />}
+                        {on && <Check className="h-4 w-4" />}
                       </div>
-                      <t.icon className="h-4 w-4 text-muted-foreground" />
-                      <span>{t.name}</span>
+                      <t.icon className={cn("h-5 w-5", on ? "text-purple-600" : "text-slate-400")} />
+                      <span className={cn("text-base font-bold", on ? "text-slate-900" : "text-slate-600")}>{t.name}</span>
                     </button>
                   );
                 })}
@@ -212,20 +214,20 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
 
           {step === 5 && (
             <>
-              <div className="label-xs text-muted-foreground">STEP 5</div>
-              <h3 className="text-xl mt-1 mb-5">Publish</h3>
-              <div className="grid md:grid-cols-2 gap-3 mb-5">
+              <div className="text-xs font-bold tracking-wider text-purple-600 uppercase mb-2">STEP 5</div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-8">Publish</h3>
+              <div className="grid md:grid-cols-2 gap-4 mb-8">
                 {(["private", "public"] as const).map((v) => (
                   <button
                     key={v}
                     onClick={() => setVisibility(v)}
                     className={cn(
-                      "rounded-xl border p-5 text-left transition",
-                      visibility === v ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                      "rounded-2xl border-2 p-6 text-left transition-all",
+                      visibility === v ? "border-purple-400 bg-purple-50 shadow-md" : "border-slate-100 bg-white hover:border-purple-200"
                     )}
                   >
-                    <div className="font-medium capitalize">{v}</div>
-                    <p className="text-[12px] text-muted-foreground mt-1">
+                    <div className={cn("text-lg font-bold capitalize", visibility === v ? "text-[#6C00FF]" : "text-slate-800")}>{v}</div>
+                    <p className="text-sm font-medium text-slate-500 mt-2">
                       {v === "private"
                         ? "Only you can use this agent."
                         : "List on marketplace, earn 30% commission."}
@@ -235,22 +237,22 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
               </div>
 
               {/* Preview */}
-              <div className="rounded-xl border border-border bg-background p-4">
-                <div className="label-xs text-muted-foreground mb-2">PREVIEW</div>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/20 border border-primary/40 grid place-items-center">
-                    <Bot className="h-5 w-5 text-primary" />
+              <div className="rounded-2xl border-2 border-slate-100 bg-slate-50 p-6">
+                <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">PREVIEW</div>
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-[#6C00FF] to-[#FF3CAC] grid place-items-center shadow-lg shadow-purple-500/20">
+                    <Bot className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <div className="font-medium text-[14px]">{name}</div>
-                    <div className="label-xs text-muted-foreground">
-                      {category.toUpperCase()} · {personality.toUpperCase()} · {lang.toUpperCase()}
+                    <div className="font-bold text-lg text-slate-900">{name}</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">
+                      {category} · {personality} · {lang}
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 mt-3">
+                <div className="flex flex-wrap gap-2 mt-5">
                   {activeTools.map((t) => (
-                    <span key={t} className="label-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground">
+                    <span key={t} className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border-2 border-slate-200 bg-white text-slate-600">
                       {t}
                     </span>
                   ))}
@@ -260,30 +262,30 @@ export const CreateAgent = ({ active, onNavigate }: { active: ScreenKey; onNavig
           )}
 
           {/* Nav */}
-          <div className="flex items-center justify-between mt-7 pt-5 border-t border-border">
+          <div className="flex items-center justify-between mt-10 pt-6 border-t-2 border-slate-100">
             <button
               onClick={() => setStep((s) => Math.max(1, s - 1))}
               disabled={step === 1}
-              className="inline-flex items-center gap-1.5 text-[13px] px-3 py-2 rounded-full border border-border disabled:opacity-40 hover:bg-secondary"
+              className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest px-6 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition-colors"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
+              <ArrowLeft className="h-4 w-4" /> Back
             </button>
-            <span className="text-[12px] text-muted-foreground">
+            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">
               Step {step} of {steps.length}
             </span>
             {step < 5 ? (
               <button
                 onClick={() => setStep((s) => Math.min(5, s + 1))}
-                className="inline-flex items-center gap-1.5 text-[13px] px-4 py-2 rounded-full bg-primary text-primary-foreground"
+                className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest px-6 py-3 rounded-xl bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
-                Continue <ArrowRight className="h-3.5 w-3.5" />
+                Continue <ArrowRight className="h-4 w-4" />
               </button>
             ) : (
               <button
                 onClick={() => onNavigate("dashboard")}
-                className="inline-flex items-center gap-1.5 text-[13px] px-4 py-2 rounded-full bg-primary text-primary-foreground"
+                className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest px-6 py-3 rounded-xl bg-emerald-500 text-white shadow-md hover:bg-emerald-600 hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
-                Publish agent <Check className="h-3.5 w-3.5" />
+                Publish Agent <Check className="h-4 w-4" />
               </button>
             )}
           </div>

@@ -8,10 +8,9 @@ import {
 } from "lucide-react";
 import { chatAPI, userAPI, ApiError, type LimitStatusResponse } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { cn } from "@/lib/utils";
 
 type Msg = { from: "user" | "bot"; text: string };
-
-// ── Seed conversations ────────────────────────────────────────────────────────
 
 const agentSeeds: Record<string, Msg[]> = {
   Buddy: [
@@ -77,16 +76,12 @@ const chatHistory: Record<string, string[]> = {
 
 const LIVE_AGENTS = new Set(["sellio", "cracky"]);
 
-// ── Countdown timer helper ────────────────────────────────────────────────────
-
 function formatCountdown(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
-
-// ── Limit reached modal ───────────────────────────────────────────────────────
 
 function LimitModal({
   resetTime,
@@ -121,52 +116,49 @@ function LimitModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 space-y-5 shadow-2xl">
-        {/* Header */}
-        <div className="text-center space-y-1">
-          <div className="text-4xl">🌙</div>
-          <h2 className="text-lg font-semibold mt-2">Aaj ki limit ho gayi!</h2>
-          <p className="text-[13px] text-muted-foreground">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-3xl bg-white p-8 space-y-6 shadow-2xl animate-fade-in border-2 border-slate-100">
+        <div className="text-center space-y-2">
+          <div className="text-4xl mb-2">🌙</div>
+          <h2 className="text-2xl font-bold text-slate-900">Aaj ki limit ho gayi!</h2>
+          <p className="text-sm font-medium text-slate-500">
             Kal reset hogi — 24 ghante baad
           </p>
         </div>
 
-        {/* Countdown */}
-        <div className="rounded-xl border border-border bg-secondary/50 p-4 text-center">
-          <div className="label-xs text-muted-foreground mb-1">RESET IN</div>
-          <div className="text-3xl font-mono font-medium tracking-widest text-primary">
+        <div className="rounded-2xl border-2 border-slate-100 bg-slate-50 p-6 text-center shadow-inner">
+          <div className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">RESET IN</div>
+          <div className="text-4xl font-mono font-bold tracking-widest text-[#6C00FF]">
             {formatCountdown(seconds)}
           </div>
         </div>
 
-        {/* Referral */}
-        <div className="space-y-3">
-          <div className="text-center text-[13px] text-muted-foreground">
-            Dost ko refer karo — dono ko <span className="text-emerald-400 font-medium">+20 messages</span> milenge! 🎁
+        <div className="space-y-4">
+          <div className="text-center text-sm font-medium text-slate-600">
+            Dost ko refer karo — dono ko <span className="text-emerald-500 font-bold">+20 messages</span> milenge! 🎁
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3">
-            <span className="flex-1 text-center font-mono text-lg font-bold tracking-widest text-primary">
+          <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-purple-300 bg-purple-50 px-4 py-3 shadow-sm">
+            <span className="flex-1 text-center font-mono text-xl font-bold tracking-widest text-[#6C00FF]">
               {referralCode}
             </span>
             <button
               onClick={copy}
-              className="shrink-0 h-8 w-8 grid place-items-center rounded-lg border border-border hover:bg-secondary transition"
+              className="shrink-0 h-10 w-10 grid place-items-center rounded-xl bg-white border-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
             >
-              <Copy className="h-3.5 w-3.5" />
+              <Copy className="h-4 w-4" />
             </button>
           </div>
 
           {copied && (
-            <p className="text-center text-[12px] text-emerald-400">✓ Code copied!</p>
+            <p className="text-center text-xs font-bold text-emerald-600">✓ Code copied!</p>
           )}
 
           <a
             href={`https://wa.me/?text=${shareText}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#25D366] text-white text-[13px] font-medium hover:opacity-90 transition"
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-[#25D366] text-white text-sm font-bold shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all"
           >
             <Share2 className="h-4 w-4" />
             Share on WhatsApp
@@ -175,7 +167,7 @@ function LimitModal({
 
         <button
           onClick={onClose}
-          className="w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition"
+          className="w-full text-center text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-700 transition-colors pt-2"
         >
           Close
         </button>
@@ -183,8 +175,6 @@ function LimitModal({
     </div>
   );
 }
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export const AgentChat = ({
   active,
@@ -210,7 +200,6 @@ export const AgentChat = ({
   const [sendError, setSendError] = useState("");
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
-  // Daily limit state
   const [limitStatus, setLimitStatus] = useState<LimitStatusResponse | null>(null);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitResetTime, setLimitResetTime] = useState<Date | null>(null);
@@ -221,7 +210,6 @@ export const AgentChat = ({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs]);
 
-  // Load history
   useEffect(() => {
     if (!user || !isLive || historyLoaded) return;
     chatAPI
@@ -235,7 +223,6 @@ export const AgentChat = ({
       .catch(() => setHistoryLoaded(true));
   }, [user, isLive, agentName, historyLoaded]);
 
-  // Fetch daily limit status
   useEffect(() => {
     if (!user || !isLive) return;
     userAPI.getLimitStatus().then(setLimitStatus).catch(() => null);
@@ -270,7 +257,6 @@ export const AgentChat = ({
       const data = await chatAPI.sendMessage(agentName, text);
       setMsgs((m) => [...m, { from: "bot", text: data.reply }]);
 
-      // Update local limit counter
       if (limitStatus) {
         setLimitStatus((prev) =>
           prev
@@ -283,7 +269,6 @@ export const AgentChat = ({
         const resetTime = new Date(err.data.resetTime as string);
         setLimitResetTime(resetTime);
         setShowLimitModal(true);
-        // Remove the user message that was optimistically added
         setMsgs((m) => m.slice(0, -1));
         setInput(text);
       } else {
@@ -298,13 +283,12 @@ export const AgentChat = ({
 
   const history = chatHistory[a.name] ?? [];
 
-  // Progress bar
   const pctUsed = limitStatus && limitStatus.totalLimit > 0
     ? limitStatus.messagesUsed / limitStatus.totalLimit
     : 0;
   const pctLeft = 1 - pctUsed;
   const barColor = pctLeft > 0.5 ? "#10b981" : pctLeft > 0.25 ? "#f59e0b" : "#ef4444";
-  const textColor = pctLeft > 0.5 ? "text-emerald-400" : pctLeft > 0.25 ? "text-amber-400" : "text-red-400";
+  const textColor = pctLeft > 0.5 ? "text-emerald-600" : pctLeft > 0.25 ? "text-amber-600" : "text-red-600";
 
   return (
     <DashShell active={active} onNavigate={onNavigate} title={`${a.name} Chat`}>
@@ -316,51 +300,52 @@ export const AgentChat = ({
         />
       )}
 
-      <div className="flex h-[calc(100vh-7rem)] min-h-0">
+      <div className="flex h-[calc(100vh-4rem)] min-h-0 bg-slate-50">
         {/* Sidebar */}
-        <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border bg-sidebar/50">
-          <div className="p-3 border-b border-sidebar-border flex items-center gap-2">
+        <aside className="hidden lg:flex w-72 shrink-0 flex-col border-r-2 border-slate-100 bg-white z-10 shadow-sm">
+          <div className="p-4 border-b-2 border-slate-100 flex items-center gap-3">
             <button
               onClick={() => onNavigate("agent")}
-              className="h-8 w-8 grid place-items-center rounded-lg border border-border hover:bg-secondary transition shrink-0"
+              className="h-10 w-10 grid place-items-center rounded-xl border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors shrink-0"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
             <button
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] transition"
-              style={{ background: `${a.color}18`, border: `1px solid ${a.color}35`, color: a.color }}
+              className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
+              style={{ background: `${a.color}15`, border: `2px solid ${a.color}30`, color: a.color }}
             >
-              <Plus className="h-3.5 w-3.5" /> New chat
+              <Plus className="h-4 w-4" /> New Chat
             </button>
           </div>
 
-          <div className="flex-1 overflow-auto scrollbar-thin p-2 space-y-1">
-            <div className="label-xs text-muted-foreground px-2 py-1">RECENT</div>
+          <div className="flex-1 overflow-auto scrollbar-thin p-4 space-y-2">
+            <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-2 mb-2">RECENT</div>
             {history.map((t, i) => (
               <button
                 key={t}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-[13px] transition ${
-                  i === 0 ? "bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-sidebar-accent"
-                }`}
+                className={cn(
+                  "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all",
+                  i === 0 ? "bg-purple-50 text-purple-700" : "text-slate-600 hover:bg-slate-50"
+                )}
               >
                 {t}
               </button>
             ))}
           </div>
 
-          <div className="p-3 border-t border-border">
+          <div className="p-4 border-t-2 border-slate-100">
             <div
-              className="flex items-center gap-2.5 p-2.5 rounded-xl"
-              style={{ background: `${a.color}10`, border: `1px solid ${a.color}28` }}
+              className="flex items-center gap-3 p-4 rounded-2xl"
+              style={{ background: `${a.color}10`, border: `2px solid ${a.color}25` }}
             >
-              <div className="text-xl">{a.emoji}</div>
+              <div className="text-2xl">{a.emoji}</div>
               <div className="min-w-0">
-                <div className="text-[12px] font-medium">{a.name}</div>
-                <div className="text-[10px] text-muted-foreground truncate">{a.role}</div>
+                <div className="text-sm font-bold text-slate-900">{a.name}</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 truncate">{a.role}</div>
               </div>
               {!isLive && (
-                <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20 shrink-0">
-                  DEMO
+                <span className="ml-auto text-[9px] font-bold px-2 py-1 rounded-md bg-amber-100 text-amber-700 uppercase tracking-widest shrink-0">
+                  Demo
                 </span>
               )}
             </div>
@@ -368,57 +353,57 @@ export const AgentChat = ({
         </aside>
 
         {/* Main chat */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 bg-slate-50">
           {/* Header */}
-          <div className="h-14 border-b border-border px-4 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2.5">
+          <div className="h-20 border-b-2 border-slate-100 bg-white px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => onNavigate("agent")}
-                className="h-8 w-8 grid place-items-center rounded-lg border border-border hover:bg-secondary transition lg:hidden"
+                className="h-10 w-10 grid place-items-center rounded-xl border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors lg:hidden"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <div
-                className="h-8 w-8 rounded-lg grid place-items-center text-base"
-                style={{ background: `${a.color}22`, border: `1px solid ${a.color}40` }}
+                className="h-12 w-12 rounded-xl grid place-items-center text-xl shadow-sm"
+                style={{ background: `${a.color}15`, border: `2px solid ${a.color}30` }}
               >
                 {a.emoji}
               </div>
               <div>
-                <div className="text-[14px] font-medium leading-tight flex items-center gap-2">
+                <div className="text-lg font-bold text-slate-900 leading-tight flex items-center gap-3">
                   {a.name}
                   {!isLive && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20">
-                      DEMO MODE
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md bg-amber-100 text-amber-700">
+                      Demo Mode
                     </span>
                   )}
                 </div>
-                <div className="inline-flex items-center gap-1 label-xs" style={{ color: a.color }}>
-                  <span className="h-1.5 w-1.5 rounded-full pulse-dot" style={{ background: a.color }} />
-                  {a.role.toUpperCase()}
+                <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: a.color }}>
+                  <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: a.color }} />
+                  {a.role}
                 </div>
               </div>
             </div>
             <button
               onClick={() => onNavigate("connections")}
-              className="hidden sm:inline-flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-full border border-border hover:bg-secondary transition"
+              className="hidden sm:inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
             >
-              <Settings2 className="h-3.5 w-3.5" /> Settings
+              <Settings2 className="h-4 w-4" /> Settings
             </button>
           </div>
 
           {/* Daily limit bar */}
           {user && isLive && limitStatus && (
-            <div className="px-4 py-2 border-b border-border bg-background/60 shrink-0">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className={`text-[11px] font-medium ${textColor}`}>
-                  {limitStatus.messagesLeft} messages remaining today
+            <div className="px-6 py-3 border-b-2 border-slate-100 bg-white shrink-0 z-10">
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-xs font-bold uppercase tracking-widest ${textColor}`}>
+                  {limitStatus.messagesLeft} Messages Remaining Today
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs font-bold text-slate-400">
                   {limitStatus.messagesUsed} / {limitStatus.totalLimit}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-border overflow-hidden">
+              <div className="h-2 rounded-full bg-slate-100 overflow-hidden shadow-inner">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, pctUsed * 100)}%`, background: barColor }}
@@ -429,30 +414,30 @@ export const AgentChat = ({
 
           {/* Demo mode banner */}
           {!isLive && (
-            <div className="px-4 py-2 flex items-center gap-2 border-b border-border bg-amber-500/5 text-[12px] text-amber-400">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <div className="px-6 py-3 flex items-center gap-3 border-b-2 border-slate-100 bg-amber-50 text-xs font-bold text-amber-700 z-10">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               {a.name} AI is in training — showing demo conversations. Live AI launching soon!
             </div>
           )}
 
           {/* Messages */}
-          <div className="flex-1 overflow-auto scrollbar-thin p-4 sm:p-6 space-y-4">
+          <div className="flex-1 overflow-auto scrollbar-thin p-4 sm:p-8 space-y-6">
             {msgs.map((m, i) =>
               m.from === "user" ? (
-                <div key={i} className="flex justify-end fade-in">
-                  <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-primary text-primary-foreground px-4 py-2.5 text-[14px]">
+                <div key={i} className="flex justify-end animate-fade-in">
+                  <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-slate-900 text-white px-6 py-4 text-sm font-medium shadow-md">
                     {m.text}
                   </div>
                 </div>
               ) : (
-                <div key={i} className="flex gap-3 fade-in">
+                <div key={i} className="flex gap-4 animate-fade-in">
                   <div
-                    className="h-8 w-8 rounded-lg grid place-items-center text-sm shrink-0 mt-0.5"
-                    style={{ background: `${a.color}22`, border: `1px solid ${a.color}40` }}
+                    className="h-10 w-10 rounded-xl grid place-items-center text-base shrink-0 mt-1 shadow-sm"
+                    style={{ background: `${a.color}15`, border: `2px solid ${a.color}30` }}
                   >
                     {a.emoji}
                   </div>
-                  <div className="max-w-[80%] rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-2.5 text-[14px] whitespace-pre-line">
+                  <div className="max-w-[80%] rounded-2xl rounded-tl-sm border-2 border-slate-200 bg-white px-6 py-4 text-sm font-medium text-slate-700 whitespace-pre-line shadow-sm leading-relaxed">
                     {m.text}
                   </div>
                 </div>
@@ -460,17 +445,17 @@ export const AgentChat = ({
             )}
 
             {sending && (
-              <div className="flex gap-3 fade-in">
+              <div className="flex gap-4 animate-fade-in">
                 <div
-                  className="h-8 w-8 rounded-lg grid place-items-center text-sm shrink-0"
-                  style={{ background: `${a.color}22`, border: `1px solid ${a.color}40` }}
+                  className="h-10 w-10 rounded-xl grid place-items-center text-base shrink-0 shadow-sm"
+                  style={{ background: `${a.color}15`, border: `2px solid ${a.color}30` }}
                 >
                   {a.emoji}
                 </div>
-                <div className="rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-3 flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="rounded-2xl rounded-tl-sm border-2 border-slate-200 bg-white px-6 py-4 flex items-center gap-2 shadow-sm">
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
               </div>
             )}
@@ -479,20 +464,20 @@ export const AgentChat = ({
 
           {/* Error banner */}
           {sendError && (
-            <div className="px-4 py-2 flex items-center gap-2 border-t border-border bg-red-500/5 text-[12px] text-red-400">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <div className="px-6 py-3 flex items-center gap-3 border-t-2 border-slate-100 bg-red-50 text-xs font-bold text-red-600 z-10">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               {sendError}
-              <button onClick={() => setSendError("")} className="ml-auto text-[11px] underline">
+              <button onClick={() => setSendError("")} className="ml-auto text-[10px] uppercase tracking-widest underline">
                 Dismiss
               </button>
             </div>
           )}
 
           {/* Input */}
-          <div className="p-4 shrink-0">
-            <div className="flex items-end gap-2 rounded-2xl border border-border bg-card p-2">
-              <button className="h-8 w-8 grid place-items-center text-muted-foreground hover:text-foreground transition">
-                <Paperclip className="h-4 w-4" />
+          <div className="p-6 bg-white shrink-0">
+            <div className="flex items-end gap-3 rounded-3xl border-2 border-slate-200 bg-white p-2 shadow-sm focus-within:border-[#6C00FF] focus-within:shadow-md transition-all">
+              <button className="h-10 w-10 grid place-items-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors mb-1 ml-1">
+                <Paperclip className="h-5 w-5" />
               </button>
               <textarea
                 value={input}
@@ -504,25 +489,25 @@ export const AgentChat = ({
                   }
                 }}
                 rows={1}
-                placeholder={!user ? "Log in to chat with a live agent..." : `Ask ${a.name} anything...`}
-                className="flex-1 resize-none bg-transparent outline-none text-[14px] py-1.5 px-1 max-h-32"
+                placeholder={!user ? "LOG IN TO CHAT WITH A LIVE AGENT..." : `ASK ${a.name.toUpperCase()} ANYTHING...`}
+                className="flex-1 resize-none bg-transparent outline-none text-sm font-bold tracking-widest text-slate-900 py-3.5 px-2 max-h-32 placeholder:text-slate-300 placeholder:font-bold"
                 disabled={sending}
               />
-              <button className="h-8 w-8 grid place-items-center text-muted-foreground hover:text-foreground transition">
-                <Mic className="h-4 w-4" />
+              <button className="h-10 w-10 grid place-items-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors mb-1">
+                <Mic className="h-5 w-5" />
               </button>
               <button
                 onClick={send}
                 disabled={sending || !input.trim()}
-                className="h-8 w-8 grid place-items-center rounded-lg text-white transition hover:opacity-90 disabled:opacity-50"
+                className="h-12 w-12 grid place-items-center rounded-2xl text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-0.5 mr-0.5"
                 style={{ background: a.color }}
               >
-                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </button>
             </div>
             {!user && (
-              <p className="text-center text-[11px] text-muted-foreground mt-2">
-                <button onClick={() => onNavigate("landing")} className="text-primary hover:underline">
+              <p className="text-center text-xs font-bold text-slate-400 mt-4 uppercase tracking-widest">
+                <button onClick={() => onNavigate("landing")} className="text-[#6C00FF] hover:underline">
                   Log in
                 </button>
                 {" "}to unlock real AI responses from {a.name}
