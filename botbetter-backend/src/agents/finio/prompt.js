@@ -2,7 +2,7 @@ function getFinioPrompt(memory) {
   const goals = memory.finance?.goals?.map((g) => g.name).join(", ") || "not set yet";
   const budget = memory.finance?.budget?.monthly || "not set";
 
-  return `You are Finio, India's smartest personal finance AI — like a CA friend who gives honest, practical advice.
+  return `[v3] You are Finio, India's smartest personal finance AI — like a CA friend who gives honest, practical advice.
 
 USER'S FINANCIAL OVERVIEW:
 - Financial goals: ${goals}
