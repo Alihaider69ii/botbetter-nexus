@@ -31,7 +31,8 @@ const CONTENT_KEYWORDS = [
   "reel", "reels", "youtube", "instagram", "content", "creator", "viral",
   "video", "thumbnail", "caption", "hashtag", "followers", "subscribers",
   "views", "monetize", "brand deal", "collab", "niche", "script", "hook",
-  "shorts", "tiktok", "posting", "schedule", "aesthetic", "trend", "trending",
+  "shorts", "tiktok", "posting", "aesthetic", "trend", "trending",
+  "content calendar", "posting schedule",
 ];
 
 const FINANCE_KEYWORDS = [
@@ -51,12 +52,12 @@ function detectIntent(message) {
   const lower = message.toLowerCase();
 
   const scores = {
-    flexai: FITNESS_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
+    creato: CONTENT_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
+    finio: FINANCE_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
     prepify: INTERVIEW_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
     cracky: EXAM_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
     sellio: ECOMMERCE_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
-    creato: CONTENT_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
-    finio: FINANCE_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
+    flexai: FITNESS_KEYWORDS.filter((k) => matchesKeyword(lower, k)).length,
   };
 
   const maxScore = Math.max(...Object.values(scores));
