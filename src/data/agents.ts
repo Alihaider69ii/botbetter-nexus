@@ -15,4 +15,5 @@ export const agents: Agent[] = [
   { name: "Cracky", role: "Exam Cracker", emoji: "📚", color: "#F59E0B", bg: "#1A1200", desc: "NEET, JEE, UPSC, CA — personalized study plans in Hinglish" },
   { name: "Creato", role: "Content Creator", emoji: "🎬", color: "#D4537E", bg: "#1F0A14", desc: "Reel ideas, YouTube scripts, viral captions" },
   { name: "Finio", role: "Finance AI", emoji: "💰", color: "#1D9E75", bg: "#0A1F18", desc: "Budget, SIP, tax saving — Indian finance expert" },
+  { name: "FlexAI", role: "Fitness Coach", emoji: "💪", color: "#FF6B35", bg: "#1F0A00", desc: "Workout plans, Indian diet charts, weight loss/gain — your personal trainer" },
 ];

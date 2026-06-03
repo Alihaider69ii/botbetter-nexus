@@ -1,51 +1,77 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { agents } from "@/data/agents";
 import { ScreenKey } from "../TopNav";
 import { DashShell } from "../DashShell";
-import { Send, Settings2, Plus, MessageSquare, Mail, Calendar, Mic, Paperclip } from "lucide-react";
+import {
+  Send, Settings2, Plus, MessageSquare, Mail, Calendar,
+  Mic, Paperclip, Loader2, AlertCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { chatAPI, ApiError } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 
 type Msg =
   | { from: "user"; text: string }
-  | { from: "nexus"; text: string; routes?: string[] }
-  | { from: "agent"; agent: string; text: string };
+  | { from: "nexus"; text: string; routes?: string[] };
 
 const seed: Msg[] = [
-  { from: "user", text: "Aaj interview hai aur client ko email bhi bhejni hai" },
   {
     from: "nexus",
-    text: "Got it! Routing to Prepify for interview prep + using Gmail to draft your email...",
-    routes: ["Prepify", "Gmail"],
-  },
-  {
-    from: "agent",
-    agent: "Prepify",
-    text: "Mock interview ready — 5 questions for Senior PM role at Razorpay. Want to start?",
-  },
-  {
-    from: "agent",
-    agent: "Gmail",
-    text: "Drafted email to client@acme.com — Subject: 'Project update — milestone 2'. Review before send?",
+    text: "Hey! Main Nexus hoon ⚡ — aapka master AI agent. Koi bhi kaam batao — main sahi specialist ko route karunga aur kaam karwa ke dunga.\n\nExample:\n• \"10kg lose karna hai\" → FlexAI\n• \"TCS interview prep\" → Prepify\n• \"NEET physics\" → Cracky\n• \"SIP calculate karo\" → Finio",
   },
 ];
 
+const recentChats = ["Interview + email tasks", "Budget review June", "Reel ideas for Diwali"];
+
 export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigate: (s: ScreenKey) => void }) => {
   const nexus = agents[0];
+  const { user } = useAuth();
+
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>(seed);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
-  const send = () => {
-    if (!input.trim()) return;
-    setMsgs((m) => [
-      ...m,
-      { from: "user", text: input },
-      {
-        from: "nexus",
-        text: "On it. Analyzing your request and routing to the right specialist...",
-        routes: ["Buddy"],
-      },
-    ]);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
+
     setInput("");
+    setSendError("");
+    setMsgs((m) => [...m, { from: "user", text }]);
+    setSending(true);
+
+    if (!user) {
+      setMsgs((m) => [
+        ...m,
+        { from: "nexus", text: "Please log in to use Nexus. Tap the login button to get started! 👇" },
+      ]);
+      setSending(false);
+      return;
+    }
+
+    try {
+      const data = await chatAPI.sendMessage("nexus", text);
+      setMsgs((m) => [...m, { from: "nexus", text: data.reply }]);
+    } catch (err) {
+      if (err instanceof ApiError && err.data.limitReached) {
+        setMsgs((m) => m.slice(0, -1));
+        setInput(text);
+        setSendError("Daily message limit reached. Come back tomorrow or refer a friend for +20 messages!");
+      } else {
+        const msg = err instanceof Error ? err.message : "Failed to get response";
+        setSendError(msg);
+        setMsgs((m) => [...m, { from: "nexus", text: "Sorry, something went wrong. Please try again! 🙏" }]);
+      }
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -54,28 +80,22 @@ export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigat
         {/* Conversation history */}
         <aside className="hidden lg:flex w-72 shrink-0 flex-col border-r-2 border-slate-100 bg-white shadow-sm z-10">
           <div className="p-4 border-b-2 border-slate-100">
-            <button className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold shadow-md hover:bg-slate-800 hover:-translate-y-0.5 transition-all">
+            <button
+              onClick={() => setMsgs(seed)}
+              className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold shadow-md hover:bg-slate-800 hover:-translate-y-0.5 transition-all"
+            >
               <Plus className="h-4 w-4" /> New Chat
             </button>
           </div>
           <div className="flex-1 overflow-auto scrollbar-thin p-4 space-y-2">
-            <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-2 mb-2">TODAY</div>
-            {["Interview + email tasks", "Plan launch week", "Budget review June"].map((t, i) => (
+            <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-2 mb-2">RECENT</div>
+            {recentChats.map((t, i) => (
               <button
                 key={t}
                 className={cn(
                   "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all",
                   i === 0 ? "bg-purple-50 text-purple-700" : "text-slate-600 hover:bg-slate-50"
                 )}
-              >
-                {t}
-              </button>
-            ))}
-            <div className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-2 mb-2 mt-6">YESTERDAY</div>
-            {["Reel ideas for Diwali", "Tax saving Q2", "Customer reply drafts"].map((t) => (
-              <button
-                key={t}
-                className="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all"
               >
                 {t}
               </button>
@@ -97,7 +117,7 @@ export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigat
               <div>
                 <div className="text-lg font-bold text-slate-900 leading-tight">Nexus — Master Agent</div>
                 <div className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-emerald-600 uppercase mt-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Routing Active
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
                 </div>
               </div>
             </div>
@@ -115,87 +135,88 @@ export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigat
               if (m.from === "user") {
                 return (
                   <div key={i} className="flex justify-end animate-fade-in">
-                    <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC] text-white px-6 py-4 text-sm font-medium shadow-md">
+                    <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC] text-white px-6 py-4 text-sm font-medium shadow-md whitespace-pre-line">
                       {m.text}
                     </div>
                   </div>
                 );
               }
-              if (m.from === "nexus") {
-                return (
-                  <div key={i} className="flex gap-4 animate-fade-in">
-                    <div
-                      className="h-10 w-10 rounded-xl grid place-items-center text-base shrink-0 shadow-sm"
-                      style={{ background: `${nexus.color}15`, border: `2px solid ${nexus.color}30` }}
-                    >
-                      {nexus.emoji}
-                    </div>
-                    <div className="max-w-[80%] space-y-3">
-                      <div className="rounded-2xl rounded-tl-sm border-2 border-slate-200 bg-white px-6 py-4 text-sm font-medium text-slate-700 shadow-sm">
-                        {m.text}
-                      </div>
-                      {m.routes && (
-                        <div className="flex flex-wrap gap-2">
-                          {m.routes.map((r) => (
-                            <span
-                              key={r}
-                              className="text-xs font-bold px-3 py-1.5 rounded-lg border-2 border-purple-200 bg-purple-50 text-purple-700 uppercase tracking-widest"
-                            >
-                              → {r}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              }
-              const a = agents.find((x) => x.name === m.agent);
-              const isApp = !a;
-              const color = a?.color ?? "#7C6BFF";
               return (
                 <div key={i} className="flex gap-4 animate-fade-in">
                   <div
-                    className="h-10 w-10 rounded-xl grid place-items-center text-base shrink-0 shadow-sm"
-                    style={{ background: `${color}15`, border: `2px solid ${color}30` }}
+                    className="h-10 w-10 rounded-xl grid place-items-center text-base shrink-0 shadow-sm mt-1"
+                    style={{ background: `${nexus.color}15`, border: `2px solid ${nexus.color}30` }}
                   >
-                    {a?.emoji ?? (m.agent === "Gmail" ? <Mail className="h-5 w-5 text-[#EA4335]" /> : <MessageSquare className="h-5 w-5 text-[#25D366]" />)}
+                    {nexus.emoji}
                   </div>
-                  <div className="max-w-[80%] rounded-2xl rounded-tl-sm border-2 border-slate-200 bg-white overflow-hidden shadow-sm">
-                    <div className="flex items-center gap-2 px-6 pt-4">
-                      <span className="text-[10px] font-bold px-2 py-1 rounded-md border-2 uppercase tracking-widest" style={{ borderColor: `${color}40`, color }}>
-                        {isApp ? "APP" : "AGENT"} · {m.agent}
-                      </span>
+                  <div className="max-w-[80%] space-y-3">
+                    <div className="rounded-2xl rounded-tl-sm border-2 border-slate-200 bg-white px-6 py-4 text-sm font-medium text-slate-700 shadow-sm whitespace-pre-line leading-relaxed">
+                      {m.text}
                     </div>
-                    <div className="px-6 pb-4 pt-3 text-sm font-medium text-slate-700">{m.text}</div>
-                    {!isApp && (
-                      <div className="px-6 pb-4 flex gap-3">
-                        <button className="text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors">
-                          Continue
-                        </button>
-                        <button className="text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">Skip</button>
+                    {m.routes && (
+                      <div className="flex flex-wrap gap-2">
+                        {m.routes.map((r) => (
+                          <span
+                            key={r}
+                            className="text-xs font-bold px-3 py-1.5 rounded-lg border-2 border-purple-200 bg-purple-50 text-purple-700 uppercase tracking-widest"
+                          >
+                            → {r}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>
                 </div>
               );
             })}
+
+            {sending && (
+              <div className="flex gap-4 animate-fade-in">
+                <div
+                  className="h-10 w-10 rounded-xl grid place-items-center text-base shrink-0 shadow-sm"
+                  style={{ background: `${nexus.color}15`, border: `2px solid ${nexus.color}30` }}
+                >
+                  {nexus.emoji}
+                </div>
+                <div className="rounded-2xl rounded-tl-sm border-2 border-slate-200 bg-white px-6 py-4 flex items-center gap-2 shadow-sm">
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
           </div>
+
+          {/* Error banner */}
+          {sendError && (
+            <div className="px-6 py-3 flex items-center gap-3 border-t-2 border-slate-100 bg-red-50 text-xs font-bold text-red-600 z-10">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {sendError}
+              <button onClick={() => setSendError("")} className="ml-auto text-[10px] uppercase tracking-widest underline">
+                Dismiss
+              </button>
+            </div>
+          )}
 
           {/* Active tools */}
           <div className="px-6 py-4 flex flex-wrap items-center gap-3 border-t-2 border-slate-100 bg-white shrink-0 z-10">
-            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">ACTIVE TOOLS</span>
+            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">ROUTES TO</span>
             {[
-              { name: "WhatsApp", icon: MessageSquare, color: "#25D366" },
-              { name: "Gmail", icon: Mail, color: "#EA4335" },
-              { name: "Calendar", icon: Calendar, color: "#1967D2" },
+              { name: "FlexAI", color: "#FF6B35" },
+              { name: "Finio", color: "#1D9E75" },
+              { name: "Prepify", color: "#1D9E75" },
+              { name: "Cracky", color: "#F59E0B" },
+              { name: "Creato", color: "#D4537E" },
+              { name: "Sellio", color: "#D85A30" },
+              { name: "Buddy", color: "#7C6BFF" },
             ].map((t) => (
               <span
                 key={t.name}
                 className="inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-full border-2 uppercase tracking-widest"
                 style={{ borderColor: `${t.color}30`, background: `${t.color}10`, color: t.color }}
               >
-                <t.icon className="h-3 w-3" /> {t.name}
+                {t.name}
               </span>
             ))}
           </div>
@@ -216,19 +237,29 @@ export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigat
                   }
                 }}
                 rows={1}
-                placeholder="ASK NEXUS TO DO ANYTHING..."
+                placeholder={!user ? "LOG IN TO USE NEXUS..." : "ASK NEXUS TO DO ANYTHING..."}
                 className="flex-1 resize-none bg-transparent outline-none text-sm font-bold tracking-widest text-slate-900 py-3.5 px-2 max-h-32 placeholder:text-slate-300 placeholder:font-bold"
+                disabled={sending}
               />
               <button className="h-10 w-10 grid place-items-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors mb-1">
                 <Mic className="h-5 w-5" />
               </button>
               <button
                 onClick={send}
-                className="h-12 w-12 grid place-items-center rounded-2xl bg-gradient-to-br from-[#6C00FF] to-[#FF3CAC] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all mb-0.5 mr-0.5"
+                disabled={sending || !input.trim()}
+                className="h-12 w-12 grid place-items-center rounded-2xl bg-gradient-to-br from-[#6C00FF] to-[#FF3CAC] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-0.5 mr-0.5"
               >
-                <Send className="h-5 w-5" />
+                {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </button>
             </div>
+            {!user && (
+              <p className="text-center text-xs font-bold text-slate-400 mt-4 uppercase tracking-widest">
+                <button onClick={() => onNavigate("landing")} className="text-[#6C00FF] hover:underline">
+                  Log in
+                </button>
+                {" "}to unlock Nexus — your master AI agent
+              </p>
+            )}
           </div>
         </div>
       </div>
