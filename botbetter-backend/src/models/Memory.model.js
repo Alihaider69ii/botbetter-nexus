@@ -63,6 +63,64 @@ const memorySchema = new mongoose.Schema({
     }],
   },
 
+  // Finio data
+  finance: {
+    goals: [{
+      name: String,
+      targetAmount: Number,
+      savedAmount: { type: Number, default: 0 },
+      deadline: Date,
+      createdAt: { type: Date, default: Date.now },
+    }],
+    budget: {
+      monthly: Number,
+      categories: mongoose.Schema.Types.Mixed,
+    },
+    investments: [{
+      type: String,
+      amount: Number,
+      platform: String,
+      createdAt: { type: Date, default: Date.now },
+    }],
+  },
+
+  // Creato data
+  content: {
+    platform: String,
+    niche: String,
+    savedIdeas: [{
+      title: String,
+      type: String,
+      createdAt: { type: Date, default: Date.now },
+    }],
+    contentCalendar: [{
+      date: Date,
+      topic: String,
+      platform: String,
+      status: { type: String, default: "planned" },
+    }],
+  },
+
+  // Buddy data
+  personal: {
+    tasks: [{
+      title: String,
+      done: { type: Boolean, default: false },
+      dueDate: Date,
+      createdAt: { type: Date, default: Date.now },
+    }],
+    notes: [{
+      title: String,
+      content: String,
+      createdAt: { type: Date, default: Date.now },
+    }],
+    reminders: [{
+      text: String,
+      time: Date,
+      done: { type: Boolean, default: false },
+    }],
+  },
+
   // Chat history — all agents
   chatHistory: [{
     agent: {
