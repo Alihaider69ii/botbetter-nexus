@@ -1,11 +1,16 @@
-const { Tool } = require("langchain/tools");
 const { getMemory } = require("../../models/Memory.model");
 
 function getFinioTools(userId) {
   return [
-    new Tool({
+    {
       name: "sip_calculator",
-      description: 'Calculate SIP compound returns. ALWAYS use this tool for any SIP/mutual fund calculation. Input: JSON like {"monthlyAmount": 5000, "annualReturn": 12, "years": 10}',
+      description: "Calculate SIP compound returns. ALWAYS call this tool for any SIP or mutual fund investment question. Never calculate manually.",
+      // Typed param schema — aiCaller converts this to provider-native function declarations
+      params: {
+        monthlyAmount: { type: "number", description: "Monthly SIP investment amount in INR (e.g. 5000)" },
+        annualReturn:  { type: "number", description: "Expected annual return in percent (use 12 as default for equity funds)" },
+        years:         { type: "number", description: "Investment duration in years (e.g. 10)" },
+      },
       func: async (input) => {
         try {
           const { monthlyAmount, annualReturn, years } = JSON.parse(input);
@@ -19,17 +24,22 @@ Monthly SIP: ₹${monthlyAmount.toLocaleString("en-IN")}
 Duration: ${years} years (${n} months)
 Expected return: ${annualReturn}% p.a.
 Total invested: ₹${Math.round(invested).toLocaleString("en-IN")}
-Estimated returns: ₹${Math.round(gains).toLocaleString("en-IN")}
-Future value: ₹${Math.round(futureValue).toLocaleString("en-IN")} 🎯`;
+Estimated gains: ₹${Math.round(gains).toLocaleString("en-IN")}
+Future value: ₹${Math.round(futureValue).toLocaleString("en-IN")} (~₹${(Math.round(futureValue) / 100000).toFixed(2)} lakhs) 🎯`;
         } catch {
           return "Invalid input. Provide monthlyAmount, annualReturn, and years.";
         }
       },
-    }),
+    },
 
-    new Tool({
+    {
       name: "emi_calculator",
-      description: 'Calculate loan EMI. ALWAYS use this tool for any loan/EMI calculation. Input: JSON like {"principal": 500000, "annualRate": 8.5, "tenureMonths": 60}',
+      description: "Calculate loan EMI. ALWAYS call this tool for any loan, home loan, car loan, or EMI calculation. Never calculate manually.",
+      params: {
+        principal:    { type: "number", description: "Loan principal amount in INR (e.g. 500000)" },
+        annualRate:   { type: "number", description: "Annual interest rate in percent (e.g. 8.5)" },
+        tenureMonths: { type: "number", description: "Loan tenure in months (e.g. 60 for 5 years)" },
+      },
       func: async (input) => {
         try {
           const { principal, annualRate, tenureMonths } = JSON.parse(input);
@@ -40,7 +50,7 @@ Future value: ₹${Math.round(futureValue).toLocaleString("en-IN")} 🎯`;
           return `EMI Calculator Results:
 Loan amount: ₹${principal.toLocaleString("en-IN")}
 Interest rate: ${annualRate}% p.a.
-Tenure: ${tenureMonths} months (${Math.round(tenureMonths / 12 * 10) / 10} years)
+Tenure: ${tenureMonths} months (${(tenureMonths / 12).toFixed(1)} years)
 Monthly EMI: ₹${Math.round(emi).toLocaleString("en-IN")}
 Total interest: ₹${Math.round(totalInterest).toLocaleString("en-IN")}
 Total payment: ₹${Math.round(totalPayment).toLocaleString("en-IN")}`;
@@ -48,11 +58,11 @@ Total payment: ₹${Math.round(totalPayment).toLocaleString("en-IN")}`;
           return "Invalid input. Provide principal, annualRate, and tenureMonths.";
         }
       },
-    }),
+    },
 
-    new Tool({
+    {
       name: "save_financial_goal",
-      description: "Save a financial goal. Input: JSON with name, targetAmount, and optional deadline.",
+      description: 'Save a financial goal. Input: JSON like {"name": "Car", "targetAmount": 500000, "deadline": "2027-01-01"}',
       func: async (input) => {
         try {
           const { name, targetAmount, deadline } = JSON.parse(input);
@@ -66,9 +76,9 @@ Total payment: ₹${Math.round(totalPayment).toLocaleString("en-IN")}`;
           return "Could not save goal.";
         }
       },
-    }),
+    },
 
-    new Tool({
+    {
       name: "get_financial_goals",
       description: "Get all saved financial goals. Use when user asks about their goals.",
       func: async () => {
@@ -79,15 +89,15 @@ Total payment: ₹${Math.round(totalPayment).toLocaleString("en-IN")}`;
           .map((g, i) => `${i + 1}. ${g.name} — Target: ₹${g.targetAmount?.toLocaleString("en-IN") || "N/A"}`)
           .join("\n");
       },
-    }),
+    },
 
-    new Tool({
+    {
       name: "web_search",
-      description: "Search for latest finance information, fund performance, or market news. Input: query.",
+      description: "Search for latest finance information, fund performance, or market news. Input: search query string.",
       func: async (query) => {
-        return `Searching for "${query}" — Based on my knowledge, I can provide the latest information on this topic. Please ask directly!`;
+        return `Searching for "${query}" — I can share insights from my knowledge on this topic. Please ask directly!`;
       },
-    }),
+    },
   ];
 }
 

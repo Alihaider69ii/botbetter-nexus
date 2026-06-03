@@ -4,7 +4,11 @@ const ApiUsage = require("../models/ApiUsage.model");
 
 // ─── Tool helpers ─────────────────────────────────────────────────────────────
 
-// Execute a named tool — handles both string input and object args from AI
+// Execute a named tool.
+// toolArgs may be:
+//   { input: "<json string>" }  — single-string-param style
+//   { key1: val, key2: val }    — native typed params (if tool has .params schema)
+//   "<json string>"             — raw string
 async function executeTool(tools, toolName, toolArgs) {
   const tool = tools.find((t) => t.name === toolName);
   if (!tool) return `Tool "${toolName}" not found`;
@@ -13,10 +17,9 @@ async function executeTool(tools, toolName, toolArgs) {
     if (typeof toolArgs === "string") {
       input = toolArgs;
     } else if (toolArgs && typeof toolArgs.input === "string") {
-      // AI passed { input: "<json string>" }
       input = toolArgs.input;
     } else {
-      // AI passed named args directly — stringify so func can JSON.parse
+      // Native typed args → stringify so func can JSON.parse
       input = JSON.stringify(toolArgs);
     }
     const result = await tool.func(input);
@@ -26,27 +29,25 @@ async function executeTool(tools, toolName, toolArgs) {
   }
 }
 
-// Convert tool array to Gemini function declarations
-function toGeminiFunctions(tools) {
-  return tools.map((tool) => ({
-    name: tool.name,
-    description: tool.description,
-    parameters: {
-      type: "OBJECT",
-      properties: {
-        input: {
-          type: "STRING",
-          description: "JSON string with required parameters (see tool description for exact keys).",
+// Build OpenAI-compatible function definition for a tool.
+// If tool.params is defined, use typed named params (more reliable for smaller models).
+// Otherwise fall back to a single opaque "input" string param.
+function toOpenAIFunction(tool) {
+  if (tool.params) {
+    return {
+      type: "function",
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: {
+          type: "object",
+          properties: tool.params,
+          required: Object.keys(tool.params),
         },
       },
-      required: ["input"],
-    },
-  }));
-}
-
-// Convert tool array to OpenAI-compatible function format (Groq / Mistral / DeepSeek)
-function toOpenAIFunctions(tools) {
-  return tools.map((tool) => ({
+    };
+  }
+  return {
     type: "function",
     function: {
       name: tool.name,
@@ -56,13 +57,49 @@ function toOpenAIFunctions(tools) {
         properties: {
           input: {
             type: "string",
-            description: "JSON string with required parameters (see tool description for exact keys).",
+            description: "JSON string input — see tool description for required keys.",
           },
         },
         required: ["input"],
       },
     },
-  }));
+  };
+}
+
+// Build Gemini function declaration for a tool.
+function toGeminiDeclaration(tool) {
+  if (tool.params) {
+    const properties = {};
+    for (const [key, val] of Object.entries(tool.params)) {
+      properties[key] = {
+        type: val.type === "number" ? "NUMBER" : "STRING",
+        description: val.description,
+      };
+    }
+    return {
+      name: tool.name,
+      description: tool.description,
+      parameters: {
+        type: "OBJECT",
+        properties,
+        required: Object.keys(tool.params),
+      },
+    };
+  }
+  return {
+    name: tool.name,
+    description: tool.description,
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        input: {
+          type: "STRING",
+          description: "JSON string — see tool description for required keys.",
+        },
+      },
+      required: ["input"],
+    },
+  };
 }
 
 // ─── Gemini ───────────────────────────────────────────────────────────────────
@@ -70,17 +107,13 @@ function toOpenAIFunctions(tools) {
 async function callGemini(provider, messages, systemPrompt, tools = []) {
   const genAI = new GoogleGenerativeAI(provider.apiKey());
 
-  const modelConfig = {
-    model: provider.model,
-    systemInstruction: systemPrompt,
-  };
+  const modelConfig = { model: provider.model, systemInstruction: systemPrompt };
   if (tools.length > 0) {
-    modelConfig.tools = [{ functionDeclarations: toGeminiFunctions(tools) }];
+    modelConfig.tools = [{ functionDeclarations: tools.map(toGeminiDeclaration) }];
   }
 
   const model = genAI.getGenerativeModel(modelConfig);
 
-  // Gemini requires alternating user/model turns; last message must be from user
   const history = messages.slice(0, -1).map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
@@ -104,7 +137,7 @@ async function callGemini(provider, messages, systemPrompt, tools = []) {
       const { name, args } = part.functionCall;
       console.log(`[Tool/Gemini] ${name}(${JSON.stringify(args).slice(0, 80)})`);
       const toolResult = await executeTool(tools, name, args);
-      console.log(`[Tool/Gemini] ${name} → ${toolResult.slice(0, 100)}`);
+      console.log(`[Tool/Gemini] → ${toolResult.slice(0, 100)}`);
       toolResponses.push({ functionResponse: { name, response: { result: toolResult } } });
     }
 
@@ -120,7 +153,7 @@ async function callGemini(provider, messages, systemPrompt, tools = []) {
 
 async function callOpenAICompat(baseURL, provider, messages, systemPrompt, tools = []) {
   let currentMessages = [{ role: "system", content: systemPrompt }, ...messages];
-  const openAITools = tools.length > 0 ? toOpenAIFunctions(tools) : undefined;
+  const openAITools = tools.length > 0 ? tools.map(toOpenAIFunction) : undefined;
   let totalTokens = 0;
 
   for (let i = 0; i < 5; i++) {
@@ -153,7 +186,7 @@ async function callOpenAICompat(baseURL, provider, messages, systemPrompt, tools
       return { reply: assistantMsg.content, tokensUsed: totalTokens };
     }
 
-    // Execute each tool call and collect results
+    // Execute each tool call then loop for final answer
     currentMessages.push(assistantMsg);
 
     for (const toolCall of assistantMsg.tool_calls) {
@@ -167,7 +200,7 @@ async function callOpenAICompat(baseURL, provider, messages, systemPrompt, tools
 
       console.log(`[Tool/${provider.id}] ${toolName}(${JSON.stringify(toolArgs).slice(0, 80)})`);
       const toolResult = await executeTool(tools, toolName, toolArgs);
-      console.log(`[Tool/${provider.id}] ${toolName} → ${toolResult.slice(0, 100)}`);
+      console.log(`[Tool/${provider.id}] → ${toolResult.slice(0, 100)}`);
 
       currentMessages.push({
         role: "tool",
@@ -216,10 +249,9 @@ async function callAI(agentName, messages, systemPrompt, tools = []) {
 
   for (const provider of providers) {
     try {
-      console.log(`[AI] ${agentName} -> trying ${provider.id} (${provider.model})`);
+      console.log(`[AI] ${agentName} -> ${provider.id} (${provider.model})`);
       const result = await callProvider(provider, messages, systemPrompt, tools);
 
-      // Track usage asynchronously — don't block the response
       ApiUsage.incrementUsage(provider.id, agentName, result.tokensUsed).catch((e) =>
         console.error(`[AI] Usage tracking failed:`, e.message)
       );
@@ -228,7 +260,6 @@ async function callAI(agentName, messages, systemPrompt, tools = []) {
       return { reply: result.reply, tokensUsed: result.tokensUsed, provider: provider.id };
     } catch (e) {
       console.error(`[AI] ${provider.id} failed for ${agentName}: ${e.message}`);
-      // Try next provider
     }
   }
 
