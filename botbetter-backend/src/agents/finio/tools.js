@@ -5,7 +5,7 @@ function getFinioTools(userId) {
   return [
     new Tool({
       name: "sip_calculator",
-      description: "Calculate SIP returns. Input: JSON with monthlyAmount, annualReturn (%), and years.",
+      description: 'Calculate SIP compound returns. ALWAYS use this tool for any SIP/mutual fund calculation. Input: JSON like {"monthlyAmount": 5000, "annualReturn": 12, "years": 10}',
       func: async (input) => {
         try {
           const { monthlyAmount, annualReturn, years } = JSON.parse(input);
@@ -29,7 +29,7 @@ Future value: ₹${Math.round(futureValue).toLocaleString("en-IN")} 🎯`;
 
     new Tool({
       name: "emi_calculator",
-      description: "Calculate loan EMI. Input: JSON with principal, annualRate (%), and tenureMonths.",
+      description: 'Calculate loan EMI. ALWAYS use this tool for any loan/EMI calculation. Input: JSON like {"principal": 500000, "annualRate": 8.5, "tenureMonths": 60}',
       func: async (input) => {
         try {
           const { principal, annualRate, tenureMonths } = JSON.parse(input);
