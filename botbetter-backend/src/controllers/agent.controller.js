@@ -2,6 +2,12 @@ const { getMemory } = require("../models/Memory.model");
 const User = require("../models/User.model");
 const { runSellio } = require("../agents/sellio");
 const { runCracky } = require("../agents/cracky");
+const { runBuddy } = require("../agents/buddy");
+const { runFinio } = require("../agents/finio");
+const { runPrepify } = require("../agents/prepify");
+const { runFlexAI } = require("../agents/flexai");
+const { runCreato } = require("../agents/creato");
+const { runNexus } = require("../agents/nexus");
 
 const PLAN_LIMITS = {
   free: 100,
@@ -85,6 +91,24 @@ const chat = async (req, res, next) => {
         break;
       case "cracky":
         reply = await runCracky(userId, message);
+        break;
+      case "buddy":
+        reply = await runBuddy(userId, message);
+        break;
+      case "finio":
+        reply = await runFinio(userId, message);
+        break;
+      case "prepify":
+        reply = await runPrepify(userId, message);
+        break;
+      case "flexai":
+        reply = await runFlexAI(userId, message);
+        break;
+      case "creato":
+        reply = await runCreato(userId, message);
+        break;
+      case "nexus":
+        reply = await runNexus(userId, message);
         break;
       default:
         return res.status(400).json({ success: false, message: `Agent "${agentName}" not found` });
