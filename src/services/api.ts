@@ -35,7 +35,8 @@ async function request<T = unknown>(path: string, options: RequestInit = {}): Pr
   }
 
   if (!res.ok) {
-    throw new ApiError(data.message ?? `Request failed (${res.status})`, res.status, data);
+    const msg = typeof data.message === "string" ? data.message : `Request failed (${res.status})`;
+    throw new ApiError(msg, res.status, data);
   }
 
   return data as T;
@@ -191,7 +192,8 @@ export const voiceAPI = {
     }
 
     if (!res.ok) {
-      throw new ApiError(data.message ?? `Request failed (${res.status})`, res.status, data);
+      const msg = typeof data.message === "string" ? data.message : `Request failed (${res.status})`;
+      throw new ApiError(msg, res.status, data);
     }
 
     return data as VoiceChatResponse;
