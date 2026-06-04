@@ -68,7 +68,7 @@ async function textToSpeech(text, language = DEFAULT_LANGUAGE) {
     body: JSON.stringify({
       inputs: [text],
       target_language_code: language,
-      speaker: "meera",
+      speaker: "anushka",
       model: "bulbul:v1",
     }),
   });
