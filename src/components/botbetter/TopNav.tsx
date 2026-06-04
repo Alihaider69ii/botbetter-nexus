@@ -1,11 +1,12 @@
-import { Moon, Sun, Sparkles } from "lucide-react";
+import { Moon, Sun, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
-import { cn } from "@/lib/utils";
+import { useVoiceMode } from "@/context/VoiceModeContext";
 
 export type ScreenKey = "landing" | "dashboard" | "chat" | "agent" | "agent-chat" | "connections" | "create";
 
 export const TopNav = ({ active, onChange }: { active: ScreenKey; onChange: (s: ScreenKey) => void }) => {
   const { theme, toggle } = useTheme();
+  const { voiceMode, toggleVoiceMode } = useVoiceMode();
   
   return (
     <div className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 text-slate-900 shadow-sm backdrop-blur-md">
@@ -21,6 +22,18 @@ export const TopNav = ({ active, onChange }: { active: ScreenKey; onChange: (s: 
         </div>
 
         <div className="flex items-center gap-4">
+          <button
+            onClick={toggleVoiceMode}
+            className={`grid h-10 w-10 place-items-center rounded-full border transition ${
+              voiceMode
+                ? "border-red-200 bg-red-50 text-red-600 shadow-sm"
+                : "border-slate-200 bg-slate-50 text-slate-600 hover:border-purple-300 hover:text-purple-600 hover:bg-purple-50"
+            }`}
+            aria-label={voiceMode ? "Turn voice mode off" : "Turn voice mode on"}
+            title={voiceMode ? "Voice mode on" : "Voice mode off"}
+          >
+            {voiceMode ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+          </button>
           <button
             onClick={toggle}
             className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition hover:border-purple-300 hover:text-purple-600 hover:bg-purple-50"

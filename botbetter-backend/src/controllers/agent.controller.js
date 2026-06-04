@@ -1,6 +1,7 @@
 const { getMemory } = require("../models/Memory.model");
 const User = require("../models/User.model");
 const { translateText } = require("../utils/translator");
+const { speechToText, textToSpeech } = require("../utils/sarvam");
 const { runSellio } = require("../agents/sellio");
 const { runCracky } = require("../agents/cracky");
 const { runBuddy } = require("../agents/buddy");
@@ -52,6 +53,29 @@ async function checkDailyLimit(userId) {
   };
 }
 
+async function runAgent(agentName, userId, message) {
+  switch (agentName) {
+    case "sellio":
+      return runSellio(userId, message);
+    case "cracky":
+      return runCracky(userId, message);
+    case "buddy":
+      return runBuddy(userId, message);
+    case "finio":
+      return runFinio(userId, message);
+    case "prepify":
+      return runPrepify(userId, message);
+    case "flexai":
+      return runFlexAI(userId, message);
+    case "creato":
+      return runCreato(userId, message);
+    case "nexus":
+      return runNexus(userId, message);
+    default:
+      return null;
+  }
+}
+
 // @route POST /api/chat/:agentName
 const chat = async (req, res, next) => {
   try {
@@ -85,34 +109,9 @@ const chat = async (req, res, next) => {
       });
     }
 
-    let reply;
-    switch (agentName) {
-      case "sellio":
-        reply = await runSellio(userId, message);
-        break;
-      case "cracky":
-        reply = await runCracky(userId, message);
-        break;
-      case "buddy":
-        reply = await runBuddy(userId, message);
-        break;
-      case "finio":
-        reply = await runFinio(userId, message);
-        break;
-      case "prepify":
-        reply = await runPrepify(userId, message);
-        break;
-      case "flexai":
-        reply = await runFlexAI(userId, message);
-        break;
-      case "creato":
-        reply = await runCreato(userId, message);
-        break;
-      case "nexus":
-        reply = await runNexus(userId, message);
-        break;
-      default:
-        return res.status(400).json({ success: false, message: `Agent "${agentName}" not found` });
+    let reply = await runAgent(agentName, userId, message);
+    if (!reply) {
+      return res.status(400).json({ success: false, message: `Agent "${agentName}" not found` });
     }
 
     // Translate if user's preferred language is not English
@@ -133,6 +132,73 @@ const chat = async (req, res, next) => {
     res.status(200).json({
       success: true,
       agent: agentName,
+      reply,
+      messagesLeft: limitStatus.messagesLeft - 1,
+      resetTime: limitStatus.resetTime,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @route POST /api/voice/chat
+const voiceChat = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const language = req.body.language || req.user.language || "en-IN";
+
+    if (!req.file?.buffer) {
+      return res.status(400).json({ success: false, message: "Audio file is required" });
+    }
+
+    const planLimit = PLAN_LIMITS[req.user.plan];
+    if (req.user.messagesCount >= planLimit) {
+      return res.status(403).json({
+        success: false,
+        message: `Message limit reached for ${req.user.plan} plan. Please upgrade!`,
+        upgrade: true,
+      });
+    }
+
+    const limitStatus = await checkDailyLimit(userId);
+    if (!limitStatus.canSend) {
+      return res.status(429).json({
+        success: false,
+        limitReached: true,
+        message: "Daily message limit reached. Come back tomorrow!",
+        messagesLeft: 0,
+        resetTime: limitStatus.resetTime,
+      });
+    }
+
+    const audioBlob = new Blob([req.file.buffer], {
+      type: req.file.mimetype || "audio/webm",
+    });
+    const transcript = (await speechToText(audioBlob, language)).trim();
+
+    if (!transcript) {
+      return res.status(400).json({ success: false, message: "Could not transcribe audio" });
+    }
+
+    let reply = await runNexus(userId, transcript);
+    if (language !== "en-IN" && reply) {
+      try {
+        reply = await translateText(reply, language);
+      } catch (e) {
+        console.error("Voice translation error (returning English):", e.message);
+      }
+    }
+
+    const audioBase64 = await textToSpeech(reply, language);
+
+    await User.findByIdAndUpdate(userId, {
+      $inc: { messagesCount: 1, tokensUsed: 100, dailyMessageCount: 1 },
+    });
+
+    res.status(200).json({
+      success: true,
+      audioBase64,
+      transcript,
       reply,
       messagesLeft: limitStatus.messagesLeft - 1,
       resetTime: limitStatus.resetTime,
@@ -179,4 +245,4 @@ const getStats = async (req, res, next) => {
   }
 };
 
-module.exports = { chat, getHistory, getStats };
+module.exports = { chat, voiceChat, getHistory, getStats };

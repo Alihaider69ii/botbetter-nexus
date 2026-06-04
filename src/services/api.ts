@@ -91,6 +91,15 @@ export interface ChatResponse {
   resetTime?: string;
 }
 
+export interface VoiceChatResponse {
+  success: boolean;
+  audioBase64: string;
+  transcript: string;
+  reply: string;
+  messagesLeft: number | string;
+  resetTime?: string;
+}
+
 export interface HistoryResponse {
   success: boolean;
   agent: string;
@@ -157,6 +166,36 @@ export const chatAPI = {
 
   getHistory: (agentName: string) =>
     request<HistoryResponse>(`/api/history/${agentName}`),
+};
+
+export const voiceAPI = {
+  sendVoiceChat: async (audio: Blob, language: string) => {
+    const token = localStorage.getItem("bb_token");
+    const form = new FormData();
+    form.append("audio", audio, "voice.webm");
+    form.append("language", language);
+
+    const res = await fetch(`${BASE_URL}/api/voice/chat`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: form,
+    });
+
+    let data: { success?: boolean; message?: string } & Record<string, unknown>;
+    try {
+      data = await res.json();
+    } catch {
+      throw new ApiError(`Server error (${res.status})`, res.status, {});
+    }
+
+    if (!res.ok) {
+      throw new ApiError(data.message ?? `Request failed (${res.status})`, res.status, data);
+    }
+
+    return data as VoiceChatResponse;
+  },
 };
 
 // ── Stats API ─────────────────────────────────────────────────────────────────
