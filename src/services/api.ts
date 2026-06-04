@@ -57,6 +57,10 @@ export interface AuthUser {
   bonusMessages?: number;
   dailyMessageLimit?: number;
   dailyMessageCount?: number;
+  language?: string;
+  voice?: string;
+  userType?: string;
+  onboardingComplete?: boolean;
 }
 
 export interface AuthResponse {
@@ -170,5 +174,11 @@ export const userAPI = {
     request<ApplyReferralResponse>("/api/user/apply-referral", {
       method: "POST",
       body: JSON.stringify({ code }),
+    }),
+
+  updateOnboarding: (data: { name?: string; userType?: string; language?: string; voice?: string }) =>
+    request<{ success: boolean; message: string; user: Partial<AuthUser> }>("/api/user/onboarding", {
+      method: "PUT",
+      body: JSON.stringify(data),
     }),
 };

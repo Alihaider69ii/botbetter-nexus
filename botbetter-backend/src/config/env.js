@@ -11,6 +11,7 @@ const config = {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
   SESSION_SECRET: process.env.SESSION_SECRET || "fallback_session_secret",
+  SARVAM_API_KEY: process.env.SARVAM_API_KEY,
 
   // Legacy single key (kept for backward compat)
   GROQ_API_KEY: process.env.GROQ_API_KEY,

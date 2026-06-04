@@ -10,6 +10,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
+  updateUser: (partial: Partial<AuthUser>) => void;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -64,8 +66,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const data = await authAPI.getMe();
+      setUser(data.user);
+    } catch {
+      // silently ignore — user stays as-is
+    }
+  }, []);
+
+  const updateUser = useCallback((partial: Partial<AuthUser>) => {
+    setUser((prev) => (prev ? { ...prev, ...partial } : prev));
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, initializing, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, token, initializing, login, signup, logout, refreshUser, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
