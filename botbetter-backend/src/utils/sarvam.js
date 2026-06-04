@@ -66,10 +66,10 @@ async function textToSpeech(text, language = DEFAULT_LANGUAGE) {
     method: "POST",
     headers: sarvamHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
-      inputs: [text],
+      inputs: [text.slice(0, 500)],
       target_language_code: language,
       speaker: "anushka",
-      model: "bulbul:v1",
+      model: "bulbul:v2",
     }),
   });
 
