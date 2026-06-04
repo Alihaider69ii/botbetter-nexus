@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const session = require("express-session");
+const passport = require("passport");
 const { connect } = require("./src/config/db");
 const config = require("./src/config/env");
 const authRoutes = require("./src/routes/auth.routes");
@@ -26,6 +28,21 @@ app.use(morgan(config.NODE_ENV === "development" ? "dev" : "combined"));
 // Body parser
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Session (needed for OAuth handshake state verification)
+app.use(session({
+  secret: config.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: config.NODE_ENV === "production",
+    maxAge: 10 * 60 * 1000,
+  },
+}));
+
+// Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Rate limiting
 app.use("/api", apiLimiter);

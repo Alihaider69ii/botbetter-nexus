@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemeProvider } from "@/components/botbetter/ThemeProvider";
 import { TopNav, ScreenKey } from "@/components/botbetter/TopNav";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -22,6 +22,14 @@ const App = () => {
     open: false,
     tab: "login",
   });
+
+  // After Google OAuth redirect: token is in localStorage, navigate to dashboard
+  useEffect(() => {
+    if (!initializing && user && sessionStorage.getItem("bb_post_oauth")) {
+      sessionStorage.removeItem("bb_post_oauth");
+      setScreen("dashboard");
+    }
+  }, [initializing, user]);
 
   const showAuth = (tab: "login" | "signup" = "login") =>
     setAuthModal({ open: true, tab });
