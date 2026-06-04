@@ -49,12 +49,15 @@ export function useVoiceChat({
           playBase64Audio(data.audioBase64);
           onResult(data);
         } catch (err) {
-          const message =
+          const rawMessage =
             err instanceof ApiError && err.data.limitReached
               ? "Daily message limit reached. Come back tomorrow or refer a friend for +20 messages!"
               : err instanceof Error
                 ? err.message
                 : "Voice chat failed";
+          const message = typeof rawMessage === "string" && rawMessage && rawMessage !== "[object Object]"
+            ? rawMessage
+            : "Voice chat failed. Please try again.";
           onError(message, err);
         } finally {
           setProcessing(false);
@@ -65,7 +68,10 @@ export function useVoiceChat({
       recorder.start();
       setRecording(true);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Microphone permission denied";
+      const rawMessage = err instanceof Error ? err.message : "";
+      const message = typeof rawMessage === "string" && rawMessage && rawMessage !== "[object Object]"
+        ? rawMessage
+        : "Microphone permission denied. Please allow mic access and try again.";
       onError(message, err);
     }
   };

@@ -27,7 +27,18 @@ async function parseSarvamResponse(res, fallbackMessage) {
   }
 
   if (!res.ok) {
-    const message = data.message || data.error || `${fallbackMessage}: ${res.status}`;
+    const raw = data.message || data.error || data.detail;
+    let message;
+    if (typeof raw === "string" && raw) {
+      message = raw;
+    } else if (raw && typeof raw === "object") {
+      message =
+        typeof raw.message === "string" ? raw.message :
+        typeof raw.detail === "string" ? raw.detail :
+        `${fallbackMessage}: ${res.status}`;
+    } else {
+      message = `${fallbackMessage}: ${res.status}`;
+    }
     throw new Error(message);
   }
 
