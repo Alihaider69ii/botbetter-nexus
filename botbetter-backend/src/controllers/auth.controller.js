@@ -110,4 +110,14 @@ const getMe = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, getMe };
+// @route GET /api/auth/google/callback (called by Passport after Google auth)
+const googleCallback = (req, res) => {
+  try {
+    const token = generateToken(req.user._id);
+    res.redirect(`${config.FRONTEND_URL}/auth/callback?token=${token}`);
+  } catch {
+    res.redirect(`${config.FRONTEND_URL}?error=google_auth_failed`);
+  }
+};
+
+module.exports = { signup, login, getMe, googleCallback };
