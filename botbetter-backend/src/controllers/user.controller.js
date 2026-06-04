@@ -86,4 +86,33 @@ const getLimitStatus = async (req, res, next) => {
   }
 };
 
-module.exports = { applyReferral, getLimitStatus };
+// @route PUT /api/user/onboarding
+const updateOnboarding = async (req, res, next) => {
+  try {
+    const { name, userType, language, voice } = req.body;
+    const update = { onboardingComplete: true };
+    if (name) update.name = name;
+    if (userType) update.userType = userType;
+    if (language) update.language = language;
+    if (voice) update.voice = voice;
+
+    const updated = await User.findByIdAndUpdate(req.user._id, update, { new: true });
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated!",
+      user: {
+        id: updated._id,
+        name: updated.name,
+        language: updated.language,
+        voice: updated.voice,
+        userType: updated.userType,
+        onboardingComplete: updated.onboardingComplete,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { applyReferral, getLimitStatus, updateOnboarding };

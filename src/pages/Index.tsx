@@ -10,6 +10,7 @@ import { AgentChat } from "@/components/botbetter/screens/AgentChat";
 import { Connections } from "@/components/botbetter/screens/Connections";
 import { CreateAgent } from "@/components/botbetter/screens/CreateAgent";
 import { AuthModal } from "@/components/botbetter/screens/AuthModal";
+import { OnboardingModal } from "@/components/botbetter/screens/OnboardingModal";
 
 // Protected screens that require a login
 const PROTECTED: ScreenKey[] = ["dashboard", "chat", "agent", "agent-chat", "connections", "create"];
@@ -22,12 +23,20 @@ const App = () => {
     open: false,
     tab: "login",
   });
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // After Google OAuth redirect: token is in localStorage, navigate to dashboard
   useEffect(() => {
     if (!initializing && user && sessionStorage.getItem("bb_post_oauth")) {
       sessionStorage.removeItem("bb_post_oauth");
       setScreen("dashboard");
+    }
+  }, [initializing, user]);
+
+  // Show onboarding for new users who haven't completed it yet
+  useEffect(() => {
+    if (!initializing && user && !user.onboardingComplete) {
+      setShowOnboarding(true);
     }
   }, [initializing, user]);
 
@@ -93,10 +102,14 @@ const App = () => {
         defaultTab={authModal.tab}
         onClose={() => setAuthModal((s) => ({ ...s, open: false }))}
         onSuccess={() => {
-          // Bypass the auth guard — we know the user just authenticated.
-          // Cannot call navigate("dashboard") here because React hasn't
-          // flushed setUser() yet, so `user` is still null and the guard
-          // would re-open the login modal.
+          setScreen("dashboard");
+        }}
+      />
+
+      <OnboardingModal
+        open={showOnboarding}
+        onComplete={() => {
+          setShowOnboarding(false);
           setScreen("dashboard");
         }}
       />

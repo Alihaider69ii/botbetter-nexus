@@ -6,10 +6,18 @@ import { AgentCard } from "../AgentCard";
 import {
   Activity, MessageSquare, Plug, Zap,
   Mail, Calendar, Send, Plus, ArrowUpRight, LogOut, Loader2,
-  Copy, Share2, Gift, Users,
+  Copy, Share2, Gift, Users, Settings2,
 } from "lucide-react";
 import { statsAPI, userAPI, type StatsResponse, type LimitStatusResponse } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+
+const LANGUAGES = [
+  { code: "en-IN", label: "English" }, { code: "hi-IN", label: "Hindi" },
+  { code: "mr-IN", label: "Marathi" }, { code: "bn-IN", label: "Bengali" },
+  { code: "ta-IN", label: "Tamil" },   { code: "te-IN", label: "Telugu" },
+  { code: "gu-IN", label: "Gujarati" },{ code: "pa-IN", label: "Punjabi" },
+  { code: "kn-IN", label: "Kannada" }, { code: "ml-IN", label: "Malayalam" },
+];
 
 const PLACEHOLDER_STATS = {
   plan: "free",
@@ -37,8 +45,12 @@ export const Dashboard = ({
   onNavigate: (s: ScreenKey) => void;
   onLogout: () => void;
 }) => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const nexus = agents[0];
+  const [prefLang, setPrefLang] = useState(user?.language ?? "en-IN");
+  const [prefVoice, setPrefVoice] = useState(user?.voice ?? "off");
+  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [prefSaved, setPrefSaved] = useState(false);
 
   const [stats, setStats] = useState<StatsResponse["stats"]>(PLACEHOLDER_STATS);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -73,6 +85,18 @@ export const Dashboard = ({
       setCodeCopied(true);
       setTimeout(() => setCodeCopied(false), 2000);
     });
+  };
+
+  const savePrefs = async () => {
+    setSavingPrefs(true);
+    try {
+      await userAPI.updateOnboarding({ language: prefLang, voice: prefVoice });
+      updateUser({ language: prefLang, voice: prefVoice });
+      setPrefSaved(true);
+      setTimeout(() => setPrefSaved(false), 2000);
+    } catch { /* ignore */ } finally {
+      setSavingPrefs(false);
+    }
   };
 
   const applyReferral = async () => {
@@ -416,6 +440,57 @@ export const Dashboard = ({
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* ── Preferences ──────────────────────────────────────────── */}
+        <div className="bento-card p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-purple-50 grid place-items-center">
+              <Settings2 className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <div className="font-bold text-slate-900">Language & Voice</div>
+              <div className="text-xs text-slate-500">Change how agents communicate with you</div>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase">Response Language</label>
+              <select
+                value={prefLang}
+                onChange={(e) => setPrefLang(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-[14px] font-medium text-slate-900 outline-none focus:border-purple-400 transition"
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>{l.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase">Voice</label>
+              <select
+                value={prefVoice}
+                onChange={(e) => setPrefVoice(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-[14px] font-medium text-slate-900 outline-none focus:border-purple-400 transition"
+              >
+                <option value="female">👩 Female</option>
+                <option value="male">👨 Male</option>
+                <option value="off">🔇 No voice</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-5 flex items-center gap-3">
+            <button
+              onClick={savePrefs}
+              disabled={savingPrefs}
+              className="px-6 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-60 transition flex items-center gap-2"
+              style={{ background: "#7C6BFF" }}
+            >
+              {savingPrefs && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save preferences
+            </button>
+            {prefSaved && <span className="text-sm font-semibold text-emerald-600">✓ Saved!</span>}
           </div>
         </div>
 

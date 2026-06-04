@@ -1,5 +1,6 @@
 const { getMemory } = require("../models/Memory.model");
 const User = require("../models/User.model");
+const { translateText } = require("../utils/translator");
 const { runSellio } = require("../agents/sellio");
 const { runCracky } = require("../agents/cracky");
 const { runBuddy } = require("../agents/buddy");
@@ -112,6 +113,16 @@ const chat = async (req, res, next) => {
         break;
       default:
         return res.status(400).json({ success: false, message: `Agent "${agentName}" not found` });
+    }
+
+    // Translate if user's preferred language is not English
+    const userLang = req.user.language || "en-IN";
+    if (userLang !== "en-IN" && reply) {
+      try {
+        reply = await translateText(reply, userLang);
+      } catch (e) {
+        console.error("Translation error (returning English):", e.message);
+      }
     }
 
     // Increment both daily counter and lifetime counter

@@ -29,3 +29,5 @@ services:
         value: https://botbetter-backend.onrender.com/api/auth/google/callback
       - key: SESSION_SECRET
         sync: false
+      - key: SARVAM_API_KEY
+        sync: false

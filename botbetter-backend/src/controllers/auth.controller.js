@@ -34,6 +34,10 @@ const signup = async (req, res, next) => {
         referralCode: user.referralCode,
         dailyMessageLimit: user.dailyMessageLimit,
         bonusMessages: user.bonusMessages,
+        language: user.language,
+        voice: user.voice,
+        userType: user.userType,
+        onboardingComplete: user.onboardingComplete,
       },
     });
   } catch (err) {
@@ -76,6 +80,10 @@ const login = async (req, res, next) => {
         referralCode: user.referralCode,
         dailyMessageLimit: user.dailyMessageLimit,
         bonusMessages: user.bonusMessages,
+        language: user.language,
+        voice: user.voice,
+        userType: user.userType,
+        onboardingComplete: user.onboardingComplete,
       },
     });
   } catch (err) {
@@ -103,6 +111,10 @@ const getMe = async (req, res, next) => {
         bonusMessages: user.bonusMessages,
         dailyMessageLimit: user.dailyMessageLimit,
         dailyMessageCount: user.dailyMessageCount,
+        language: user.language,
+        voice: user.voice,
+        userType: user.userType,
+        onboardingComplete: user.onboardingComplete,
       },
     });
   } catch (err) {

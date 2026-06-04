@@ -1,4 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-10px) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(420px) rotate(720deg); opacity: 0; }
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

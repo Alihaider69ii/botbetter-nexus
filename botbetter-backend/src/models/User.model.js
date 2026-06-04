@@ -30,6 +30,16 @@ const userSchema = new mongoose.Schema({
   authProvider: { type: String, enum: ["local", "google"], default: "local" },
   avatar: { type: String },
   isVerified: { type: Boolean, default: false },
+
+  // Onboarding & preferences
+  language: { type: String, default: "en-IN" },
+  voice: { type: String, enum: ["female", "male", "off"], default: "off" },
+  userType: {
+    type: String,
+    enum: ["student", "professional", "entrepreneur", "freelancer", "homemaker", "other"],
+  },
+  onboardingComplete: { type: Boolean, default: false },
+
   plan: {
     type: String,
     enum: ["free", "starter", "basic", "pro", "unlimited"],
