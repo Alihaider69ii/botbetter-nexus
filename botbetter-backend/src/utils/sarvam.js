@@ -49,7 +49,7 @@ async function speechToText(audioBlob, language = DEFAULT_LANGUAGE) {
   const form = new FormData();
   form.append("file", audioBlob, "voice.webm");
   form.append("language_code", language);
-  form.append("model", "saarika:v2");
+  form.append("model", "saaras:v2");
 
   const res = await fetch(`${SARVAM_BASE_URL}/speech-to-text-translate`, {
     method: "POST",
