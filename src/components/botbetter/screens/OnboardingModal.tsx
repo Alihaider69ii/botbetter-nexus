@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Loader2, ChevronLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { userAPI } from "@/services/api";
@@ -139,6 +139,8 @@ export const OnboardingModal = ({ open, onComplete }: Props) => {
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
+        <DialogTitle className="sr-only">Set up your BotBetter profile</DialogTitle>
+        <DialogDescription className="sr-only">Tell us a bit about yourself to personalise your experience.</DialogDescription>
         <div className="px-8 pt-8 pb-8 relative">
           {/* ── Step 1: Name ─────────────────────────────────── */}
           {step === 1 && (

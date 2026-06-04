@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { Sparkles, Eye, EyeOff, Loader2 } from "lucide-react";
 
@@ -76,6 +76,8 @@ export const AuthModal = ({ open, defaultTab = "login", onClose, onSuccess }: Pr
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+        <DialogTitle className="sr-only">Sign in to BotBetter</DialogTitle>
+        <DialogDescription className="sr-only">Log in or create an account to continue.</DialogDescription>
         {/* Header */}
         <div className="px-8 pt-8 pb-6 text-center border-b border-border">
           <div

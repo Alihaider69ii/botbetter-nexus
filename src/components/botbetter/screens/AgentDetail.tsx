@@ -2,7 +2,7 @@ import { useState } from "react";
 import { agents } from "@/data/agents";
 import { ScreenKey } from "../TopNav";
 import { DashShell } from "../DashShell";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Check, MessageSquare, Send, Globe, Code2, ArrowRight,
   Mail, Calendar, Slack, Camera, Palette,
@@ -179,6 +179,8 @@ const ConnectorModal = ({ open, onClose }: { open: boolean; onClose: () => void 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden bg-white border-2 border-slate-100 rounded-3xl">
+        <DialogTitle className="sr-only">Agent details</DialogTitle>
+        <DialogDescription className="sr-only">View and configure this AI agent.</DialogDescription>
         <div className="px-8 pt-8 pb-6 border-b-2 border-slate-100 bg-slate-50">
           <div className="flex items-center justify-between mb-6">
             <div>
