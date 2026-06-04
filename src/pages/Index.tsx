@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ThemeProvider } from "@/components/botbetter/ThemeProvider";
 import { TopNav, ScreenKey } from "@/components/botbetter/TopNav";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { VoiceModeProvider } from "@/context/VoiceModeContext";
 import { Landing } from "@/components/botbetter/screens/Landing";
 import { Dashboard } from "@/components/botbetter/screens/Dashboard";
 import { NexusChat } from "@/components/botbetter/screens/NexusChat";
@@ -120,7 +121,9 @@ const App = () => {
 const Index = () => (
   <ThemeProvider>
     <AuthProvider>
-      <App />
+      <VoiceModeProvider>
+        <App />
+      </VoiceModeProvider>
     </AuthProvider>
   </ThemeProvider>
 );

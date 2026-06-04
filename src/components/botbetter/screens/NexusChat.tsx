@@ -9,6 +9,8 @@ import {
 import { cn } from "@/lib/utils";
 import { chatAPI, ApiError } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { useVoiceMode } from "@/context/VoiceModeContext";
+import { useVoiceChat } from "@/hooks/use-voice-chat";
 
 type Msg =
   | { from: "user"; text: string }
@@ -26,6 +28,7 @@ const recentChats = ["Interview + email tasks", "Budget review June", "Reel idea
 export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigate: (s: ScreenKey) => void }) => {
   const nexus = agents[0];
   const { user } = useAuth();
+  const { voiceMode } = useVoiceMode();
 
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>(seed);
@@ -33,6 +36,22 @@ export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigat
   const [sendError, setSendError] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const userLanguage = user?.language || "en-IN";
+
+  const voice = useVoiceChat({
+    language: userLanguage,
+    onResult: (data) => {
+      setSendError("");
+      setMsgs((m) => [
+        ...m,
+        { from: "user", text: data.transcript },
+        { from: "nexus", text: data.reply },
+      ]);
+    },
+    onError: (message) => setSendError(message),
+  });
+
+  const busy = sending || voice.processing;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,7 +59,7 @@ export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigat
 
   const send = async () => {
     const text = input.trim();
-    if (!text || sending) return;
+    if (!text || busy) return;
 
     setInput("");
     setSendError("");
@@ -170,7 +189,7 @@ export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigat
               );
             })}
 
-            {sending && (
+            {busy && (
               <div className="flex gap-4 animate-fade-in">
                 <div
                   className="h-10 w-10 rounded-xl grid place-items-center text-base shrink-0 shadow-sm"
@@ -239,17 +258,37 @@ export const NexusChat = ({ active, onNavigate }: { active: ScreenKey; onNavigat
                 rows={1}
                 placeholder={!user ? "LOG IN TO USE NEXUS..." : "ASK NEXUS TO DO ANYTHING..."}
                 className="flex-1 resize-none bg-transparent outline-none text-sm font-bold tracking-widest text-slate-900 py-3.5 px-2 max-h-32 placeholder:text-slate-300 placeholder:font-bold"
-                disabled={sending}
+                disabled={busy || voiceMode}
               />
-              <button className="h-10 w-10 grid place-items-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors mb-1">
-                <Mic className="h-5 w-5" />
+              <button
+                onClick={() => {
+                  if (!user) {
+                    setSendError("Please log in to use voice chat.");
+                    return;
+                  }
+                  voice.toggleRecording();
+                }}
+                disabled={voice.processing || sending}
+                className={cn(
+                  "h-10 w-10 grid place-items-center rounded-xl transition-colors mb-1",
+                  voice.recording
+                    ? "bg-red-500 text-white shadow-md shadow-red-500/30 animate-pulse"
+                    : voiceMode
+                      ? "bg-red-50 text-red-600 hover:bg-red-100"
+                      : "text-slate-400 hover:text-slate-700 hover:bg-slate-50",
+                  (voice.processing || sending) && "opacity-60"
+                )}
+                aria-label={voice.recording ? "Stop recording" : "Start voice chat"}
+                title={voice.recording ? "Stop recording" : "Start voice chat"}
+              >
+                {voice.processing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Mic className="h-5 w-5" />}
               </button>
               <button
                 onClick={send}
-                disabled={sending || !input.trim()}
+                disabled={busy || voiceMode || !input.trim()}
                 className="h-12 w-12 grid place-items-center rounded-2xl bg-gradient-to-br from-[#6C00FF] to-[#FF3CAC] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 mb-0.5 mr-0.5"
               >
-                {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </button>
             </div>
             {!user && (
