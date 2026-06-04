@@ -1,10 +1,23 @@
 import { useRef, useState } from "react";
 import { voiceAPI, ApiError, type VoiceChatResponse } from "@/services/api";
 
-function playBase64Audio(audioBase64: string) {
-  if (!audioBase64) return;
-  const audio = new Audio(`data:audio/wav;base64,${audioBase64}`);
-  void audio.play();
+async function playBase64Audio(audioBase64: string) {
+  if (!audioBase64) {
+    console.warn("[Voice] audioBase64 is empty — TTS returned no audio");
+    return;
+  }
+  console.log("[Voice] playing audio, base64 length:", audioBase64.length);
+
+  // Sarvam bulbul:v2 outputs WAV; try WAV first, fall back to MP3
+  for (const mime of ["audio/wav", "audio/mpeg", "audio/ogg"]) {
+    try {
+      const audio = new Audio(`data:${mime};base64,${audioBase64}`);
+      await audio.play();
+      return;
+    } catch (e) {
+      console.warn(`[Voice] play failed with ${mime}:`, (e as Error).message);
+    }
+  }
 }
 
 export function useVoiceChat({
@@ -46,7 +59,8 @@ export function useVoiceChat({
         setProcessing(true);
         try {
           const data = await voiceAPI.sendVoiceChat(audio, language);
-          playBase64Audio(data.audioBase64);
+          console.log("[Voice] API response audioBase64 length:", data.audioBase64?.length ?? 0);
+          await playBase64Audio(data.audioBase64);
           onResult(data);
         } catch (err) {
           const rawMessage =

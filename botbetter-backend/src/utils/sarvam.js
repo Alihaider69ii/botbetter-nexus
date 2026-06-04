@@ -74,7 +74,10 @@ async function textToSpeech(text, language = DEFAULT_LANGUAGE) {
   });
 
   const data = await parseSarvamResponse(res, "Sarvam text-to-speech failed");
-  return data.audios?.[0] || data.audio || data.audio_base64 || "";
+  console.log("[TTS] response keys:", Object.keys(data));
+  const audioB64 = data.audios?.[0] ?? data.audio ?? data.audio_base64 ?? "";
+  console.log("[TTS] audioBase64 length:", typeof audioB64 === "string" ? audioB64.length : `non-string: ${typeof audioB64}`);
+  return audioB64;
 }
 
 async function translateText(text, targetLang = DEFAULT_LANGUAGE) {
