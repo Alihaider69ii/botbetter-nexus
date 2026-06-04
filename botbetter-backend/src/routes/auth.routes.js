@@ -10,12 +10,14 @@ router.post("/signup", authLimiter, signup);
 router.post("/login", authLimiter, login);
 router.get("/me", protect, getMe);
 
-// Google OAuth
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-router.get(
-  "/google/callback",
-  passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL}?error=auth_failed` }),
-  googleCallback
-);
+// Google OAuth — only register routes when credentials are configured
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+  router.get(
+    "/google/callback",
+    passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL}?error=auth_failed` }),
+    googleCallback
+  );
+}
 
 module.exports = router;
