@@ -26,13 +26,20 @@ const App = () => {
   });
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // After Google OAuth redirect: token is in localStorage, navigate to dashboard
+  // After Google OAuth redirect: token is in localStorage, navigate to chat
   useEffect(() => {
     if (!initializing && user && sessionStorage.getItem("bb_post_oauth")) {
       sessionStorage.removeItem("bb_post_oauth");
-      setScreen("dashboard");
+      setScreen("chat");
     }
   }, [initializing, user]);
+
+  // Auto-navigate to chat when user logs in or session is restored
+  useEffect(() => {
+    if (!initializing && user && screen === "landing") {
+      setScreen("chat");
+    }
+  }, [initializing, user, screen]);
 
   // Show onboarding for new users who haven't completed it yet
   useEffect(() => {
@@ -69,7 +76,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <TopNav active={screen} onChange={navigate} />
+      {screen !== "chat" && <TopNav active={screen} onChange={navigate} />}
       <div key={screen} className="fade-in">
         {screen === "landing" && (
           <Landing onNavigate={navigate} onShowAuth={showAuth} />
@@ -103,7 +110,7 @@ const App = () => {
         defaultTab={authModal.tab}
         onClose={() => setAuthModal((s) => ({ ...s, open: false }))}
         onSuccess={() => {
-          setScreen("dashboard");
+          setScreen("chat");
         }}
       />
 
