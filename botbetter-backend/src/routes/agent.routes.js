@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const router = express.Router();
-const { chat, voiceChat, getHistory, getStats } = require("../controllers/agent.controller");
+const { chat, voiceChat, getHistory, clearHistory, getStats } = require("../controllers/agent.controller");
 const { protect } = require("../middleware/auth.middleware");
 const { chatLimiter } = require("../middleware/rateLimit.middleware");
 
@@ -18,6 +18,9 @@ router.post("/voice/chat", protect, chatLimiter, upload.single("audio"), voiceCh
 
 // Get chat history
 router.get("/history/:agentName", protect, getHistory);
+
+// Clear chat history for an agent
+router.delete("/history/:agentName", protect, clearHistory);
 
 // Get user stats
 router.get("/stats", protect, getStats);

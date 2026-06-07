@@ -8,26 +8,26 @@ const { runSellio } = require("../sellio");
 const { runCracky } = require("../cracky");
 
 const AGENT_RUNNERS = {
-  buddy: runBuddy,
-  finio: runFinio,
+  buddy:   runBuddy,
+  finio:   runFinio,
   prepify: runPrepify,
-  flexai: runFlexAI,
-  creato: runCreato,
-  sellio: runSellio,
-  cracky: runCracky,
+  flexai:  runFlexAI,
+  creato:  runCreato,
+  sellio:  runSellio,
+  cracky:  runCracky,
 };
 
-async function runNexus(userId, userMessage) {
+async function runNexus(userId, userMessage, opts = {}) {
   try {
     const agentName = detectIntent(userMessage);
-    console.log(`[Nexus] Routing "${userMessage.slice(0, 50)}..." → ${agentName}`);
+    console.log(`[Nexus] Routing "${userMessage.slice(0, 50)}..." → ${agentName} (personality: ${opts.personality || "maya"})`);
 
     const runner = AGENT_RUNNERS[agentName];
     if (!runner) {
-      return runBuddy(userId, userMessage);
+      return runBuddy(userId, userMessage, opts);
     }
 
-    return await runner(userId, userMessage);
+    return await runner(userId, userMessage, opts);
   } catch (e) {
     console.error("Nexus error:", e.message);
     return "Sorry yaar, thoda issue aa gaya. Dobara try karo! 🙏";

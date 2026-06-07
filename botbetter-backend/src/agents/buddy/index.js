@@ -2,10 +2,10 @@ const { getMemory } = require("../../models/Memory.model");
 const { getBuddyPrompt } = require("./prompt");
 const { callAI } = require("../../utils/aiCaller");
 
-async function runBuddy(userId, userMessage) {
+async function runBuddy(userId, userMessage, opts = {}) {
   try {
     const memory = await getMemory(userId);
-    const systemPrompt = getBuddyPrompt(memory);
+    const systemPrompt = getBuddyPrompt(memory, opts);
 
     const history = memory.getAgentHistory("buddy", 8).map((m) => ({
       role: m.role === "assistant" ? "assistant" : "user",
