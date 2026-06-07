@@ -3,28 +3,25 @@ const config = require("../config/env");
 const SARVAM_BASE_URL = "https://api.sarvam.ai";
 const DEFAULT_LANGUAGE = "en-IN";
 
+// Maya = female voice, Kabir = male voice
+const PERSONALITY_SPEAKERS = {
+  maya:  "anushka",
+  kabir: "karun",
+};
+
 function getApiKey() {
   const key = config.SARVAM_API_KEY || process.env.SARVAM_API_KEY;
-  if (!key) {
-    throw new Error("Missing SARVAM_API_KEY");
-  }
+  if (!key) throw new Error("Missing SARVAM_API_KEY");
   return key;
 }
 
 function sarvamHeaders(extra = {}) {
-  return {
-    "api-subscription-key": getApiKey(),
-    ...extra,
-  };
+  return { "api-subscription-key": getApiKey(), ...extra };
 }
 
 async function parseSarvamResponse(res, fallbackMessage) {
   let data = {};
-  try {
-    data = await res.json();
-  } catch {
-    // Sarvam normally returns JSON, but keep the thrown error useful if it does not.
-  }
+  try { data = await res.json(); } catch { /* keep empty */ }
 
   if (!res.ok) {
     const raw = data.message || data.error || data.detail;
@@ -34,14 +31,13 @@ async function parseSarvamResponse(res, fallbackMessage) {
     } else if (raw && typeof raw === "object") {
       message =
         typeof raw.message === "string" ? raw.message :
-        typeof raw.detail === "string" ? raw.detail :
+        typeof raw.detail  === "string" ? raw.detail  :
         `${fallbackMessage}: ${res.status}`;
     } else {
       message = `${fallbackMessage}: ${res.status}`;
     }
     throw new Error(message);
   }
-
   return data;
 }
 
@@ -61,14 +57,16 @@ async function speechToText(audioBlob, language = DEFAULT_LANGUAGE) {
   return data.transcript || data.transcript_text || data.text || data.translated_text || "";
 }
 
-async function textToSpeech(text, language = DEFAULT_LANGUAGE) {
+async function textToSpeech(text, language = DEFAULT_LANGUAGE, personality = "maya") {
+  const speaker = PERSONALITY_SPEAKERS[personality] || PERSONALITY_SPEAKERS.maya;
+
   const res = await fetch(`${SARVAM_BASE_URL}/text-to-speech`, {
     method: "POST",
     headers: sarvamHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       inputs: [text.slice(0, 500)],
       target_language_code: language,
-      speaker: "anushka",
+      speaker,
       model: "bulbul:v2",
     }),
   });

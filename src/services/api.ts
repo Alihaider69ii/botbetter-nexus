@@ -1,7 +1,5 @@
 const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? "";
 
-// ── Custom error that carries the raw response body ───────────────────────────
-
 export class ApiError extends Error {
   status: number;
   data: Record<string, unknown>;
@@ -12,8 +10,6 @@ export class ApiError extends Error {
     this.data = data;
   }
 }
-
-// ── Core fetch wrapper ────────────────────────────────────────────────────────
 
 async function request<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem("bb_token");
@@ -42,8 +38,6 @@ async function request<T = unknown>(path: string, options: RequestInit = {}): Pr
   return data as T;
 }
 
-// ── Response shapes ───────────────────────────────────────────────────────────
-
 export interface AuthUser {
   id: string;
   name: string;
@@ -60,6 +54,7 @@ export interface AuthUser {
   dailyMessageCount?: number;
   language?: string;
   voice?: string;
+  personality?: "maya" | "kabir";
   userType?: string;
   onboardingComplete?: boolean;
 }
@@ -88,6 +83,7 @@ export interface ChatResponse {
   success: boolean;
   agent: string;
   reply: string;
+  audioBase64?: string;
   messagesLeft: number | string;
   resetTime?: string;
 }
@@ -138,8 +134,6 @@ export interface ApplyReferralResponse {
   totalDailyLimit: number;
 }
 
-// ── Auth API ──────────────────────────────────────────────────────────────────
-
 export const authAPI = {
   login: (email: string, password: string) =>
     request<AuthResponse>("/api/auth/login", {
@@ -156,8 +150,6 @@ export const authAPI = {
   getMe: () => request<MeResponse>("/api/auth/me"),
 };
 
-// ── Chat API ──────────────────────────────────────────────────────────────────
-
 export const chatAPI = {
   sendMessage: (agentName: string, message: string) =>
     request<ChatResponse>(`/api/chat/${agentName}`, {
@@ -167,14 +159,20 @@ export const chatAPI = {
 
   getHistory: (agentName: string) =>
     request<HistoryResponse>(`/api/history/${agentName}`),
+
+  clearHistory: (agentName: string) =>
+    request<{ success: boolean; message: string }>(`/api/history/${agentName}`, {
+      method: "DELETE",
+    }),
 };
 
 export const voiceAPI = {
-  sendVoiceChat: async (audio: Blob, language: string) => {
+  sendVoiceChat: async (audio: Blob, language: string, personality = "maya") => {
     const token = localStorage.getItem("bb_token");
     const form = new FormData();
     form.append("audio", audio, "voice.webm");
     form.append("language", language);
+    form.append("personality", personality);
 
     const res = await fetch(`${BASE_URL}/api/voice/chat`, {
       method: "POST",
@@ -200,13 +198,9 @@ export const voiceAPI = {
   },
 };
 
-// ── Stats API ─────────────────────────────────────────────────────────────────
-
 export const statsAPI = {
   getStats: () => request<StatsResponse>("/api/stats"),
 };
-
-// ── User API ──────────────────────────────────────────────────────────────────
 
 export const userAPI = {
   getLimitStatus: () => request<LimitStatusResponse>("/api/user/limit-status"),
@@ -217,8 +211,20 @@ export const userAPI = {
       body: JSON.stringify({ code }),
     }),
 
-  updateOnboarding: (data: { name?: string; userType?: string; language?: string; voice?: string }) =>
+  updateOnboarding: (data: {
+    name?: string;
+    userType?: string;
+    language?: string;
+    voice?: string;
+    personality?: string;
+  }) =>
     request<{ success: boolean; message: string; user: Partial<AuthUser> }>("/api/user/onboarding", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  updateProfile: (data: { language?: string; voice?: string; personality?: string }) =>
+    request<{ success: boolean; user: Partial<AuthUser> }>("/api/user/profile", {
       method: "PUT",
       body: JSON.stringify(data),
     }),

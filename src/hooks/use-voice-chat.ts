@@ -8,7 +8,6 @@ async function playBase64Audio(audioBase64: string) {
   }
   console.log("[Voice] playing audio, base64 length:", audioBase64.length);
 
-  // Sarvam bulbul:v2 outputs WAV; try WAV first, fall back to MP3
   for (const mime of ["audio/wav", "audio/mpeg", "audio/ogg"]) {
     try {
       const audio = new Audio(`data:${mime};base64,${audioBase64}`);
@@ -22,25 +21,25 @@ async function playBase64Audio(audioBase64: string) {
 
 export function useVoiceChat({
   language,
+  personality = "maya",
   onResult,
   onError,
 }: {
   language: string;
+  personality?: string;
   onResult: (data: VoiceChatResponse) => void;
   onError: (message: string, err: unknown) => void;
 }) {
-  const [recording, setRecording] = useState(false);
-  const [processing, setProcessing] = useState(false);
+  const [recording,   setRecording]   = useState(false);
+  const [processing,  setProcessing]  = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);
+  const chunksRef   = useRef<BlobPart[]>([]);
 
-  const stopRecording = () => {
-    recorderRef.current?.stop();
-  };
+  const stopRecording = () => { recorderRef.current?.stop(); };
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream  = await navigator.mediaDevices.getUserMedia({ audio: true });
       chunksRef.current = [];
       const options = MediaRecorder.isTypeSupported("audio/webm") ? { mimeType: "audio/webm" } : undefined;
       const recorder = new MediaRecorder(stream, options);
@@ -58,7 +57,7 @@ export function useVoiceChat({
 
         setProcessing(true);
         try {
-          const data = await voiceAPI.sendVoiceChat(audio, language);
+          const data = await voiceAPI.sendVoiceChat(audio, language, personality);
           console.log("[Voice] API response audioBase64 length:", data.audioBase64?.length ?? 0);
           await playBase64Audio(data.audioBase64);
           onResult(data);
@@ -69,9 +68,10 @@ export function useVoiceChat({
               : err instanceof Error
                 ? err.message
                 : "Voice chat failed";
-          const message = typeof rawMessage === "string" && rawMessage && rawMessage !== "[object Object]"
-            ? rawMessage
-            : "Voice chat failed. Please try again.";
+          const message =
+            typeof rawMessage === "string" && rawMessage && rawMessage !== "[object Object]"
+              ? rawMessage
+              : "Voice chat failed. Please try again.";
           onError(message, err);
         } finally {
           setProcessing(false);
@@ -83,21 +83,21 @@ export function useVoiceChat({
       setRecording(true);
     } catch (err) {
       const rawMessage = err instanceof Error ? err.message : "";
-      const message = typeof rawMessage === "string" && rawMessage && rawMessage !== "[object Object]"
-        ? rawMessage
-        : "Microphone permission denied. Please allow mic access and try again.";
+      const message =
+        typeof rawMessage === "string" && rawMessage && rawMessage !== "[object Object]"
+          ? rawMessage
+          : "Microphone permission denied. Please allow mic access and try again.";
       onError(message, err);
     }
   };
 
   const toggleRecording = () => {
     if (processing) return;
-    if (recording) {
-      stopRecording();
-      return;
-    }
+    if (recording) { stopRecording(); return; }
     void startRecording();
   };
 
   return { recording, processing, toggleRecording };
 }
+
+export { playBase64Audio };

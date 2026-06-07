@@ -34,9 +34,10 @@ const userSchema = new mongoose.Schema({
   // Onboarding & preferences
   language: { type: String, default: "en-IN" },
   voice: { type: String, enum: ["female", "male", "off"], default: "off" },
+  personality: { type: String, enum: ["maya", "kabir"], default: "maya" },
   userType: {
     type: String,
-    enum: ["student", "professional", "entrepreneur", "freelancer", "homemaker", "other"],
+    enum: ["student", "professional", "entrepreneur", "freelancer", "homemaker", "seller", "creator", "fitness", "other"],
   },
   onboardingComplete: { type: Boolean, default: false },
 

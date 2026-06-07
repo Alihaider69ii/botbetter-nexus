@@ -25,7 +25,6 @@ const applyReferral = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Invalid referral code" });
     }
 
-    // Give both users +20 bonus messages
     await User.findByIdAndUpdate(userId, {
       referredBy: code.toUpperCase(),
       $inc: { bonusMessages: 20 },
@@ -58,17 +57,12 @@ const getLimitStatus = async (req, res, next) => {
     const elapsed = now - lastReset;
 
     let dailyCount = user.dailyMessageCount;
-
-    // Reflect reset if 24h passed (don't persist here — chat endpoint handles the write)
-    if (elapsed >= 24 * 60 * 60 * 1000) {
-      dailyCount = 0;
-    }
+    if (elapsed >= 24 * 60 * 60 * 1000) dailyCount = 0;
 
     const totalLimit = user.dailyMessageLimit + user.bonusMessages;
     const messagesLeft = Math.max(0, totalLimit - dailyCount);
     const resetTime = new Date(
-      (elapsed >= 24 * 60 * 60 * 1000 ? now : lastReset).getTime() +
-        24 * 60 * 60 * 1000
+      (elapsed >= 24 * 60 * 60 * 1000 ? now : lastReset).getTime() + 24 * 60 * 60 * 1000
     );
 
     res.status(200).json({
@@ -89,12 +83,13 @@ const getLimitStatus = async (req, res, next) => {
 // @route PUT /api/user/onboarding
 const updateOnboarding = async (req, res, next) => {
   try {
-    const { name, userType, language, voice } = req.body;
+    const { name, userType, language, voice, personality } = req.body;
     const update = { onboardingComplete: true };
-    if (name) update.name = name;
-    if (userType) update.userType = userType;
-    if (language) update.language = language;
-    if (voice) update.voice = voice;
+    if (name)        update.name = name;
+    if (userType)    update.userType = userType;
+    if (language)    update.language = language;
+    if (voice)       update.voice = voice;
+    if (personality) update.personality = personality;
 
     const updated = await User.findByIdAndUpdate(req.user._id, update, { new: true });
 
@@ -106,6 +101,7 @@ const updateOnboarding = async (req, res, next) => {
         name: updated.name,
         language: updated.language,
         voice: updated.voice,
+        personality: updated.personality,
         userType: updated.userType,
         onboardingComplete: updated.onboardingComplete,
       },
@@ -115,4 +111,33 @@ const updateOnboarding = async (req, res, next) => {
   }
 };
 
-module.exports = { applyReferral, getLimitStatus, updateOnboarding };
+// @route PUT /api/user/profile
+const updateProfile = async (req, res, next) => {
+  try {
+    const { language, voice, personality } = req.body;
+    const update = {};
+    if (language)                                        update.language    = language;
+    if (voice && ["female","male","off"].includes(voice)) update.voice       = voice;
+    if (personality && ["maya","kabir"].includes(personality)) update.personality = personality;
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ success: false, message: "Nothing to update" });
+    }
+
+    const updated = await User.findByIdAndUpdate(req.user._id, update, { new: true });
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id:          updated._id,
+        language:    updated.language,
+        voice:       updated.voice,
+        personality: updated.personality,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { applyReferral, getLimitStatus, updateOnboarding, updateProfile };
