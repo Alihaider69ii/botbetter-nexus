@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BotBetter — NEXUS OS</title>
+  <meta name="description" content="BotBetter NEXUS AI Interface" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    /* ===== RESET & CYBERPUNK/GENZ DESIGN SYSTEM ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #03020d;
+      --accent: #00f0ff; /* Neon Cyber Cyan */
+      --accent-pink: #ff007f; /* Neon Hot Pink */
+      --accent-green: #39ff14; /* Brat Green */
+      --text: #e8f9ff;
+      --border-neon: linear-gradient(90deg, #00f0ff, #ff007f);
+      --glass-panel: rgba(10, 4, 30, 0.45);
+      --glass-border: rgba(0, 240, 255, 0.2);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* Heading font */
+    .heading-font {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+    }
+
+    .mono {
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* ===== KEYFRAMES ===== */
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), 0 0 20px rgba(255, 0, 127, 0.1); }
+      50% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.6), 0 0 40px rgba(255, 0, 127, 0.3); }
+    }
+    @keyframes statusBlink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+    }
+    @keyframes fillProgress {
+      0%, 100% { filter: hue-rotate(0deg); }
+      50% { filter: hue-rotate(30deg); }
+    }
+    @keyframes scanLine {
+      0% { top: 0%; }
+      100% { top: 100%; }
+    }
+    @keyframes voiceActive {
+      0%, 100% { height: 4px; background-color: var(--accent); }
+      50% { height: 20px; background-color: var(--accent-pink); }
+    }
+    @keyframes floatingCard {
+      0%, 100% { transform: translateY(0px) rotate(-1deg); }
+      50% { transform: translateY(-8px) rotate(1deg); }
+    }
+
+    /* ===== APP LAYOUT ===== */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+    }
+
+    /* 3D CANVAS & EFFECTS */
+    #canvas3d {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* === GEMINI-STYLE AURORA SHINE BACKGROUND === */
+    .aurora-shine {
+      position: absolute;
+      inset: 0;
+      filter: blur(100px);
+      opacity: 0.6;
+      z-index: 0;
+      mix-blend-mode: screen;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .aurora-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(50px);
+      mix-blend-mode: screen;
+      animation: floatOrb 14s ease-in-out infinite alternate;
+    }
+    .aurora-orb--1 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+      top: 10%;
+      left: 15%;
+      animation-duration: 18s;
+    }
+    .aurora-orb--2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--accent-pink) 0%, transparent 70%);
+      bottom: 10%;
+      right: 15%;
+      animation-duration: 22s;
+    }
+    .aurora-orb--3 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, #7f00ff 0%, transparent 70%);
+      top: 35%;
+      left: 45%;
+      animation-duration: 16s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(60px, -60px) scale(1.15); }
+      100% { transform: translate(-40px, 40px) scale(0.9); }
+    }
+
+    .sweep-bar {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent-pink), transparent);
+      animation: scanLine 7s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ===== HEADER BAR ===== */
+    .header-bar {
+      height: 64px;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px dashed rgba(0, 240, 255, 0.3);
+      background: rgba(3, 2, 13, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-container {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(45deg, var(--accent), var(--accent-pink));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+
+    .brand-name {
+      font-size: 19px;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+
+    .badge-trending {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(57, 255, 20, 0.15);
+      border: 1px solid var(--accent-green);
+      color: var(--accent-green);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .telemetry-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 12px;
+    }
+
+    .status-tag {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      padding: 4px 12px;
+      border-radius: 30px;
+    }
+
+    .status-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: statusBlink 1.5s infinite;
+    }
+
+    .time-ticker {
+      font-variant-numeric: tabular-nums;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 240, 255, 0.05);
+      color: var(--accent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .header-btn:hover {
+      background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+      color: #fff;
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+      transform: scale(1.08) rotate(5deg);
+    }
+
+    /* ===== COCKPIT AREA ===== */
+    .cockpit-view {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      z-index: 5;
+    }
+
+    /* ===== LEFT PANEL (SYSTEM DIAGS) ===== */
+    .system-sidebar {
+      width: 260px;
+      background: var(--glass-panel);
+      border-right: 1px dashed rgba(0, 240, 255, 0.2);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      z-index: 10;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: rgba(232,249,255,0.45);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .stat-card {
+      background: rgba(0, 240, 255, 0.03);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .stat-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .stat-badge {
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(255, 0, 127, 0.15);
+      border: 1px solid var(--accent-pink);
+      color: var(--accent-pink);
+      font-weight: bold;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-pink));
+      border-radius: 3px;
+      animation: fillProgress 4s linear infinite;
+    }
+
+    /* Live terminal box */
+    .terminal-logs {
+      flex: 1;
+      background: rgba(3, 2, 13, 0.8);
+      border: 1px dashed rgba(0, 240, 255, 0.2);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 11px;
+      color: rgba(0, 240, 255, 0.75);
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    .log-line {
+      margin-bottom: 8px;
+    }
+    .log-tag {
+      color: var(--accent-pink);
+      font-weight: bold;
+    }
+
+    /* ===== RIGHT PANEL (TACTICAL COMMANDS) ===== */
+    .tactical-sidebar {
+      width: 260px;
+      background: var(--glass-panel);
+      border-left: 1px dashed rgba(0, 240, 255, 0.2);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      z-index: 10;
+    }
+
+    /* Sticker Alert Box */
+    .alert-sticker {
+      background: rgba(255, 0, 127, 0.05);
+      border: 2px dashed rgba(255, 0, 127, 0.45);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .alert-sticker-tag {
+      position: absolute;
+      top: -10px;
+      left: 14px;
+      background: var(--accent-pink);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 1px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 10px rgba(255,0,127,0.3);
+    }
+    .alert-sticker-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--accent-pink);
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+    .alert-sticker-desc {
+      font-size: 11px;
+      color: rgba(232,249,255,0.7);
+      line-height: 1.4;
+    }
+
+    .sidebar-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(232,249,255,0.6);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      margin-bottom: 6px;
+    }
+    .sidebar-menu-item:hover {
+      background: rgba(0, 240, 255, 0.04);
+      color: var(--text);
+    }
+    .sidebar-menu-item--active {
+      background: rgba(0, 240, 255, 0.1);
+      border-color: rgba(0, 240, 255, 0.35);
+      color: var(--accent);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+    }
+
+    .theme-switcher {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 0 4px;
+    }
+    .theme-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid rgba(255,255,255,0.15);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .theme-btn:hover {
+      transform: scale(1.2);
+      border-color: #fff;
+    }
+    .theme-btn--stealth {
+      background: linear-gradient(135deg, #00f0ff, #ff007f);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+    }
+    .theme-btn--stark {
+      background: linear-gradient(135deg, #ff3c00, #ffd700);
+      box-shadow: 0 0 10px rgba(255, 60, 0, 0.4);
+    }
+    .theme-btn--brat {
+      background: linear-gradient(135deg, #39ff14, #bd00ff);
+      box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+    }
+    .theme-btn--hologold {
+      background: linear-gradient(135deg, #ffcc00, #00ffcc);
+      box-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+    }
+    .theme-btn--white {
+      background: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+    .theme-btn--black {
+      background: #000000;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    /* User details sticker widget */
+    .user-sticker {
+      margin-top: auto;
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      background: rgba(0, 240, 255, 0.04);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      cursor: pointer;
+    }
+    .user-sticker-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 11px;
+      color: #fff;
+    }
+    .user-sticker-name {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    /* Sticker dropdown */
+    .sticker-dropdown {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: rgba(5, 3, 18, 0.98);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 6px 0;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.6);
+      z-index: 20;
+    }
+    .sticker-drop-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(232,249,255,0.7);
+    }
+    .sticker-drop-item:hover {
+      background: rgba(0, 240, 255, 0.08);
+      color: var(--accent);
+    }
+    .sticker-drop-item--red {
+      color: var(--accent-pink);
+    }
+    .sticker-drop-item--red:hover {
+      background: rgba(255, 0, 127, 0.08);
+      color: #ff3385;
+    }
+
+    /* ===== CHAT MESSAGES PANEL ===== */
+    .chat-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Dynamic Floating HUD panel (Brat/Y2K vibe) */
+    .floating-sticker-overlay {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 230px;
+      background: rgba(10, 4, 30, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1.5px solid var(--accent);
+      border-radius: 14px;
+      padding: 14px;
+      z-index: 10;
+      animation: floatingCard 4s ease-in-out infinite;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .sticker-badge {
+      font-size: 8.5px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--accent-pink);
+      color: #fff;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .overlay-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+    .overlay-list-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      color: rgba(232,249,255,0.85);
+    }
+
+    .messages-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 24px;
+      overflow-y: auto;
+      z-index: 5;
+    }
+
+    /* Chat bubble structures */
+    .bubble-row {
+      display: flex;
+      gap: 12px;
+      max-width: 600px;
+      animation: floatingCard 6s ease-in-out infinite alternate;
+    }
+    .bubble-row--right {
+      align-self: flex-end;
+      justify-content: flex-end;
+      animation-name: none;
+    }
+
+    .bubble-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 13px;
+      color: #fff;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .bubble-avatar--user {
+      background: var(--accent-pink);
+      box-shadow: 0 0 12px rgba(255, 0, 127, 0.5);
+    }
+
+    .chat-bubble {
+      background: rgba(10, 4, 30, 0.55);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: 0 14px 14px 14px;
+      padding: 16px 20px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--text);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .chat-bubble--user {
+      background: rgba(255, 0, 127, 0.05);
+      border-color: rgba(255, 0, 127, 0.35);
+      border-radius: 14px 0 14px 14px;
+    }
+
+    .bubble-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .bubble-title--user {
+      color: var(--accent-pink);
+    }
+
+    /* Subtask block styling */
+    .subtask-box {
+      margin-top: 12px;
+      border-top: 1px dashed rgba(0, 240, 255, 0.2);
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pill-tags-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .pill-tag {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      background: rgba(0, 240, 255, 0.05);
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .subtask-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12.5px;
+      color: rgba(232, 249, 255, 0.85);
+    }
+    .subtask-bullet {
+      color: var(--accent-pink);
+      font-weight: 900;
+    }
+
+    /* Badge details */
+    .vibe-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(232, 249, 255, 0.45);
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .vibe-pulse-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: statusBlink 1.5s infinite;
+    }
+
+    /* Bouncing typing indicator */
+    .bouncing-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 12px 18px;
+    }
+
+    /* ===== INPUT CAPSULE ===== */
+    .input-dock {
+      border-top: 1px dashed rgba(0, 240, 255, 0.2);
+      background: rgba(3, 2, 13, 0.85);
+      padding: 16px 24px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+
+    .input-capsule {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .input-field-dock {
+      flex: 1;
+      background: rgba(0, 240, 255, 0.02);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-radius: 30px;
+      padding: 12px 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14.5px;
+      color: var(--text);
+      outline: none;
+      box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.05);
+      transition: all 0.3s;
+    }
+    .input-field-dock:focus {
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.25);
+    }
+    .input-field-dock::placeholder {
+      color: rgba(0, 240, 255, 0.35);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .action-btn {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      background: rgba(0, 240, 255, 0.03);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .action-btn:hover {
+      box-shadow: 0 0 15px var(--accent);
+      transform: scale(1.08);
+      background: rgba(0, 240, 255, 0.1);
+    }
+    .action-btn--mic {
+      background: rgba(255, 0, 127, 0.1);
+      border-color: rgba(255, 0, 127, 0.4);
+      color: var(--accent-pink);
+      box-shadow: 0 0 12px rgba(255,0,127,0.35);
+    }
+    .action-btn--mic:hover {
+      box-shadow: 0 0 20px var(--accent-pink);
+      background: rgba(255, 0, 127, 0.2);
+    }
+
+    .action-btn--send {
+      background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+      border: none;
+      color: #fff;
+    }
+    .action-btn--send:hover {
+      box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
+    }
+
+    /* Sound Frequency Waves */
+    .frequencies-dock {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      height: 18px;
+      margin-top: 12px;
+    }
+    .freq-bar {
+      width: 2.5px;
+      background: var(--accent);
+      border-radius: 1px;
+      animation: voiceActive 1s ease-in-out infinite;
+    }
+    .freq-bar:nth-child(1)  { animation-delay: 0.0s; height: 6px; }
+    .freq-bar:nth-child(2)  { animation-delay: 0.12s; height: 14px; }
+    .freq-bar:nth-child(3)  { animation-delay: 0.05s; height: 8px; }
+    .freq-bar:nth-child(4)  { animation-delay: 0.25s; height: 18px; }
+    .freq-bar:nth-child(5)  { animation-delay: 0.3s; height: 10px; }
+    .freq-bar:nth-child(6)  { animation-delay: 0.42s; height: 20px; }
+    .freq-bar:nth-child(7)  { animation-delay: 0.15s; height: 6px; }
+    .freq-bar:nth-child(8)  { animation-delay: 0.35s; height: 13px; }
+    .freq-bar:nth-child(9)  { animation-delay: 0.08s; height: 4px; }
+    .freq-bar:nth-child(10) { animation-delay: 0.5s; height: 16px; }
+    .freq-bar:nth-child(11) { animation-delay: 0.22s; height: 9px; }
+    .freq-bar:nth-child(12) { animation-delay: 0.18s; height: 5px; }
+
+    /* Custom scrollbars */
+    /* ===== INTERACTIVE DASHBOARD & FLASH ===== */
+    .flash-overlay {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .flash-overlay.flash-active {
+      opacity: 0.95;
+      transition: none;
+    }
+    .flash-overlay.flash-fade {
+      opacity: 0;
+      transition: opacity 0.35s ease-out;
+    }
+    .flash-overlay.flash-complete {
+      background: var(--accent-green);
+      opacity: 0.55;
+      transition: none;
+    }
+
+    .chat-view {
+      transition: flex-direction 0.3s ease;
+    }
+    .chat-view.split-active {
+      flex-direction: row !important;
+    }
+    .chat-view.split-active .messages-area {
+      flex: 0 0 50% !important;
+      border-right: 1px dashed var(--glass-border);
+    }
+    .chat-view.split-active .floating-sticker-overlay {
+      display: none !important;
+    }
+
+    /* Split-screen task dashboard */
+    .task-dashboard {
+      flex: 0 0 50%;
+      background: rgba(8, 4, 28, 0.82);
+      backdrop-filter: blur(25px);
+      padding: 20px;
+      display: none;
+      flex-direction: column;
+      animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 8;
+      overflow-y: auto;
+      border-left: 1px dashed var(--glass-border);
+    }
+    .chat-view.split-active .task-dashboard {
+      display: flex;
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .dashboard-header {
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dashboard-title-glow {
+      text-shadow: 0 0 10px var(--accent);
+    }
+
+    /* === HOLOGRAM PROJECTOR (LARGE ANIMATED ENTER) === */
+    .holo-projector {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0) rotate(-15deg);
+      width: 460px;
+      max-width: 90vw;
+      background: rgba(5, 3, 18, 0.94);
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 45px rgba(0, 240, 255, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.2);
+      border-radius: 20px;
+      padding: 30px 24px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      backdrop-filter: blur(25px);
+      text-align: center;
+    }
+    .holo-projector.active {
+      transform: translate(-50%, -50%) scale(1) rotate(0deg);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .holo-projector.shrink-glide {
+      transform: translate(22vw, -25vh) scale(0.1) rotate(15deg);
+      opacity: 0;
+      transition: all 0.6s cubic-bezier(0.6, -0.28, 0.735, 0.045);
+    }
+
+    .holo-ring-outer {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 16px;
+      border: 3px dashed var(--accent);
+      border-radius: 50%;
+      animation: spinClockwise 8s linear infinite;
+    }
+    .holo-ring-inner {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 74px;
+      height: 74px;
+      border: 2px dashed var(--accent-pink);
+      border-radius: 50%;
+      animation: spinCounter 4s linear infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .holo-scanner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scanLaser 2s ease-in-out infinite;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    @keyframes spinClockwise {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes spinCounter {
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @keyframes scanLaser {
+      0%, 100% { top: 0%; opacity: 0.2; }
+      50% { top: 100%; opacity: 1; }
+    }
+
+    /* === MULTI-TASK GRID SYSTEM === */
+    .task-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+    .task-grid.multi-layout {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .dynamic-task-card {
+      background: rgba(0, 240, 255, 0.02);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: 12px;
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: taskFadeIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
+    }
+
+    @keyframes taskFadeIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .dynamic-task-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-pink));
+      opacity: 0.7;
+    }
+
+    .dynamic-task-card.task-complete {
+      border-color: var(--accent-green);
+      background: rgba(57, 255, 20, 0.05);
+      box-shadow: 0 0 15px rgba(57, 255, 20, 0.12);
+    }
+    .dynamic-task-card.task-complete::before {
+      background: var(--accent-green);
+    }
+
+    .task-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .task-card-title {
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .task-card-status {
+      font-size: 9px;
+      color: var(--accent);
+      padding: 1px 6px;
+      background: rgba(0, 240, 255, 0.1);
+      border-radius: 4px;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+    }
+    .task-complete .task-card-status {
+      color: var(--accent-green);
+      background: rgba(57, 255, 20, 0.15);
+      border-color: rgba(57, 255, 20, 0.25);
+    }
+
+    .progress-ring-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-ring {
+      width: 36px;
+      height: 36px;
+      transform: rotate(-90deg);
+      flex-shrink: 0;
+    }
+    .progress-ring__circle {
+      stroke: var(--accent);
+      stroke-width: 3.5;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      transition: stroke-dashoffset 0.1s ease-out;
+    }
+    .progress-ring-bg {
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 3.5;
+    }
+
+    .progress-label-value {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--accent);
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .task-complete .progress-label-value {
+      color: var(--accent-green);
+    }
+
+    .task-telemetry {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9.5px;
+      color: rgba(232, 249, 255, 0.45);
+      line-height: 1.3;
+      height: 24px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .terminal-logs::-webkit-scrollbar,
+    .messages-area::-webkit-scrollbar,
+    .task-dashboard::-webkit-scrollbar {
+      width: 4px;
+    }
+    .terminal-logs::-webkit-scrollbar-thumb,
+    .messages-area::-webkit-scrollbar-thumb,
+    .task-dashboard::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.15);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Flash screen overlay -->
+  <div class="flash-overlay" id="flash-overlay"></div>
+
+  <!-- Holographic Task Projector Modal -->
+  <div class="holo-projector" id="hologram-projector">
+    <div class="holo-ring-outer">
+      <div class="holo-ring-inner heading-font">⚡</div>
+      <div class="holo-scanner"></div>
+    </div>
+    <div class="section-title heading-font" style="color: var(--accent-pink); font-size: 11px; letter-spacing: 2px; margin-bottom: 4px;">INGESTION STREAM</div>
+    <h2 id="holo-task-title" class="heading-font" style="font-size: 16px; margin: 6px 0; color: #fff; text-shadow: 0 0 10px var(--accent); text-transform: uppercase;"></h2>
+    <p id="holo-task-subtitle" class="mono" style="font-size: 10px; color: rgba(232, 249, 255, 0.6);">COMPILING SYSTEM MATRIX...</p>
+  </div>
+
+  <div class="app">
+
+    <!-- ===== HEADER BAR ===== -->
+    <header class="header-bar">
+      <div class="brand">
+        <div class="logo-container heading-font">N</div>
+        <div class="brand-name heading-font">NEXUS OS</div>
+        <span class="badge-trending">NEXUS CORE v4.6</span>
+      </div>
+      <div class="telemetry-header mono">
+        <div class="status-tag">
+          <span class="status-pulse-dot"></span>
+          <span>SYSTEM ACTIVE // NO CAP</span>
+        </div>
+        <span class="time-ticker" id="clock">00:00:00</span>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" aria-label="Mic Settings">🎤</button>
+        <button class="header-btn" aria-label="Terminal Config">⚙</button>
+        <div class="logo-container heading-font" style="background: var(--accent-pink); width: 34px; height: 34px; box-shadow: 0 0 10px rgba(255,0,127,0.4);">B</div>
+      </div>
+    </header>
+
+    <!-- ===== COCKPIT AREA ===== -->
+    <div class="cockpit-view">
+
+      <!-- 3D WebGL Live Background -->
+      <canvas id="canvas3d"></canvas>
+
+      <!-- Gemini Aurora Shine background glow -->
+      <div class="aurora-shine">
+        <div class="aurora-orb aurora-orb--1"></div>
+        <div class="aurora-orb aurora-orb--2"></div>
+        <div class="aurora-orb aurora-orb--3"></div>
+      </div>
+      <div class="sweep-bar"></div>
+
+      <!-- ===== LEFT PANEL: SYSTEM DIAGS ===== -->
+      <aside class="system-sidebar">
+        <div class="section-title heading-font">🛡️ System Status</div>
+
+        <div class="stat-card">
+          <div class="stat-label-row">
+            <span>Neural Core Temp</span>
+            <span class="stat-badge">3,200K</span>
+          </div>
+          <div class="progress-bar-container"><div class="progress-bar-fill" style="width: 98%;"></div></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label-row">
+            <span>Kernel Matrix</span>
+            <span style="color: var(--accent-green); font-weight: bold;">STABLE</span>
+          </div>
+          <div class="progress-bar-container"><div class="progress-bar-fill" style="width: 100%;"></div></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label-row">
+            <span>Compute Level</span>
+            <span style="color: var(--accent); font-weight: bold;">MAX</span>
+          </div>
+          <div class="progress-bar-container"><div class="progress-bar-fill" style="width: 100%;"></div></div>
+        </div>
+
+        <div class="section-title heading-font" style="margin-top: 10px;">💾 Active Feeds</div>
+        <div class="terminal-logs mono">
+          <div class="log-line"><span class="log-tag">NEXUS_OS //</span> BOOT SEQUENCE OK</div>
+          <div class="log-line"><span class="log-tag">NEXUS_CORE //</span> SYNCHRONIZED</div>
+          <div class="log-line"><span class="log-tag">VIBE_CHECK //</span> 100% STABLE</div>
+          <div class="log-line"><span class="log-tag">COMPUTE //</span> CALIBRATED</div>
+          <div class="log-line"><span class="log-tag">SYS_ALERTS //</span> ZERO Ls DETECTED</div>
+        </div>
+      </aside>
+
+      <!-- ===== CENTER CHAT VIEW ===== -->
+      <main class="chat-view">
+
+        <!-- Brat/Y2K Floating Overlay -->
+        <div class="floating-sticker-overlay">
+          <span class="sticker-badge heading-font">Vibe Check</span>
+          <div class="overlay-list mono">
+            <div class="overlay-list-item">⚡ Neural Core: serving Ws</div>
+            <div class="overlay-list-item">📡 Satellite Uplink: stable</div>
+            <div class="overlay-list-item">🛡️ System protocols: calibrated</div>
+          </div>
+        </div>
+
+        <div class="messages-area" id="messages">
+
+          <!-- Message 1 — NEXUS -->
+          <div class="bubble-row">
+            <div class="bubble-avatar">N</div>
+            <div class="chat-bubble">
+              <div class="bubble-title heading-font">NEXUS ▷</div>
+              Good evening. All systems are completely calibrated (no cap). Threat scanners report zero Ls. What can I help you with?
+              <div class="vibe-tag mono">
+                <span class="vibe-pulse-dot"></span>
+                NEXUS CORE // ONLINE
+              </div>
+            </div>
+          </div>
+
+          <!-- Message 2 — User -->
+          <div class="bubble-row bubble-row--right">
+            <div class="chat-bubble chat-bubble--user">
+              <div class="bubble-title bubble-title--user heading-font">YOU ▷</div>
+              NEXUS, do a quick sweep of the systems, optimize performance output, and pull up the latest AI insights.
+            </div>
+          </div>
+
+          <!-- Message 3 — NEXUS Response -->
+          <div class="bubble-row">
+            <div class="bubble-avatar">N</div>
+            <div class="chat-bubble">
+              <div class="bubble-title heading-font">NEXUS ▷</div>
+              Processing complete. System sweeps are done, here are the stats:
+
+              <div class="subtask-box">
+                <div class="pill-tags-row">
+                  <span class="pill-tag mono">System Sweep</span>
+                  <span class="pill-tag mono">Perf Boost</span>
+                  <span class="pill-tag mono">AI Insights</span>
+                </div>
+                <div class="subtask-row">
+                  <span class="subtask-bullet">✦</span>
+                  <span><strong>System Sweep:</strong> Clean scans. Threat matrix is at zero.</span>
+                </div>
+                <div class="subtask-row">
+                  <span class="subtask-bullet">✦</span>
+                  <span><strong>Performance:</strong> Optimization locked in. We are so back.</span>
+                </div>
+                <div class="subtask-row">
+                  <span class="subtask-bullet">✦</span>
+                  <span><strong>AI Insights:</strong> Deep Learning, Neural Networks, and Transformers indexed (certified Ws).</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message 4 — Typing indicator -->
+          <div class="bubble-row">
+            <div class="bubble-avatar">N</div>
+            <div class="chat-bubble bouncing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Split-screen task processor dashboard -->
+        <div class="task-dashboard" id="task-dashboard">
+          <div class="dashboard-header heading-font">
+            <span class="dashboard-title-glow">⚡ TASK DISPATCH CENTER</span>
+            <span class="mono" id="dispatch-percentage" style="font-size: 11px; color: var(--accent-pink);">0%</span>
+          </div>
+
+          <!-- Dynamic Task Grid Container -->
+          <div class="task-grid" id="task-grid-container"></div>
+
+          <div class="section-title heading-font" style="margin-top: 10px;">💾 DISPATCH FEEDS</div>
+          <div class="terminal-logs mono" id="dispatch-logs" style="height: 120px;">
+            <div class="log-line">> WAITING FOR COMMAND INGESTION...</div>
+          </div>
+        </div>
+
+        <!-- ===== INPUT TERMINAL DOCK ===== -->
+        <div class="input-dock">
+          <div class="input-capsule">
+            <button class="action-btn" aria-label="Attach File">📎</button>
+            <input type="text" class="input-field-dock" id="input-terminal" placeholder="ENTER TASK OR VOICE COMMAND PROTOCOL..." />
+            <button class="action-btn action-btn--mic" aria-label="Activate Voice input">🎤</button>
+            <button class="action-btn action-btn--send" id="send-btn" aria-label="Execute Command">▲</button>
+          </div>
+          <!-- Voice spectrum waves -->
+          <div class="frequencies-dock">
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+            <div class="freq-bar"></div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- ===== RIGHT PANEL: TACTICAL CONTROL ===== -->
+      <aside class="tactical-sidebar">
+        <div class="section-title heading-font">⚠️ Critical Alerts</div>
+        <div class="alert-sticker">
+          <div class="alert-sticker-tag mono">WARNING</div>
+          <div class="alert-sticker-title heading-font">Core Power Flux</div>
+          <div class="alert-sticker-desc mono">Minor variance in core stabilizer. NEXUS is compensating. We are so back.</div>
+        </div>
+
+        <div class="section-title heading-font" style="margin-top: 10px;">🎨 Color Mode</div>
+        <div class="theme-switcher" style="flex-wrap: wrap;">
+          <div class="theme-btn theme-btn--stealth" title="Stealth Core (Cyan/Pink)" onclick="setSuitTheme('stealth')"></div>
+          <div class="theme-btn theme-btn--stark" title="Classic Gold (Gold/Red)" onclick="setSuitTheme('stark')"></div>
+          <div class="theme-btn theme-btn--brat" title="Brat Tech (Green/Purple)" onclick="setSuitTheme('brat')"></div>
+          <div class="theme-btn theme-btn--hologold" title="Hologram Gold (Gold/Teal)" onclick="setSuitTheme('hologold')"></div>
+          <div class="theme-btn theme-btn--white" title="Lab Cleanroom (White)" onclick="setSuitTheme('white')"></div>
+          <div class="theme-btn theme-btn--black" title="Deep Obsidian (Black)" onclick="setSuitTheme('black')"></div>
+        </div>
+
+        <div class="section-title heading-font" style="margin-top: 10px;">📡 Network Link</div>
+        <div class="sidebar-menu-item sidebar-menu-item--active">
+          <span>🛰️ Primary Node Link</span>
+        </div>
+        <div class="sidebar-menu-item">
+          <span>📡 Diagnostics Link</span>
+        </div>
+
+        <div class="section-title heading-font" style="margin-top: 14px;">👥 Active Agents</div>
+        <div class="sidebar-menu-item">
+          <span>🤖 AI Assistant (Active)</span>
+        </div>
+        <div class="sidebar-menu-item">
+          <span>⚙️ System Monitor</span>
+        </div>
+
+        <!-- User profile sticky tag with dropdown -->
+        <div class="user-sticker" id="user-sticker-btn">
+          <div class="user-sticker-avatar">U</div>
+          <div class="user-sticker-name">User</div>
+          <span style="font-size: 8px; color: var(--accent-pink); border: 1.5px solid var(--accent-pink); padding: 1px 6px; border-radius: 20px; font-weight: bold; margin-left: auto;">ADMIN</span>
+
+          <!-- Dropdown menu -->
+          <div class="sticker-dropdown">
+            <div class="sticker-drop-item">👤 Profile Settings</div>
+            <div class="sticker-drop-item">📊 Usage Dashboard</div>
+            <div class="sticker-drop-item">🔑 Access Keys</div>
+            <div class="sticker-drop-item sticker-drop-item--red">⏻ Disconnect</div>
+          </div>
+        </div>
+      </aside>
+
+    </div><!-- /cockpit-view -->
+
+  </div><!-- /app -->
+
+  <!-- Clock & Three.js 3D Hologram Setup -->
+  <script>
+    // --- Global Theme Engine ---
+    const themes = {
+      stealth: {
+        bg: '#03020d',
+        accent: '#00f0ff',
+        accentPink: '#ff007f',
+        text: '#e8f9ff',
+        glassBorder: 'rgba(0, 240, 255, 0.2)',
+        coreEmissive: 0x00f0ff,
+        coreColor: 0xff007f,
+        ambient: 0x0f0525
+      },
+      stark: {
+        bg: '#0e0101',
+        accent: '#ffd700',
+        accentPink: '#ff3c00',
+        text: '#fff6e0',
+        glassBorder: 'rgba(255, 60, 0, 0.2)',
+        coreEmissive: 0xff3c00,
+        coreColor: 0xffd700,
+        ambient: 0x250505
+      },
+      brat: {
+        bg: '#050a02',
+        accent: '#39ff14',
+        accentPink: '#bd00ff',
+        text: '#e0ffe6',
+        glassBorder: 'rgba(57, 255, 20, 0.2)',
+        coreEmissive: 0xbd00ff,
+        coreColor: 0x39ff14,
+        ambient: 0x052505
+      },
+      hologold: {
+        bg: '#0c0800',
+        accent: '#ffcc00',
+        accentPink: '#00ffcc',
+        text: '#fffae6',
+        glassBorder: 'rgba(255, 204, 0, 0.2)',
+        coreEmissive: 0x00ffcc,
+        coreColor: 0xffcc00,
+        ambient: 0x252005
+      },
+      white: {
+        bg: '#f5f8fc',
+        accent: '#0070f3',
+        accentPink: '#d0006f',
+        text: '#0b0f19',
+        glassBorder: 'rgba(0, 112, 243, 0.2)',
+        coreEmissive: 0x0070f3,
+        coreColor: 0xd0006f,
+        ambient: 0xcccccc
+      },
+      black: {
+        bg: '#000000',
+        accent: '#ffffff',
+        accentPink: '#333333',
+        text: '#ffffff',
+        glassBorder: 'rgba(255, 255, 255, 0.25)',
+        coreEmissive: 0xffffff,
+        coreColor: 0x666666,
+        ambient: 0x111111
+      }
+    };
+
+    window.setSuitTheme = function(themeKey) {
+      const theme = themes[themeKey];
+      if (!theme) return;
+
+      const root = document.documentElement;
+      root.style.setProperty('--bg', theme.bg);
+      root.style.setProperty('--accent', theme.accent);
+      root.style.setProperty('--accent-pink', theme.accentPink);
+      root.style.setProperty('--text', theme.text);
+      root.style.setProperty('--glass-border', theme.glassBorder);
+
+      if (window.updateSceneColors) {
+        window.updateSceneColors(theme);
+      }
+    };
+
+    // --- Live Clock ---
+    (function() {
+      const clockEl = document.getElementById('clock');
+      function tick() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        clockEl.textContent = h + ':' + m + ':' + s;
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+
+    // --- 3D Scene Setup ---
+    (function() {
+      const canvas = document.getElementById('canvas3d');
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x03020d, 0.015);
+
+      // Camera setup
+      const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      camera.position.set(0, 0.8, 8.0);
+      camera.lookAt(0, 0, 0);
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      function resizeRenderer() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        if (canvas.width !== width || canvas.height !== height) {
+          renderer.setSize(width, height, false);
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+        }
+      }
+      resizeRenderer();
+
+      // --- Lights ---
+      const ambientLight = new THREE.AmbientLight(0x0f0525);
+      scene.add(ambientLight);
+
+      const pointLight = new THREE.PointLight(0x00f0ff, 1.8, 30);
+      pointLight.position.set(3, 4, 5);
+      scene.add(pointLight);
+
+      const coreLight = new THREE.PointLight(0xff007f, 2.5, 12);
+      coreLight.position.set(0, 0, 0);
+      scene.add(coreLight);
+
+      // --- Holographic Reactor Group ---
+      const reactorGroup = new THREE.Group();
+      reactorGroup.position.set(0, 0.2, 0);
+      scene.add(reactorGroup);
+
+      // 1. Core Sphere (Changing color cyan/pink gradient)
+      const coreGeom = new THREE.SphereGeometry(0.5, 32, 32);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0xff007f,
+        emissive: 0x00f0ff,
+        emissiveIntensity: 1.8,
+        metalness: 0.9,
+        roughness: 0.15,
+        transparent: true,
+        opacity: 0.8
+      });
+      const coreSphere = new THREE.Mesh(coreGeom, coreMat);
+      reactorGroup.add(coreSphere);
+
+      // 2. Inner detailed wireframe ring
+      const innerWireGeom = new THREE.TorusGeometry(0.7, 0.015, 16, 100);
+      const innerWireMat = new THREE.MeshBasicMaterial({
+        color: 0x00f0ff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.85
+      });
+      const innerWire = new THREE.Mesh(innerWireGeom, innerWireMat);
+      reactorGroup.add(innerWire);
+
+      // 3. Radial Spoke Pins
+      const spokeGroup = new THREE.Group();
+      const spokeGeom = new THREE.CylinderGeometry(0.015, 0.015, 0.25, 8);
+      const spokeMat = new THREE.MeshStandardMaterial({
+        color: 0xff007f,
+        emissive: 0x00f0ff,
+        emissiveIntensity: 1.2,
+        metalness: 0.8,
+        transparent: true,
+        opacity: 0.95
+      });
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const spoke = new THREE.Mesh(spokeGeom, spokeMat);
+        spoke.position.set(Math.cos(angle) * 0.6, Math.sin(angle) * 0.6, 0);
+        spoke.rotation.z = angle + Math.PI / 2;
+        spokeGroup.add(spoke);
+      }
+      reactorGroup.add(spokeGroup);
+
+      // 4. Bracket Nodes (Segmented Ring)
+      const bracketGroup = new THREE.Group();
+      const bracketGeom = new THREE.BoxGeometry(0.06, 0.04, 0.08);
+      const bracketMat = new THREE.MeshStandardMaterial({
+        color: 0x00f0ff,
+        emissive: 0xff007f,
+        emissiveIntensity: 1.5,
+        transparent: true,
+        opacity: 0.95
+      });
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const bracket = new THREE.Mesh(bracketGeom, bracketMat);
+        bracket.position.set(Math.cos(angle) * 0.9, Math.sin(angle) * 0.9, 0);
+        bracket.rotation.z = angle;
+        bracketGroup.add(bracket);
+      }
+      reactorGroup.add(bracketGroup);
+
+      // 5. Outer Torus Ring 1 (Middle)
+      const ringMat = new THREE.MeshStandardMaterial({
+        color: 0x00f0ff,
+        emissive: 0x220033,
+        emissiveIntensity: 0.9,
+        transparent: true,
+        opacity: 0.4
+      });
+      const outerRing1Geom = new THREE.TorusGeometry(1.25, 0.035, 16, 100);
+      const outerRing1 = new THREE.Mesh(outerRing1Geom, ringMat);
+      reactorGroup.add(outerRing1);
+
+      // 6. Outer Torus Ring 2
+      const outerRing2Geom = new THREE.TorusGeometry(1.55, 0.02, 16, 100);
+      const outerRing2 = new THREE.Mesh(outerRing2Geom, ringMat);
+      reactorGroup.add(outerRing2);
+
+      // (Grid floor and cylinder guidelines removed for clean shine effect)
+
+      // --- Floating Holographic HUD Panels ---
+      const createHoloPanel = (x, y, z, width, height, color) => {
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const material = new THREE.MeshStandardMaterial({
+          color: color,
+          emissive: color,
+          emissiveIntensity: 0.4,
+          transparent: true,
+          opacity: 0.12,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        });
+        const panel = new THREE.Mesh(geometry, material);
+        panel.position.set(x, y, z);
+        scene.add(panel);
+
+        const borderGeom = new THREE.EdgesGeometry(geometry);
+        const borderMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.35 });
+        const border = new THREE.LineSegments(borderGeom, borderMat);
+        panel.add(border);
+
+        return panel;
+      };
+
+      const leftHoloPanel = createHoloPanel(-2.2, 1.2, -1.8, 2.4, 1.6, 0x00f0ff);
+      leftHoloPanel.rotation.y = 0.3;
+
+      const rightHoloPanel = createHoloPanel(2.2, -0.6, -1.8, 2.2, 1.4, 0xff007f);
+      rightHoloPanel.rotation.y = -0.25;
+
+      const topHoloPanel = createHoloPanel(0, 2.2, -2.5, 3.8, 0.9, 0x00ffaa);
+      topHoloPanel.rotation.x = 0.15;
+
+      // --- Scene Color Synchronizer ---
+      window.updateSceneColors = function(theme) {
+        ambientLight.color.setHex(theme.ambient);
+        pointLight.color.setHex(theme.coreEmissive);
+        coreLight.color.setHex(theme.coreColor);
+
+        coreSphere.material.color.setHex(theme.coreColor);
+        coreSphere.material.emissive.setHex(theme.coreEmissive);
+        innerWire.material.color.setHex(theme.coreEmissive);
+
+        spokeGroup.children.forEach(spoke => {
+          spoke.material.color.setHex(theme.coreColor);
+          spoke.material.emissive.setHex(theme.coreEmissive);
+        });
+
+        bracketGroup.children.forEach(bracket => {
+          bracket.material.color.setHex(theme.coreEmissive);
+          bracket.material.emissive.setHex(theme.coreColor);
+        });
+
+        outerRing1.material.color.setHex(theme.coreEmissive);
+        outerRing2.material.color.setHex(theme.coreEmissive);
+
+        particleSystem.material.color.setHex(theme.coreEmissive);
+        hexField.material.color.setHex(theme.coreEmissive);
+
+        leftHoloPanel.material.color.setHex(theme.coreEmissive);
+        leftHoloPanel.children[0].material.color.setHex(theme.coreEmissive);
+
+        rightHoloPanel.material.color.setHex(theme.coreEmissive);
+        rightHoloPanel.children[0].material.color.setHex(theme.coreEmissive);
+
+        topHoloPanel.material.color.setHex(theme.coreColor);
+        topHoloPanel.children[0].material.color.setHex(theme.coreColor);
+      };
+
+      // --- Floating Holographic Particles (Engaging Background) ---
+      const particleCount = 900;
+      const particlesGeometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        positions[i*3] = (Math.random() - 0.5) * 16;
+        positions[i*3+1] = (Math.random() - 0.5) * 10;
+        positions[i*3+2] = (Math.random() - 0.5) * 8 - 2;
+      }
+      particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const particlesMaterial = new THREE.PointsMaterial({
+        color: 0x00f0ff,
+        size: 0.04,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending
+      });
+      const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
+      scene.add(particleSystem);
+
+      // Hex green/cyan dots
+      const hexCount = 450;
+      const hexGeometry = new THREE.BufferGeometry();
+      const hexPositions = new Float32Array(hexCount * 3);
+      for (let i = 0; i < hexCount; i++) {
+        hexPositions[i*3] = (Math.random() - 0.5) * 14;
+        hexPositions[i*3+1] = (Math.random() - 0.5) * 8;
+        hexPositions[i*3+2] = (Math.random() - 0.5) * 6 - 1;
+      }
+      hexGeometry.setAttribute('position', new THREE.BufferAttribute(hexPositions, 3));
+      const hexMaterial = new THREE.PointsMaterial({
+        color: 0x00ffaa,
+        size: 0.024,
+        transparent: true,
+        opacity: 0.4,
+        blending: THREE.AdditiveBlending
+      });
+      const hexField = new THREE.Points(hexGeometry, hexMaterial);
+      scene.add(hexField);
+
+      // --- Interactive Parallax ---
+      let mouseX = 0, mouseY = 0;
+      let targetX = 0, targetY = 0;
+
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+      });
+
+      // --- Interactive Click Flash ---
+      let flashPulse = 0;
+      window.addEventListener('click', (e) => {
+        if (e.clientY > 64 && e.clientX > 260 && e.clientX < window.innerWidth - 260) {
+          flashPulse = 1.0;
+        }
+      });
+
+      // --- Animation Loop ---
+      window.temporalSpeed = 1.0;
+      let time = 0;
+      function animate() {
+        requestAnimationFrame(animate);
+        time += 0.012 * window.temporalSpeed;
+
+        // Decay temporal speed smoothly
+        if (window.temporalSpeed > 1.0) {
+          window.temporalSpeed -= (window.temporalSpeed - 1.0) * 0.03;
+          if (window.temporalSpeed < 1.01) window.temporalSpeed = 1.0;
+        }
+
+        resizeRenderer();
+
+        // Parallax smooth interpolation
+        targetX += (mouseX - targetX) * 0.05;
+        targetY += (mouseY - targetY) * 0.05;
+
+        // Apply Parallax tilt to reactor group
+        reactorGroup.rotation.y = time * 0.2 + targetX * 0.45;
+        reactorGroup.rotation.x = Math.sin(time * 0.15) * 0.1 + targetY * 0.35;
+
+        bracketGroup.rotation.z = -time * 0.65;
+        spokeGroup.rotation.z = time * 0.35;
+
+        // Outer rings
+        outerRing1.rotation.y = time * 0.4;
+        outerRing1.rotation.x = Math.sin(time * 0.25) * 0.15;
+
+        outerRing2.rotation.y = -time * 0.2;
+        outerRing2.rotation.z = Math.cos(time * 0.2) * 0.12;
+
+        // Float 3D HUD panels
+        leftHoloPanel.position.y = 1.2 + Math.sin(time * 0.5) * 0.08;
+        leftHoloPanel.rotation.y = 0.3 + targetX * 0.15;
+        leftHoloPanel.rotation.x = targetY * 0.1;
+
+        rightHoloPanel.position.y = -0.6 + Math.cos(time * 0.6) * 0.06;
+        rightHoloPanel.rotation.y = -0.25 + targetX * 0.15;
+        rightHoloPanel.rotation.x = targetY * 0.1;
+
+        topHoloPanel.position.y = 2.2 + Math.sin(time * 0.4) * 0.05;
+        topHoloPanel.rotation.y = targetX * 0.1;
+        topHoloPanel.rotation.x = 0.15 + targetY * 0.1;
+
+        // Pulsing and flashing core
+        let currentIntensity = 2.0 + Math.sin(time * 8) * 0.7;
+        let scaleOffset = Math.sin(time * 8) * 0.04;
+
+        if (flashPulse > 0.01) {
+          currentIntensity += flashPulse * 9.0;
+          scaleOffset += flashPulse * 0.3;
+          flashPulse *= 0.92;
+        }
+
+        const scale = 1.0 + scaleOffset;
+        coreSphere.scale.set(scale, scale, scale);
+        coreLight.intensity = currentIntensity;
+
+        // Gradient shifting core colors
+        coreSphere.material.color.setHSL((Math.sin(time * 0.2) + 1.0) / 2.0 * 0.2 + 0.85, 1.0, 0.5);
+
+        // Drift particles
+        particleSystem.rotation.y = time * 0.03 + targetX * 0.15;
+        particleSystem.rotation.x = Math.sin(time * 0.05) * 0.05 + targetY * 0.1;
+
+        // Scale particle size/brightness during acceleration
+        particleSystem.material.size = 0.04 * (1.0 + (window.temporalSpeed - 1.0) * 0.4);
+        particleSystem.material.opacity = 0.55 * (1.0 + (window.temporalSpeed - 1.0) * 0.15);
+
+        hexField.rotation.z = -time * 0.015;
+        hexField.rotation.y = time * 0.01 + targetX * 0.1;
+
+        // (GridHelper rotation removed)
+
+        // Parallax camera drift
+        camera.position.x = Math.sin(time * 0.3) * 0.1 + targetX * 0.7;
+        camera.position.y = 0.8 + Math.cos(time * 0.2) * 0.05 + targetY * 0.6;
+        camera.lookAt(targetX * 0.4, targetY * 0.2, 0);
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        resizeRenderer();
+      });
+
+      // --- Interactive Task Dispatcher Logic ---
+      (function() {
+        const inputField = document.getElementById('input-terminal');
+        const sendBtn = document.getElementById('send-btn');
+        const messagesContainer = document.getElementById('messages');
+        const chatView = document.querySelector('.chat-view');
+        const flashOverlay = document.getElementById('flash-overlay');
+        const projectorEl = document.getElementById('hologram-projector');
+        const projectorTitleEl = document.getElementById('holo-task-title');
+        const percentageEl = document.getElementById('dispatch-percentage');
+        const logsEl = document.getElementById('dispatch-logs');
+
+        let activeSubtasks = [];
+        let progressInterval = null;
+        let pendingApiResponse = null;
+
+        // Custom Synthesizers
+        function playBeep(freq, duration, type = 'sine') {
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+          } catch(e) {}
+        }
+
+        function playSynthSweep() {
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 1.2);
+            gain.gain.setValueAtTime(0.04, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.3);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 1.2);
+          } catch(e) {}
+        }
+
+        function playCompletionChime() {
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const playNote = (freq, start, dur) => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.value = freq;
+              gain.gain.setValueAtTime(0.15, ctx.currentTime + start);
+              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(ctx.currentTime + start);
+              osc.stop(ctx.currentTime + start + dur);
+            };
+            playNote(880, 0, 0.15);
+            playNote(1320, 0.08, 0.25);
+          } catch(e) {}
+        }
+
+        function appendLog(text, type = '') {
+          const div = document.createElement('div');
+          div.className = 'log-line';
+          if (type === 'pink') div.innerHTML = `<span class="log-tag">NEXUS //</span> ${text}`;
+          else div.innerHTML = `> ${text}`;
+          logsEl.appendChild(div);
+          logsEl.scrollTop = logsEl.scrollHeight;
+        }
+
+        // --- Real API Call ---
+        async function fetchNexusResponse(message) {
+          const token = localStorage.getItem('bb_token') || '';
+          try {
+            const res = await fetch('/api/chat/nexus', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({ message: message })
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            return data.reply || data.message || data.response || data.text || data.content || 'Processing complete.';
+          } catch(e) {
+            return 'Systems operational. Ready for your next command.';
+          }
+        }
+
+        function triggerTaskExecution(commandText) {
+          // Start real API call immediately (runs in parallel with animations)
+          pendingApiResponse = fetchNexusResponse(commandText);
+
+          // 1. Flash Screen & Play Synth Ingestion Sweep
+          flashOverlay.className = 'flash-overlay'; // Reset
+          void flashOverlay.offsetWidth; // Force reflow
+          flashOverlay.classList.add('flash-active');
+          playSynthSweep();
+
+          // Trigger WebGL Reactor Flash pulse
+          flashPulse = 1.3;
+
+          setTimeout(() => {
+            flashOverlay.classList.remove('flash-active');
+            flashOverlay.classList.add('flash-fade');
+          }, 50);
+
+          // 2. Large Holographic Projector Pop Up
+          projectorTitleEl.textContent = commandText;
+          projectorEl.classList.remove('shrink-glide');
+          projectorEl.classList.add('active');
+
+          // Add user message to chat history immediately
+          const userRow = document.createElement('div');
+          userRow.className = 'bubble-row bubble-row--right';
+          userRow.innerHTML = `
+            <div class="chat-bubble chat-bubble--user">
+              <div class="bubble-title bubble-title--user heading-font">YOU ▷</div>
+              ${commandText}
+            </div>
+          `;
+          messagesContainer.appendChild(userRow);
+
+          // Keep typing indicator at bottom
+          const typingIndicator = messagesContainer.querySelector('.bubble-row:last-child');
+          if (typingIndicator) {
+            messagesContainer.appendChild(typingIndicator);
+          }
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+          // Clear input field
+          inputField.value = '';
+
+          // Decompose command into subtasks based on context keywords
+          let subtaskTitles = [];
+          let commandLower = commandText.toLowerCase();
+          if (commandLower.includes("performance") || commandLower.includes("optimize") || commandLower.includes("speed") || commandLower.includes("diagnostic")) {
+            subtaskTitles = [
+              "Warming neural stabilizers",
+              "Vector calibration",
+              "Core thermal optimization"
+            ];
+          } else if (commandLower.includes("sweep") || commandLower.includes("scan") || commandLower.includes("security") || commandLower.includes("protocol")) {
+            subtaskTitles = [
+              "Deploying scan protocols",
+              "System perimeter sweep",
+              "Security matrix integration"
+            ];
+          } else if (commandLower.includes("data") || commandLower.includes("analysis") || commandLower.includes("report") || commandLower.includes("insight")) {
+            subtaskTitles = [
+              "Data stream indexing",
+              "Analysis compiler",
+              "Insights data export"
+            ];
+          } else {
+            subtaskTitles = [
+              "Quantum stream ingestion",
+              "Core flux balance",
+              "Neural NEXUS OS check"
+            ];
+          }
+
+          // 3. Projector Glides & Splits Screen
+          setTimeout(() => {
+            projectorEl.classList.add('shrink-glide');
+
+            setTimeout(() => {
+              projectorEl.classList.remove('active', 'shrink-glide');
+            }, 600);
+
+            chatView.classList.add('split-active');
+            playBeep(520, 0.15);
+
+            // Create and append new tasks
+            subtaskTitles.forEach(title => {
+              const id = 'task-' + Math.random().toString(36).substr(2, 9);
+              activeSubtasks.push({
+                id: id,
+                title: title.toUpperCase(),
+                progress: 0,
+                speed: 0.5 + Math.random() * 1.5,
+                status: 'QUEUED',
+                telemetry: 'INIT SYSTEM THREAD...',
+                complete: false
+              });
+            });
+
+            renderTaskGrid();
+            appendLog(`NEW THREAD INGESTED: "${commandText.toUpperCase()}"`, 'pink');
+            appendLog("RESOLVING SYSTEM SUBTASKS...");
+
+            // Start the update loop if not active
+            if (!progressInterval) {
+              progressInterval = setInterval(updateTaskProgress, 50);
+            }
+          }, 1200);
+        }
+
+        function renderTaskGrid() {
+          const container = document.getElementById('task-grid-container');
+
+          // Switch to dual column if we have more than 3 tasks running in parallel
+          if (activeSubtasks.length > 3) {
+            container.classList.add('multi-layout');
+          } else {
+            container.classList.remove('multi-layout');
+          }
+
+          activeSubtasks.forEach(task => {
+            let card = document.getElementById(task.id);
+            if (!card) {
+              card = document.createElement('div');
+              card.id = task.id;
+              card.className = 'dynamic-task-card';
+              card.innerHTML = `
+                <div class="task-card-header">
+                  <span class="task-card-title heading-font">${task.title}</span>
+                  <span class="task-card-status mono" id="status-${task.id}">${task.status}</span>
+                </div>
+                <div class="progress-ring-container">
+                  <svg class="progress-ring" viewBox="0 0 40 40">
+                    <circle class="progress-ring-bg" cx="20" cy="20" r="16" fill="transparent"/>
+                    <circle class="progress-ring__circle" id="circle-${task.id}" cx="20" cy="20" r="16" fill="transparent" />
+                  </svg>
+                  <div class="progress-label-value" id="percent-${task.id}">0%</div>
+                  <div class="task-telemetry mono" id="telemetry-${task.id}">${task.telemetry}</div>
+                </div>
+              `;
+              container.appendChild(card);
+            }
+          });
+        }
+
+        function updateTaskProgress() {
+          let allDone = true;
+          let totalProgress = 0;
+
+          activeSubtasks.forEach(task => {
+            if (task.progress < 100) {
+              allDone = false;
+              task.progress += task.speed;
+              if (task.progress >= 100) {
+                task.progress = 100;
+                task.status = 'COMPLETE';
+                task.telemetry = 'ALL THREADS OK // ZERO Ls';
+                task.complete = true;
+
+                const card = document.getElementById(task.id);
+                if (card) card.classList.add('task-complete');
+
+                playBeep(980, 0.08, 'triangle');
+                appendLog(`SUBTASK RESOLVED: ${task.title}`);
+              } else {
+                task.status = 'COMPILING...';
+                if (Math.random() < 0.2) {
+                  const telemetryLines = [
+                    "COMPILING BINDINGS...",
+                    "MATRIX LOAD: " + Math.floor(40 + Math.random()*50) + "%",
+                    "TRANSCEIVING NODE...",
+                    "NEXUS CORE ADJ: " + (Math.random() * 2 - 1).toFixed(2),
+                    "VIBE CHECKING CORE..."
+                  ];
+                  task.telemetry = telemetryLines[Math.floor(Math.random() * telemetryLines.length)];
+                }
+              }
+            }
+
+            totalProgress += task.progress;
+
+            // Update DOM Elements
+            const statusEl = document.getElementById(`status-${task.id}`);
+            const circleEl = document.getElementById(`circle-${task.id}`);
+            const percentEl = document.getElementById(`percent-${task.id}`);
+            const telemetryEl = document.getElementById(`telemetry-${task.id}`);
+
+            if (statusEl) statusEl.textContent = task.status;
+            if (percentEl) percentEl.textContent = Math.floor(task.progress) + '%';
+            if (telemetryEl) telemetryEl.textContent = task.telemetry;
+            if (circleEl) {
+              // Stroke dash offset calculation
+              const offset = 100 - (task.progress / 100) * 100;
+              circleEl.style.strokeDashoffset = offset;
+            }
+          });
+
+          const avgProgress = Math.floor(totalProgress / activeSubtasks.length);
+          percentageEl.textContent = avgProgress + '%';
+
+          if (allDone && activeSubtasks.length > 0) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+            completeTasks();
+          }
+        }
+
+        async function completeTasks() {
+          // Complete effects
+          playCompletionChime();
+          window.temporalSpeed = 6.0; // hyper spin three.js core
+
+          // Edge green flash strobe
+          flashOverlay.className = 'flash-overlay';
+          void flashOverlay.offsetWidth;
+          flashOverlay.classList.add('flash-complete');
+          setTimeout(() => {
+            flashOverlay.classList.remove('flash-complete');
+            flashOverlay.classList.add('flash-fade');
+          }, 80);
+
+          appendLog("ALL SYSTEMS OPERATIVE // NO CAP", 'pink');
+
+          // Wait for the real API response (likely already resolved)
+          let apiResponseText = 'Processing complete. All systems are running green.';
+          try {
+            if (pendingApiResponse) {
+              apiResponseText = await pendingApiResponse;
+              pendingApiResponse = null;
+            }
+          } catch(e) {}
+
+          // Accelerated typing / Response bubble
+          setTimeout(() => {
+            const typingIndicator = messagesContainer.querySelector('.bubble-row:last-child');
+            if (typingIndicator) typingIndicator.remove();
+
+            let summaryList = "";
+            activeSubtasks.forEach(t => {
+              summaryList += `
+                <div class="subtask-row">
+                  <span class="subtask-bullet">✦</span>
+                  <span><strong>${t.title}:</strong> Compiled successfully. System load stable (no cap).</span>
+                </div>
+              `;
+            });
+
+            const responseRow = document.createElement('div');
+            responseRow.className = 'bubble-row';
+            responseRow.innerHTML = `
+              <div class="bubble-avatar">N</div>
+              <div class="chat-bubble" style="animation: taskFadeIn 0.3s ease both;">
+                <div class="bubble-title heading-font">NEXUS ▷</div>
+                ${apiResponseText}
+                <div class="subtask-box">
+                  ${summaryList}
+                </div>
+                <div class="vibe-tag mono">
+                  <span class="vibe-pulse-dot"></span>
+                  NEXUS RESPONSE ENGINE // ONLINE
+                </div>
+              </div>
+            `;
+
+            messagesContainer.appendChild(responseRow);
+            if (typingIndicator) messagesContainer.appendChild(typingIndicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Shrink and fly out completed task cards
+            setTimeout(() => {
+              activeSubtasks.forEach(t => {
+                const card = document.getElementById(t.id);
+                if (card) {
+                  card.style.transform = 'scale(0.8) translateY(20px)';
+                  card.style.opacity = '0';
+                }
+              });
+
+              setTimeout(() => {
+                const container = document.getElementById('task-grid-container');
+                container.innerHTML = '';
+                activeSubtasks = [];
+                chatView.classList.remove('split-active');
+                playBeep(440, 0.1, 'triangle');
+              }, 400);
+            }, 3500);
+
+          }, 400);
+        }
+
+        // Input Listeners
+        inputField.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && inputField.value.trim()) {
+            triggerTaskExecution(inputField.value);
+          }
+        });
+
+        sendBtn.addEventListener('click', () => {
+          if (inputField.value.trim()) {
+            triggerTaskExecution(inputField.value);
+          }
+        });
+
+        const micBtn = document.querySelector('.action-btn--mic');
+        micBtn.addEventListener('click', () => {
+          const sampleCommands = [
+            "Run a full system diagnostic and optimize performance",
+            "Analyze current data streams and generate insights",
+            "Summarize the latest AI research trends",
+            "Sync all data nodes and verify connections"
+          ];
+          const randomCmd = sampleCommands[Math.floor(Math.random() * sampleCommands.length)];
+          inputField.value = randomCmd;
+          playBeep(640, 0.08);
+        });
+      })();
+    })();
+  </script>
+</body>
+</html>
