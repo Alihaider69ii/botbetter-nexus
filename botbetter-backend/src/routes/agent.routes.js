@@ -11,8 +11,8 @@ const upload = multer({
   limits: { fileSize: 12 * 1024 * 1024 },
 });
 
-const MAYA_INTRO = "Hi! I am Maya, your personal AI from BotBetter. I am powered by Nexus, India's first agentic AI. I can manage your schedule, send WhatsApp messages, help you prepare for exams, grow your business, create content, manage finances, and much more. All in your language. All with just one command. Click Login to access my full capabilities.";
-const KABIR_INTRO = "Kabir here. BotBetter's execution engine. Give me a command, I'll get it done. Simultaneously. In real time. Schedule, research, sell, create, learn. One platform. Infinite actions. Login to begin.";
+const MAYA_INTRO = "Hey! Maya here, your AI best friend from BotBetter! Yaar, imagine a friend who sends your WhatsApp messages, preps you for NEET, helps you sell more on Meesho, creates your Instagram reels, manages your budget, and plans your whole week. All at the same time! In Hindi, English, Hinglish, whatever feels like home. That is me. Powered by Nexus, India's first agentic AI. Come on, click Login and let us get things done together!";
+const KABIR_INTRO = "Yo! Kabir here, the execution guy at BotBetter! You talk, I deliver. Schedule your week? Done. Research trending products? Done. Send messages, create content, prep for interviews, manage your money? All done. Simultaneously. While you chill. Connected to WhatsApp, Gmail, Instagram, Meesho, Zerodha and more. Ten Indian languages. No delays, no excuses. BotBetter is India's first agentic AI and bhai, you will love it. Hit Login. Let us go!";
 
 // Public voice intro — no auth required
 router.post("/voice/intro", async (req, res) => {

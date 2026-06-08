@@ -486,12 +486,34 @@ export function Landing({
       // Fallback to browser TTS
       try {
         if (window.speechSynthesis) {
-          const MAYA_TEXT = "Hi! I am Maya, your personal AI from BotBetter. I can manage your schedule, send messages, and much more. Click Login to get started.";
-          const KABIR_TEXT = "Kabir here. BotBetter's execution engine. Give me a command and I'll get it done. Login to begin.";
-          const utt = new SpeechSynthesisUtterance(personality === "kabir" ? KABIR_TEXT : MAYA_TEXT);
+          const MAYA_TEXT = "Hey! Maya here, your AI best friend from BotBetter! Imagine a friend who sends your WhatsApp messages, preps you for exams, helps you sell more, creates your content, and plans your whole week. All at once! In Hindi, English, or whatever feels like home. That is me. India's first agentic AI. Click Login and let us get started!";
+          const KABIR_TEXT = "Yo! Kabir here, the execution guy at BotBetter. You talk, I deliver. Scheduling, research, messages, content, interviews, money management. Done. Simultaneously. While you chill. Connected to WhatsApp, Gmail, Instagram, and more. Ten Indian languages. BotBetter is India's first agentic AI. Hit Login. Let us go!";
+          const text = personality === "kabir" ? KABIR_TEXT : MAYA_TEXT;
+          const utt = new SpeechSynthesisUtterance(text);
           utt.lang = "en-IN";
-          utt.rate = 0.95;
-          utt.pitch = personality === "maya" ? 1.2 : 0.85;
+          utt.rate = personality === "kabir" ? 1.08 : 0.93;
+          utt.pitch = personality === "maya" ? 1.3 : 0.7;
+
+          // Try to select gender-appropriate voice
+          const assignVoice = () => {
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices.length) return;
+            const isMale = personality === "kabir";
+            const maleKeys = ["male", "man", "david", "mark", "daniel", "george", "tom", "alex", "james", "oliver"];
+            const femaleKeys = ["female", "woman", "zira", "hazel", "karen", "samantha", "victoria", "susan", "kate"];
+            const keys = isMale ? maleKeys : femaleKeys;
+            const pick = voices.find(v => v.lang.startsWith("en") && keys.some(k => v.name.toLowerCase().includes(k)))
+              ?? voices.find(v => v.lang.startsWith("en-IN"))
+              ?? voices.find(v => v.lang.startsWith("en"));
+            if (pick) utt.voice = pick;
+          };
+
+          if (window.speechSynthesis.getVoices().length) {
+            assignVoice();
+          } else {
+            window.speechSynthesis.addEventListener("voiceschanged", assignVoice, { once: true });
+          }
+
           setVoiceState((s) => ({ ...s, [personality]: "playing" }));
           utt.onend = () => setVoiceState((s) => ({ ...s, [personality]: "idle" }));
           window.speechSynthesis.speak(utt);
