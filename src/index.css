@@ -1,5 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
+/* ── BotBetter 3-Theme System ────────────────────────────────────────────── */
+:root,
+[data-theme="nexus"] {
+  --bb-bg:      #020510;
+  --bb-accent:  #00D4FF;
+  --bb-text:    #E0F7FF;
+  --bb-border:  rgba(0,212,255,0.14);
+  --bb-surface: rgba(0,212,255,0.04);
+  --bb-primary: #00D4FF;
+  --bb-glow:    rgba(0,212,255,0.3);
+  --bb-pink:    #FF007F;
+}
+
+[data-theme="void"] {
+  --bb-bg:      #000000;
+  --bb-accent:  #7C6BFF;
+  --bb-text:    #FFFFFF;
+  --bb-border:  #1A1A1A;
+  --bb-surface: rgba(124,107,255,0.05);
+  --bb-primary: #7C6BFF;
+  --bb-glow:    rgba(124,107,255,0.35);
+  --bb-pink:    #FF007F;
+}
+
+[data-theme="genz"] {
+  --bb-bg:      #FFFFFF;
+  --bb-accent:  #FFD700;
+  --bb-text:    #0A0A0F;
+  --bb-border:  #E5E7EB;
+  --bb-surface: rgba(108,0,255,0.04);
+  --bb-primary: #6C00FF;
+  --bb-glow:    rgba(108,0,255,0.15);
+  --bb-pink:    #FF3CAC;
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 @keyframes confetti-fall {
   0%   { transform: translateY(-10px) rotate(0deg);   opacity: 1; }
   100% { transform: translateY(420px) rotate(720deg); opacity: 0; }

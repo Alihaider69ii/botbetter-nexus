@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ThemeProvider } from "@/components/botbetter/ThemeProvider";
+import { ThemeProvider, useTheme, type NexusTheme } from "@/components/botbetter/ThemeProvider";
 import { TopNav, ScreenKey } from "@/components/botbetter/TopNav";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { VoiceModeProvider } from "@/context/VoiceModeContext";
@@ -18,6 +18,14 @@ const PROTECTED: ScreenKey[] = ["dashboard", "chat", "agent", "agent-chat", "con
 
 const App = () => {
   const { user, initializing, logout } = useAuth();
+  const { setTheme } = useTheme();
+
+  // Sync theme from user profile when they log in
+  useEffect(() => {
+    if (user?.theme && ["nexus","void","genz"].includes(user.theme)) {
+      setTheme(user.theme as NexusTheme);
+    }
+  }, [user?.id, user?.theme, setTheme]);
   const [screen, setScreen] = useState<ScreenKey>("landing");
   const [chatAgentIdx, setChatAgentIdx] = useState(1);
   const [authModal, setAuthModal] = useState<{ open: boolean; tab: "login" | "signup" }>({
@@ -76,7 +84,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {screen !== "chat" && <TopNav active={screen} onChange={navigate} />}
+      {screen !== "chat" && screen !== "landing" && <TopNav active={screen} onChange={navigate} />}
       <div key={screen} className="fade-in">
         {screen === "landing" && (
           <Landing onNavigate={navigate} onShowAuth={showAuth} />

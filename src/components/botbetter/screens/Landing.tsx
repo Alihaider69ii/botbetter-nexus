@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ScreenKey } from "../TopNav";
+import { ThemeSwitcher } from "@/components/botbetter/ThemeProvider";
+import { playBase64Audio } from "@/hooks/use-voice-chat";
 import "./landing.css";
 
 /* ─── Data ─── */
@@ -409,6 +411,8 @@ function ConnectorSpace() {
 
 /* ─── Main Landing ─── */
 
+type VoiceState = "idle" | "loading" | "playing";
+
 export function Landing({
   onNavigate: _onNavigate,
   onShowAuth,
@@ -420,6 +424,7 @@ export function Landing({
   const platformRef = useRef<HTMLElement>(null);
   const langSectionRef = useRef<HTMLElement>(null);
   const storyRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [bootDone, setBootDone] = useState(false);
   const [bootHidden, setBootHidden] = useState(false);
@@ -428,8 +433,50 @@ export function Landing({
   const [clock, setClock] = useState("IST 00:00:00");
   const [langAnimated, setLangAnimated] = useState(false);
   const [capVisible, setCapVisible] = useState<boolean[]>(() => CAPABILITIES.map(() => false));
+  const [voiceState, setVoiceState] = useState<Record<"maya"|"kabir", VoiceState>>({ maya: "idle", kabir: "idle" });
+  const [voiceError, setVoiceError] = useState("");
 
   useParticleCanvas(canvasRef);
+
+  const stopCurrentAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+  };
+
+  const playVoiceIntro = useCallback(async (personality: "maya" | "kabir") => {
+    stopCurrentAudio();
+    setVoiceState((s) => ({ ...s, [personality]: "loading" }));
+    setVoiceError("");
+    const other = personality === "maya" ? "kabir" : "maya";
+    setVoiceState((s) => ({ ...s, [other]: "idle" }));
+
+    try {
+      const base = (import.meta.env.VITE_API_URL as string) ?? "";
+      const res = await fetch(`${base}/api/voice/intro`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ personality }),
+      });
+      const data = await res.json() as { success: boolean; audioBase64?: string; message?: string };
+      if (!data.success || !data.audioBase64) throw new Error(data.message || "No audio");
+
+      const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
+      audioRef.current = audio;
+      setVoiceState((s) => ({ ...s, [personality]: "playing" }));
+      audio.play().catch(() => {});
+      audio.onended = () => setVoiceState((s) => ({ ...s, [personality]: "idle" }));
+    } catch {
+      setVoiceState((s) => ({ ...s, [personality]: "idle" }));
+      setVoiceError("Voice unavailable right now. Try again!");
+    }
+  }, []);
+
+  const stopVoice = (personality: "maya" | "kabir") => {
+    stopCurrentAudio();
+    setVoiceState((s) => ({ ...s, [personality]: "idle" }));
+  };
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -456,6 +503,8 @@ export function Landing({
         setTimeout(() => {
           setBootHidden(true);
           setMainVisible(true);
+          // Auto-play Maya intro after boot
+          setTimeout(() => playVoiceIntro("maya"), 1200);
         }, 500);
       }, delay + 500)
     );
@@ -544,6 +593,36 @@ export function Landing({
         <div className="nl-grid-overlay" aria-hidden />
         <div className="nl-scan-line" aria-hidden />
 
+        {/* Landing top bar — login + theme toggle */}
+        <div style={{
+          position:"fixed", top:0, left:0, right:0, zIndex:200,
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding:"0 24px", height:52,
+          background:"rgba(2,5,16,0.7)", backdropFilter:"blur(10px)",
+          borderBottom:"1px solid rgba(0,212,255,0.1)",
+        }}>
+          <span style={{ fontSize:13, fontWeight:700, letterSpacing:3, color:"var(--bb-accent,#00D4FF)", fontFamily:"Orbitron,sans-serif" }}>
+            BOTBETTER
+          </span>
+          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+            <ThemeSwitcher />
+            <button
+              onClick={() => onShowAuth("login")}
+              style={{ fontSize:11, fontWeight:700, letterSpacing:1.5, padding:"6px 14px", borderRadius:6,
+                border:"1px solid rgba(0,212,255,0.35)", background:"rgba(0,212,255,0.06)",
+                color:"var(--bb-accent,#00D4FF)", cursor:"pointer", fontFamily:"Share Tech Mono,monospace" }}>
+              LOGIN
+            </button>
+            <button
+              onClick={() => onShowAuth("signup")}
+              style={{ fontSize:11, fontWeight:700, letterSpacing:1.5, padding:"6px 14px", borderRadius:6,
+                background:"linear-gradient(135deg,#00D4FF,#FF007F)", border:"none",
+                color:"#fff", cursor:"pointer", fontFamily:"Share Tech Mono,monospace" }}>
+              SIGN UP
+            </button>
+          </div>
+        </div>
+
         {/* HUD */}
         <div className="nl-hud nl-hud-tl">
           <div>SYSTEM STATUS</div>
@@ -604,10 +683,20 @@ export function Landing({
             <div className="nl-or-badge">OR</div>
 
             <div className="nl-persona-side nl-persona-maya">
-              <div className="nl-persona-avatar-wrap">
-                <div className="nl-persona-ring nl-maya-ring-1" />
-                <div className="nl-persona-ring nl-maya-ring-2" />
-                <div className="nl-persona-avatar nl-maya-avatar">M</div>
+              <div
+                className="nl-persona-avatar-wrap"
+                style={{ cursor:"pointer" }}
+                onClick={() => voiceState.maya === "playing" ? stopVoice("maya") : playVoiceIntro("maya")}
+                title={voiceState.maya === "playing" ? "Pause Maya" : "Hear Maya"}
+              >
+                <div className="nl-persona-ring nl-maya-ring-1"
+                  style={voiceState.maya === "playing" ? { animationDuration:"3s", borderColor:"rgba(155,89,255,0.9)" } : undefined} />
+                <div className="nl-persona-ring nl-maya-ring-2"
+                  style={voiceState.maya === "playing" ? { animationDuration:"4s" } : undefined} />
+                <div className="nl-persona-avatar nl-maya-avatar"
+                  style={voiceState.maya === "playing" ? { boxShadow:"0 0 70px rgba(155,89,255,0.9)" } : undefined}>
+                  {voiceState.maya === "loading" ? "⏳" : voiceState.maya === "playing" ? "⏸" : "M"}
+                </div>
               </div>
               <h2 className="nl-persona-name">MAYA</h2>
               <p className="nl-persona-tagline">Gentle. Intuitive. Always listening.</p>
@@ -615,16 +704,34 @@ export function Landing({
                 MAYA speaks your language — literally. Hindi, Hinglish, or English.
                 She remembers everything about you and gets things done before you ask.
               </p>
-              <button type="button" className="nl-btn nl-btn-maya" onClick={() => onShowAuth("signup")}>
-                Choose Maya →
-              </button>
+              <div style={{ display:"flex", gap:10, marginBottom:16 }}>
+                <button type="button" className="nl-btn nl-btn-maya"
+                  style={{ padding:"8px 18px", fontSize:12 }}
+                  onClick={() => voiceState.maya === "playing" ? stopVoice("maya") : playVoiceIntro("maya")}>
+                  {voiceState.maya === "loading" ? "⏳ Loading..." : voiceState.maya === "playing" ? "⏸ Pause" : "🔊 Hear Maya"}
+                </button>
+                <button type="button" className="nl-btn nl-btn-maya" onClick={() => onShowAuth("signup")}
+                  style={{ padding:"8px 18px", fontSize:12 }}>
+                  Choose Maya →
+                </button>
+              </div>
             </div>
 
             <div className="nl-persona-side nl-persona-kabir">
-              <div className="nl-persona-avatar-wrap">
-                <div className="nl-persona-ring nl-kabir-ring-1" />
-                <div className="nl-persona-ring nl-kabir-ring-2" />
-                <div className="nl-persona-avatar nl-kabir-avatar">K</div>
+              <div
+                className="nl-persona-avatar-wrap"
+                style={{ cursor:"pointer" }}
+                onClick={() => voiceState.kabir === "playing" ? stopVoice("kabir") : playVoiceIntro("kabir")}
+                title={voiceState.kabir === "playing" ? "Pause Kabir" : "Hear Kabir"}
+              >
+                <div className="nl-persona-ring nl-kabir-ring-1"
+                  style={voiceState.kabir === "playing" ? { animationDuration:"1s", borderColor:"rgba(0,217,255,0.9)" } : undefined} />
+                <div className="nl-persona-ring nl-kabir-ring-2"
+                  style={voiceState.kabir === "playing" ? { animationDuration:"1.5s" } : undefined} />
+                <div className="nl-persona-avatar nl-kabir-avatar"
+                  style={voiceState.kabir === "playing" ? { boxShadow:"0 0 70px rgba(0,217,255,0.9)" } : undefined}>
+                  {voiceState.kabir === "loading" ? "⏳" : voiceState.kabir === "playing" ? "⏸" : "K"}
+                </div>
               </div>
               <h2 className="nl-persona-name">KABIR</h2>
               <p className="nl-persona-tagline">Precise. Powerful. Execution-first.</p>
@@ -632,13 +739,22 @@ export function Landing({
                 KABIR doesn&apos;t wait. He executes simultaneously, tracks every task,
                 and reports back when done.
               </p>
-              <button type="button" className="nl-btn nl-btn-kabir" onClick={() => onShowAuth("signup")}>
-                Choose Kabir →
-              </button>
+              <div style={{ display:"flex", gap:10, marginBottom:16 }}>
+                <button type="button" className="nl-btn nl-btn-kabir"
+                  style={{ padding:"8px 18px", fontSize:12 }}
+                  onClick={() => voiceState.kabir === "playing" ? stopVoice("kabir") : playVoiceIntro("kabir")}>
+                  {voiceState.kabir === "loading" ? "⏳ Loading..." : voiceState.kabir === "playing" ? "⏸ Pause" : "🔊 Hear Kabir"}
+                </button>
+                <button type="button" className="nl-btn nl-btn-kabir" onClick={() => onShowAuth("signup")}
+                  style={{ padding:"8px 18px", fontSize:12 }}>
+                  Choose Kabir →
+                </button>
+              </div>
             </div>
 
             <p className="nl-persona-footer">
               Both powered by Nexus Core. Same intelligence. Different personality.
+              {voiceError && <span style={{ color:"#ff007f", display:"block", marginTop:4, fontSize:11 }}>{voiceError}</span>}
             </p>
           </div>
         </section>

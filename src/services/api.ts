@@ -55,6 +55,7 @@ export interface AuthUser {
   language?: string;
   voice?: string;
   personality?: "maya" | "kabir";
+  theme?: "nexus" | "void" | "genz";
   userType?: string;
   onboardingComplete?: boolean;
 }
@@ -223,7 +224,7 @@ export const userAPI = {
       body: JSON.stringify(data),
     }),
 
-  updateProfile: (data: { language?: string; voice?: string; personality?: string }) =>
+  updateProfile: (data: { language?: string; voice?: string; personality?: string; theme?: string }) =>
     request<{ success: boolean; user: Partial<AuthUser> }>("/api/user/profile", {
       method: "PUT",
       body: JSON.stringify(data),

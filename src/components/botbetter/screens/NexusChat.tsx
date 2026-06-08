@@ -6,6 +6,7 @@ import {
 } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceChat, playBase64Audio } from "@/hooks/use-voice-chat";
+import { ThemeSwitcher, useTheme } from "@/components/botbetter/ThemeProvider";
 import { AuthModal } from "./AuthModal";
 import type { ScreenKey } from "../TopNav";
 
@@ -372,6 +373,59 @@ const CSS = `
 
 .nx-save-toast { margin-top:6px; font-size:9px; text-align:center; letter-spacing:1px; animation:nx-fade-up .2s ease; color:#39ff14; }
 .nx-save-saving { color:rgba(0,240,255,.45); }
+
+/* ── VOID theme ── */
+[data-theme="void"] .nx-root { background:#000 !important; }
+[data-theme="void"] .nx-header { background:rgba(0,0,0,.97) !important; border-color:#1A1A1A !important; }
+[data-theme="void"] .nx-dock { background:rgba(0,0,0,.97) !important; border-color:#1A1A1A !important; }
+[data-theme="void"] .nx-left { background:rgba(8,0,22,.6) !important; border-color:#1A1A1A !important; }
+[data-theme="void"] .nx-right { background:rgba(8,0,22,.6) !important; border-color:#1A1A1A !important; }
+[data-theme="void"] .nx-brand-name,[data-theme="void"] .nx-clock,[data-theme="void"] .nx-new-btn,[data-theme="void"] .nx-bbl-name { color:#7C6BFF !important; }
+[data-theme="void"] .nx-hdr-btn { color:#7C6BFF !important; border-color:rgba(124,107,255,.28) !important; background:rgba(124,107,255,.04) !important; }
+[data-theme="void"] .nx-hdr-btn:hover { background:linear-gradient(135deg,#7C6BFF,#FF007F) !important; color:#fff !important; }
+[data-theme="void"] .nx-status-pill { border-color:rgba(124,107,255,.25) !important; background:rgba(124,107,255,.06) !important; }
+[data-theme="void"] .nx-pulse-dot { background:#7C6BFF !important; box-shadow:0 0 6px #7C6BFF !important; }
+[data-theme="void"] .nx-bbl { border-color:rgba(124,107,255,.2) !important; }
+[data-theme="void"] .nx-input { border-color:rgba(124,107,255,.28) !important; }
+[data-theme="void"] .nx-input:focus { border-color:#7C6BFF !important; }
+[data-theme="void"] .nx-orb-1 { background:radial-gradient(circle,#7C6BFF 0%,transparent 70%) !important; }
+[data-theme="void"] .nx-ibtn--send { background:linear-gradient(135deg,#7C6BFF,#FF007F) !important; }
+[data-theme="void"] .nx-logo { background:linear-gradient(45deg,#7C6BFF,#FF007F) !important; }
+[data-theme="void"] .nx-prog-fill { background:linear-gradient(90deg,#7C6BFF,#FF007F) !important; }
+
+/* ── GEN Z theme ── */
+[data-theme="genz"] .nx-root { background:#fff !important; color:#0A0A0F !important; }
+[data-theme="genz"] .nx-header { background:rgba(255,255,255,.97) !important; border-color:#E5E7EB !important; }
+[data-theme="genz"] .nx-dock { background:rgba(255,255,255,.97) !important; border-color:#E5E7EB !important; }
+[data-theme="genz"] .nx-left { background:rgba(248,247,255,.92) !important; border-color:#E5E7EB !important; }
+[data-theme="genz"] .nx-right { background:rgba(248,247,255,.92) !important; border-color:#E5E7EB !important; }
+[data-theme="genz"] .nx-brand-name,[data-theme="genz"] .nx-clock,[data-theme="genz"] .nx-new-btn,[data-theme="genz"] .nx-bbl-name { color:#6C00FF !important; }
+[data-theme="genz"] .nx-hdr-btn { color:#6C00FF !important; border-color:rgba(108,0,255,.22) !important; background:rgba(108,0,255,.04) !important; }
+[data-theme="genz"] .nx-hdr-btn:hover { background:linear-gradient(135deg,#6C00FF,#FF3CAC) !important; color:#fff !important; }
+[data-theme="genz"] .nx-status-pill { border-color:rgba(108,0,255,.2) !important; background:rgba(108,0,255,.05) !important; color:#6C00FF !important; }
+[data-theme="genz"] .nx-pulse-dot { background:#22c55e !important; box-shadow:0 0 6px #22c55e !important; }
+[data-theme="genz"] .nx-bbl { background:rgba(108,0,255,.03) !important; border-color:rgba(108,0,255,.14) !important; color:#0A0A0F !important; }
+[data-theme="genz"] .nx-bbl--user { background:rgba(255,60,172,.04) !important; border-color:rgba(255,60,172,.18) !important; }
+[data-theme="genz"] .nx-input { background:rgba(108,0,255,.02) !important; border-color:rgba(108,0,255,.2) !important; color:#0A0A0F !important; }
+[data-theme="genz"] .nx-input:focus { border-color:#FF3CAC !important; }
+[data-theme="genz"] .nx-input::placeholder { color:rgba(108,0,255,.35) !important; }
+[data-theme="genz"] .nx-section-head { color:rgba(10,10,15,.35) !important; }
+[data-theme="genz"] .nx-hist-text { color:rgba(10,10,15,.55) !important; }
+[data-theme="genz"] .nx-hist-item:hover { background:rgba(108,0,255,.06) !important; }
+[data-theme="genz"] .nx-hist-item--active { background:rgba(108,0,255,.09) !important; border-color:#6C00FF !important; }
+[data-theme="genz"] .nx-empty { color:rgba(10,10,15,.35) !important; }
+[data-theme="genz"] .nx-orb-1,[data-theme="genz"] .nx-orb-2,[data-theme="genz"] .nx-orb-3 { opacity:.08 !important; }
+[data-theme="genz"] .nx-aurora { opacity:.08 !important; }
+[data-theme="genz"] .nx-ibtn--send { background:linear-gradient(135deg,#6C00FF,#FF3CAC) !important; }
+[data-theme="genz"] .nx-ibtn--mic { background:rgba(255,60,172,.07) !important; border-color:rgba(255,60,172,.3) !important; color:#FF3CAC !important; }
+[data-theme="genz"] .nx-logo { background:linear-gradient(45deg,#6C00FF,#FF3CAC) !important; }
+[data-theme="genz"] .nx-prog-fill { background:linear-gradient(90deg,#6C00FF,#FF3CAC) !important; }
+[data-theme="genz"] .nx-ref-code,[data-theme="genz"] .nx-ref-copy { color:#6C00FF !important; border-color:rgba(108,0,255,.25) !important; }
+[data-theme="genz"] .nx-stat-tag { background:rgba(255,60,172,.08) !important; border-color:rgba(255,60,172,.25) !important; color:#FF3CAC !important; }
+[data-theme="genz"] .nx-plan-tag { border-color:#6C00FF !important; color:#6C00FF !important; }
+[data-theme="genz"] .nx-tgl-opt { border-color:rgba(108,0,255,.15) !important; color:rgba(10,10,15,.4) !important; }
+[data-theme="genz"] .nx-drop-row { color:rgba(10,10,15,.6) !important; }
+[data-theme="genz"] .nx-av-drop { background:rgba(255,255,255,.99) !important; border-color:rgba(108,0,255,.3) !important; }
 `;
 
 /* ── Component ─────────────────────────────────────────────────────────────── */
@@ -382,6 +436,16 @@ export const NexusChat = ({
   onNavigate: (s: ScreenKey) => void;
 }) => {
   const { user, logout, updateUser } = useAuth();
+  const { theme } = useTheme();
+
+  // Save theme to backend when it changes (debounced)
+  useEffect(() => {
+    if (!user) return;
+    const timer = setTimeout(() => {
+      userAPI.updateProfile({ theme }).catch(() => {});
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [theme, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [msgs,       setMsgs]        = useState<Msg[]>(SEED);
   const [input,      setInput]       = useState("");
@@ -612,6 +676,7 @@ export const NexusChat = ({
             <span className="nx-clock">{clock}</span>
           </div>
           <div className="nx-hdr-actions">
+            <ThemeSwitcher style={{ marginRight: 4 }} />
             {user ? (
               <div className="nx-avatar" title={user.name} onClick={(e)=>{e.stopPropagation();setAvatarOpen((v)=>!v);}}>
                 {userInitial}
