@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ScreenKey } from "../TopNav";
 import { ThemeSwitcher } from "@/components/botbetter/ThemeProvider";
-import { playBase64Audio } from "@/hooks/use-voice-chat";
 import "./landing.css";
 
 /* ─── Data ─── */
@@ -443,6 +442,9 @@ export function Landing({
       audioRef.current.pause();
       audioRef.current = null;
     }
+    if (window.speechSynthesis?.speaking) {
+      window.speechSynthesis.cancel();
+    }
   };
 
   const playVoiceIntro = useCallback(async (personality: "maya" | "kabir") => {
@@ -462,14 +464,43 @@ export function Landing({
       const data = await res.json() as { success: boolean; audioBase64?: string; message?: string };
       if (!data.success || !data.audioBase64) throw new Error(data.message || "No audio");
 
-      const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
+      // Try multiple MIME types — Sarvam may return WAV or MP3
+      let audio: HTMLAudioElement | null = null;
+      for (const mime of ["audio/wav", "audio/mpeg", "audio/ogg"]) {
+        try {
+          const a = new Audio(`data:${mime};base64,${data.audioBase64}`);
+          await a.play();
+          audio = a;
+          break;
+        } catch {
+          /* try next mime */
+        }
+      }
+      if (!audio) throw new Error("Audio playback failed for all MIME types");
       audioRef.current = audio;
       setVoiceState((s) => ({ ...s, [personality]: "playing" }));
-      audio.play().catch(() => {});
       audio.onended = () => setVoiceState((s) => ({ ...s, [personality]: "idle" }));
-    } catch {
+    } catch (err) {
+      console.error("[Landing] Voice intro failed:", err);
       setVoiceState((s) => ({ ...s, [personality]: "idle" }));
-      setVoiceError("Voice unavailable right now. Try again!");
+      // Fallback to browser TTS
+      try {
+        if (window.speechSynthesis) {
+          const MAYA_TEXT = "Hi! I am Maya, your personal AI from BotBetter. I can manage your schedule, send messages, and much more. Click Login to get started.";
+          const KABIR_TEXT = "Kabir here. BotBetter's execution engine. Give me a command and I'll get it done. Login to begin.";
+          const utt = new SpeechSynthesisUtterance(personality === "kabir" ? KABIR_TEXT : MAYA_TEXT);
+          utt.lang = "en-IN";
+          utt.rate = 0.95;
+          utt.pitch = personality === "maya" ? 1.2 : 0.85;
+          setVoiceState((s) => ({ ...s, [personality]: "playing" }));
+          utt.onend = () => setVoiceState((s) => ({ ...s, [personality]: "idle" }));
+          window.speechSynthesis.speak(utt);
+        } else {
+          setVoiceError("Voice unavailable right now. Try again!");
+        }
+      } catch {
+        setVoiceError("Voice unavailable right now. Try again!");
+      }
     }
   }, []);
 

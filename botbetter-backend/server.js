@@ -18,7 +18,19 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: config.FRONTEND_URL,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // same-origin / curl
+    const allowed = [
+      config.FRONTEND_URL,
+      "http://localhost:5173",
+      "http://localhost:8080",
+      "http://localhost:3000",
+    ];
+    if (allowed.includes(origin) || /\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
 }));
 
