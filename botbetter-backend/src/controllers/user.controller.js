@@ -114,11 +114,12 @@ const updateOnboarding = async (req, res, next) => {
 // @route PUT /api/user/profile
 const updateProfile = async (req, res, next) => {
   try {
-    const { language, voice, personality } = req.body;
+    const { language, voice, personality, theme } = req.body;
     const update = {};
-    if (language)                                        update.language    = language;
-    if (voice && ["female","male","off"].includes(voice)) update.voice       = voice;
+    if (language)                                             update.language    = language;
+    if (voice && ["female","male","off"].includes(voice))     update.voice       = voice;
     if (personality && ["maya","kabir"].includes(personality)) update.personality = personality;
+    if (theme && ["nexus","void","genz"].includes(theme))     update.theme       = theme;
 
     if (Object.keys(update).length === 0) {
       return res.status(400).json({ success: false, message: "Nothing to update" });
@@ -133,6 +134,7 @@ const updateProfile = async (req, res, next) => {
         language:    updated.language,
         voice:       updated.voice,
         personality: updated.personality,
+        theme:       updated.theme,
       },
     });
   } catch (err) {

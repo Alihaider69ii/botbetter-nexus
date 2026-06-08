@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
   language: { type: String, default: "en-IN" },
   voice: { type: String, enum: ["female", "male", "off"], default: "off" },
   personality: { type: String, enum: ["maya", "kabir"], default: "maya" },
+  theme: { type: String, enum: ["nexus", "void", "genz"], default: "nexus" },
   userType: {
     type: String,
     enum: ["student", "professional", "entrepreneur", "freelancer", "homemaker", "seller", "creator", "fitness", "other"],

@@ -38,6 +38,7 @@ const signup = async (req, res, next) => {
         voice: user.voice,
         userType: user.userType,
         onboardingComplete: user.onboardingComplete,
+        theme: user.theme || "nexus",
       },
     });
   } catch (err) {
@@ -84,6 +85,7 @@ const login = async (req, res, next) => {
         voice: user.voice,
         userType: user.userType,
         onboardingComplete: user.onboardingComplete,
+        theme: user.theme || "nexus",
       },
     });
   } catch (err) {
@@ -115,6 +117,7 @@ const getMe = async (req, res, next) => {
         voice: user.voice,
         userType: user.userType,
         onboardingComplete: user.onboardingComplete,
+        theme: user.theme || "nexus",
       },
     });
   } catch (err) {
