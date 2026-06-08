@@ -16,6 +16,7 @@ const USER_TYPES = [
 const LANGUAGES = [
   { code: "en-IN", label: "English",    flag: "🇬🇧", native: "English"    },
   { code: "hi-IN", label: "Hindi",      flag: "🇮🇳", native: "हिंदी"       },
+  { code: "ur",    label: "Urdu",       flag: "🇵🇰", native: "اردو"        },
   { code: "mr-IN", label: "Marathi",    flag: "🇮🇳", native: "मराठी"      },
   { code: "bn-IN", label: "Bengali",    flag: "🇮🇳", native: "বাংলা"      },
   { code: "ta-IN", label: "Tamil",      flag: "🇮🇳", native: "தமிழ்"      },

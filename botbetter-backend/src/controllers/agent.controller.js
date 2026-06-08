@@ -11,6 +11,20 @@ const { runFlexAI } = require("../agents/flexai");
 const { runCreato } = require("../agents/creato");
 const { runNexus } = require("../agents/nexus");
 
+function deduplicateResponse(text) {
+  if (!text || typeof text !== "string") return text;
+  const segments = text.split(/(?<=[.!?।\n])\s+/);
+  const seen = new Set();
+  const result = [];
+  for (const seg of segments) {
+    const key = seg.toLowerCase().trim().replace(/\s+/g, " ");
+    if (key.length > 4 && seen.has(key)) continue;
+    if (key.length > 4) seen.add(key);
+    result.push(seg);
+  }
+  return result.join(" ").trim();
+}
+
 const PLAN_LIMITS = {
   free: 100,
   starter: 500,
@@ -95,6 +109,8 @@ const chat = async (req, res, next) => {
     if (!reply) {
       return res.status(400).json({ success: false, message: `Agent "${agentName}" not found` });
     }
+
+    reply = deduplicateResponse(reply);
 
     // Translate if needed (skip for en-IN)
     if (resolvedLanguage !== "en-IN" && reply) {

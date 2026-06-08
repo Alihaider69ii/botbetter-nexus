@@ -18,6 +18,7 @@ type Session = { id: string; title: string; date: string; messages: Msg[] };
 const LANGUAGES = [
   { code: "en-IN", label: "English",   native: "English"   },
   { code: "hi-IN", label: "Hindi",     native: "हिंदी"      },
+  { code: "ur",    label: "Urdu",      native: "اردو"       },
   { code: "mr-IN", label: "Marathi",   native: "मराठी"     },
   { code: "bn-IN", label: "Bengali",   native: "বাংলা"     },
   { code: "ta-IN", label: "Tamil",     native: "தமிழ்"     },
@@ -31,7 +32,7 @@ const LANGUAGES = [
 /* ── UI label translations ─────────────────────────────────────────────────── */
 type TKey = "newChat"|"history"|"connectors"|"usageToday"|"referralCode"|"voice"|"personality"
           |"language"|"textOnly"|"voiceOn"|"logIn"|"signUp"|"placeholder"|"loginPrompt"
-          |"noHistory"|"search";
+          |"noHistory"|"search"|"nexusOs"|"systemActive"|"profile";
 
 const TR: Record<string, Record<TKey,string>> = {
   "en-IN": {
@@ -40,6 +41,7 @@ const TR: Record<string, Record<TKey,string>> = {
     textOnly:"Text Only", voiceOn:"Voice On", logIn:"Log In", signUp:"Sign Up",
     placeholder:"Ask NEXUS anything...", loginPrompt:"Log in to chat with NEXUS",
     noHistory:"No history yet.\nStart chatting!", search:"Search history...",
+    nexusOs:"NEXUS OS", systemActive:"SYSTEM ACTIVE", profile:"Profile",
   },
   "hi-IN": {
     newChat:"नया चैट", history:"इतिहास", connectors:"कनेक्शन", usageToday:"आज का उपयोग",
@@ -47,6 +49,15 @@ const TR: Record<string, Record<TKey,string>> = {
     textOnly:"टेक्स्ट", voiceOn:"आवाज़ चालू", logIn:"लॉग इन", signUp:"साइन अप",
     placeholder:"NEXUS से कुछ भी पूछें...", loginPrompt:"NEXUS से चैट के लिए लॉग इन करें",
     noHistory:"कोई इतिहास नहीं।\nचैटिंग शुरू करें!", search:"इतिहास खोजें...",
+    nexusOs:"NEXUS सिस्टम", systemActive:"सक्रिय", profile:"प्रोफ़ाइल",
+  },
+  "ur": {
+    newChat:"نئی چیٹ", history:"تاریخ", connectors:"کنکشن", usageToday:"آج کا استعمال",
+    referralCode:"ریفرل کوڈ", voice:"آواز", personality:"شخصیت", language:"زبان",
+    textOnly:"متن", voiceOn:"آواز آن", logIn:"لاگ ان", signUp:"سائن اپ",
+    placeholder:"NEXUS سے کچھ بھی پوچھیں...", loginPrompt:"NEXUS سے چیٹ کرنے کے لیے لاگ ان کریں",
+    noHistory:"کوئی تاریخ نہیں۔\nچیٹ شروع کریں!", search:"تاریخ تلاش کریں...",
+    nexusOs:"NEXUS سسٹم", systemActive:"فعال", profile:"پروفائل",
   },
   "mr-IN": {
     newChat:"नवीन चॅट", history:"इतिहास", connectors:"कनेक्शन", usageToday:"आजचा वापर",
@@ -54,6 +65,7 @@ const TR: Record<string, Record<TKey,string>> = {
     textOnly:"मजकूर", voiceOn:"आवाज चालू", logIn:"लॉग इन", signUp:"साइन अप",
     placeholder:"NEXUS ला काहीही विचारा...", loginPrompt:"NEXUS शी चॅट करण्यासाठी लॉग इन करा",
     noHistory:"कोणताही इतिहास नाही.\nचॅट सुरू करा!", search:"इतिहास शोधा...",
+    nexusOs:"NEXUS प्रणाली", systemActive:"सक्रिय", profile:"प्रोफाइल",
   },
   "bn-IN": {
     newChat:"নতুন চ্যাট", history:"ইতিহাস", connectors:"সংযোগ", usageToday:"আজকের ব্যবহার",
@@ -61,6 +73,7 @@ const TR: Record<string, Record<TKey,string>> = {
     textOnly:"টেক্সট", voiceOn:"ভয়েস অন", logIn:"লগ ইন", signUp:"সাইন আপ",
     placeholder:"NEXUS কে কিছু জিজ্ঞেস করুন...", loginPrompt:"NEXUS এর সাথে চ্যাট করতে লগ ইন করুন",
     noHistory:"কোনো ইতিহাস নেই।\nচ্যাট শুরু করুন!", search:"ইতিহাস খুঁজুন...",
+    nexusOs:"NEXUS সিস্টেম", systemActive:"সক্রিয়", profile:"প্রোফাইল",
   },
   "ta-IN": {
     newChat:"புதிய அரட்டை", history:"வரலாறு", connectors:"இணைப்புகள்", usageToday:"இன்றைய பயன்பாடு",
@@ -68,6 +81,47 @@ const TR: Record<string, Record<TKey,string>> = {
     textOnly:"உரை மட்டும்", voiceOn:"குரல் இயக்கு", logIn:"உள்நுழை", signUp:"பதிவு செய்",
     placeholder:"NEXUS ஐ எதுவும் கேளுங்கள்...", loginPrompt:"NEXUS உடன் அரட்டையடிக்க உள்நுழையவும்",
     noHistory:"வரலாறு இல்லை.\nஅரட்டை தொடங்குங்கள்!", search:"வரலாறு தேடுங்கள்...",
+    nexusOs:"NEXUS அமைப்பு", systemActive:"செயலில்", profile:"சுயவிவரம்",
+  },
+  "te-IN": {
+    newChat:"కొత్త చాట్", history:"చరిత్ర", connectors:"కనెక్షన్లు", usageToday:"నేటి వినియోగం",
+    referralCode:"రెఫరల్ కోడ్", voice:"వాయిస్", personality:"వ్యక్తిత్వం", language:"భాష",
+    textOnly:"టెక్స్ట్", voiceOn:"వాయిస్ ఆన్", logIn:"లాగిన్", signUp:"సైన్ అప్",
+    placeholder:"NEXUS ను ఏదైనా అడగండి...", loginPrompt:"NEXUS తో చాట్ చేయడానికి లాగిన్ చేయండి",
+    noHistory:"చరిత్ర లేదు.\nచాటింగ్ ప్రారంభించండి!", search:"చరిత్ర శోధించండి...",
+    nexusOs:"NEXUS వ్యవస్థ", systemActive:"యాక్టివ్", profile:"ప్రొఫైల్",
+  },
+  "gu-IN": {
+    newChat:"નવી ચેટ", history:"ઇતિહાસ", connectors:"કનેક્શન", usageToday:"આજનો ઉપયોગ",
+    referralCode:"રેફરલ કોડ", voice:"અવાજ", personality:"વ્યક્તિત્વ", language:"ભાષા",
+    textOnly:"ટેક્સ્ટ", voiceOn:"અવાજ ચાલુ", logIn:"લૉગ ઇન", signUp:"સાઇન અપ",
+    placeholder:"NEXUS ને કંઈ પણ પૂછો...", loginPrompt:"NEXUS સાથે ચેટ કરવા લૉગ ઇન કરો",
+    noHistory:"કોઈ ઇતિહાસ નથી.\nચેટ શરૂ કરો!", search:"ઇતિહાસ શોધો...",
+    nexusOs:"NEXUS સિસ્ટમ", systemActive:"સક્રિય", profile:"પ્રોફાઇલ",
+  },
+  "pa-IN": {
+    newChat:"ਨਵੀਂ ਚੈਟ", history:"ਇਤਿਹਾਸ", connectors:"ਕਨੈਕਸ਼ਨ", usageToday:"ਅੱਜ ਦੀ ਵਰਤੋਂ",
+    referralCode:"ਰੈਫਰਲ ਕੋਡ", voice:"ਅਵਾਜ਼", personality:"ਸ਼ਖਸੀਅਤ", language:"ਭਾਸ਼ਾ",
+    textOnly:"ਟੈਕਸਟ", voiceOn:"ਅਵਾਜ਼ ਚਾਲੂ", logIn:"ਲੌਗ ਇਨ", signUp:"ਸਾਈਨ ਅੱਪ",
+    placeholder:"NEXUS ਨੂੰ ਕੁਝ ਵੀ ਪੁੱਛੋ...", loginPrompt:"NEXUS ਨਾਲ ਚੈਟ ਕਰਨ ਲਈ ਲੌਗ ਇਨ ਕਰੋ",
+    noHistory:"ਕੋਈ ਇਤਿਹਾਸ ਨਹੀਂ।\nਚੈਟ ਸ਼ੁਰੂ ਕਰੋ!", search:"ਇਤਿਹਾਸ ਖੋਜੋ...",
+    nexusOs:"NEXUS ਸਿਸਟਮ", systemActive:"ਸਰਗਰਮ", profile:"ਪ੍ਰੋਫਾਈਲ",
+  },
+  "kn-IN": {
+    newChat:"ಹೊಸ ಚಾಟ್", history:"ಇತಿಹಾಸ", connectors:"ಸಂಪರ್ಕಗಳು", usageToday:"ಇಂದಿನ ಬಳಕೆ",
+    referralCode:"ರೆಫರಲ್ ಕೋಡ್", voice:"ಧ್ವನಿ", personality:"ವ್ಯಕ್ತಿತ್ವ", language:"ಭಾಷೆ",
+    textOnly:"ಪಠ್ಯ", voiceOn:"ಧ್ವನಿ ಆನ್", logIn:"ಲಾಗಿನ್", signUp:"ಸೈನ್ ಅಪ್",
+    placeholder:"NEXUS ಗೆ ಏನು ಬೇಕಾದರೂ ಕೇಳಿ...", loginPrompt:"NEXUS ಜೊತೆ ಚಾಟ್ ಮಾಡಲು ಲಾಗಿನ್ ಮಾಡಿ",
+    noHistory:"ಯಾವುದೇ ಇತಿಹಾಸ ಇಲ್ಲ.\nಚಾಟ್ ಪ್ರಾರಂಭಿಸಿ!", search:"ಇತಿಹಾಸ ಹುಡುಕಿ...",
+    nexusOs:"NEXUS ವ್ಯವಸ್ಥೆ", systemActive:"ಸಕ್ರಿಯ", profile:"ಪ್ರೊಫೈಲ್",
+  },
+  "ml-IN": {
+    newChat:"പുതിയ ചാറ്റ്", history:"ചരിത്രം", connectors:"കണക്ഷനുകൾ", usageToday:"ഇന്നത്തെ ഉപയോഗം",
+    referralCode:"റഫറൽ കോഡ്", voice:"ശബ്ദം", personality:"വ്യക്തിത്വം", language:"ഭാഷ",
+    textOnly:"ടെക്സ്റ്റ്", voiceOn:"ശബ്ദം ഓൺ", logIn:"ലോഗ് ഇൻ", signUp:"സൈൻ അപ്",
+    placeholder:"NEXUS നോട് എന്തും ചോദിക്കൂ...", loginPrompt:"NEXUS ൽ ചാറ്റ് ചെയ്യാൻ ലോഗ് ഇൻ ചെയ്യൂ",
+    noHistory:"ചരിത്രം ഇല്ല.\nചാറ്റ് ആരംഭിക്കൂ!", search:"ചരിത്രം തിരയൂ...",
+    nexusOs:"NEXUS സിസ്റ്റം", systemActive:"സജീവം", profile:"പ്രൊഫൈൽ",
   },
 };
 const t = (lang: Lang, key: TKey): string => TR[lang]?.[key] ?? TR["en-IN"][key] ?? key;
@@ -551,10 +605,10 @@ export const NexusChat = ({
           <div className="nx-brand">
             <button className="nx-hdr-btn nx-hdr-btn--icon" onClick={()=>setLeftOpen((v)=>!v)} aria-label="Toggle sidebar">☰</button>
             <div className="nx-logo nx-hf">N</div>
-            <span className="nx-brand-name nx-hf">NEXUS OS</span>
+            <span className="nx-brand-name nx-hf">{t(language,"nexusOs")}</span>
           </div>
           <div className="nx-telemetry nx-mono">
-            <div className="nx-status-pill"><span className="nx-pulse-dot"/><span>SYSTEM ACTIVE</span></div>
+            <div className="nx-status-pill"><span className="nx-pulse-dot"/><span>{t(language,"systemActive")}</span></div>
             <span className="nx-clock">{clock}</span>
           </div>
           <div className="nx-hdr-actions">
