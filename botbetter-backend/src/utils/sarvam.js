@@ -3,10 +3,10 @@ const config = require("../config/env");
 const SARVAM_BASE_URL = "https://api.sarvam.ai";
 const DEFAULT_LANGUAGE = "en-IN";
 
-// Maya = female voice (anushka), Kabir = male voice (kabir)
+// Maya = female voice (anushka), Kabir = male voice (karun)
 const PERSONALITY_SPEAKERS = {
   maya:  "anushka",
-  kabir: "kabir",
+  kabir: "karun",
 };
 
 function getApiKey() {
