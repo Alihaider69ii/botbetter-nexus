@@ -49,7 +49,10 @@ const userSchema = new mongoose.Schema({
   },
   connectedApps: [{
     type: String,
-    enum: ["whatsapp", "gmail", "calendar", "telegram", "slack"],
+    enum: [
+      "whatsapp", "gmail", "calendar", "telegram", "slack",
+      "instagram", "linkedin", "notion", "drive", "canva", "shopify", "github",
+    ],
   }],
   activeAgents: [{
     type: String,
