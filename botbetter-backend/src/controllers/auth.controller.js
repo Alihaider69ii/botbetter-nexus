@@ -34,11 +34,14 @@ const signup = async (req, res, next) => {
         referralCode: user.referralCode,
         dailyMessageLimit: user.dailyMessageLimit,
         bonusMessages: user.bonusMessages,
+        connectedApps: user.connectedApps,
         language: user.language,
         voice: user.voice,
+        personality: user.personality,
         userType: user.userType,
         onboardingComplete: user.onboardingComplete,
         theme: user.theme || "nexus",
+        createdAt: user.createdAt,
       },
     });
   } catch (err) {
@@ -83,9 +86,11 @@ const login = async (req, res, next) => {
         bonusMessages: user.bonusMessages,
         language: user.language,
         voice: user.voice,
+        personality: user.personality,
         userType: user.userType,
         onboardingComplete: user.onboardingComplete,
         theme: user.theme || "nexus",
+        createdAt: user.createdAt,
       },
     });
   } catch (err) {
@@ -115,9 +120,11 @@ const getMe = async (req, res, next) => {
         dailyMessageCount: user.dailyMessageCount,
         language: user.language,
         voice: user.voice,
+        personality: user.personality,
         userType: user.userType,
         onboardingComplete: user.onboardingComplete,
         theme: user.theme || "nexus",
+        createdAt: user.createdAt,
       },
     });
   } catch (err) {
