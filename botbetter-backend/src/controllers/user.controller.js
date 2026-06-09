@@ -1,10 +1,4 @@
 const User = require("../models/User.model");
-const { Memory } = require("../models/Memory.model");
-
-const CONNECTOR_IDS = [
-  "whatsapp", "gmail", "calendar", "telegram", "slack",
-  "instagram", "linkedin", "notion", "drive", "canva", "shopify", "github",
-];
 
 // @route POST /api/user/apply-referral
 const applyReferral = async (req, res, next) => {
@@ -120,15 +114,12 @@ const updateOnboarding = async (req, res, next) => {
 // @route PUT /api/user/profile
 const updateProfile = async (req, res, next) => {
   try {
-    const { language, voice, personality, theme, connectedApps } = req.body;
+    const { language, voice, personality, theme } = req.body;
     const update = {};
     if (language)                                             update.language    = language;
     if (voice && ["female","male","off"].includes(voice))     update.voice       = voice;
     if (personality && ["maya","kabir"].includes(personality)) update.personality = personality;
     if (theme && ["nexus","void","genz"].includes(theme))     update.theme       = theme;
-    if (Array.isArray(connectedApps)) {
-      update.connectedApps = connectedApps.filter((app) => CONNECTOR_IDS.includes(app));
-    }
 
     if (Object.keys(update).length === 0) {
       return res.status(400).json({ success: false, message: "Nothing to update" });
@@ -144,7 +135,6 @@ const updateProfile = async (req, res, next) => {
         voice:       updated.voice,
         personality: updated.personality,
         theme:       updated.theme,
-        connectedApps: updated.connectedApps,
       },
     });
   } catch (err) {
@@ -152,15 +142,4 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-// @route DELETE /api/user/account
-const deleteAccount = async (req, res, next) => {
-  try {
-    await Memory.deleteOne({ userId: req.user._id });
-    await User.findByIdAndDelete(req.user._id);
-    res.status(200).json({ success: true, message: "Account deleted" });
-  } catch (err) {
-    next(err);
-  }
-};
-
-module.exports = { applyReferral, getLimitStatus, updateOnboarding, updateProfile, deleteAccount };
+module.exports = { applyReferral, getLimitStatus, updateOnboarding, updateProfile };

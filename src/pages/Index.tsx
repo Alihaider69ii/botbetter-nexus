@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ThemeProvider, useTheme, type NexusTheme } from "@/components/botbetter/ThemeProvider";
-import { ScreenKey } from "@/components/botbetter/TopNav";
+import { TopNav, ScreenKey } from "@/components/botbetter/TopNav";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { VoiceModeProvider } from "@/context/VoiceModeContext";
 import { Landing } from "@/components/botbetter/screens/Landing";
@@ -84,6 +84,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {screen !== "chat" && screen !== "landing" && <TopNav active={screen} onChange={navigate} />}
       <div key={screen} className="fade-in">
         {screen === "landing" && (
           <Landing onNavigate={navigate} onShowAuth={showAuth} />
