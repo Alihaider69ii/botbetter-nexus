@@ -58,7 +58,6 @@ export interface AuthUser {
   theme?: "nexus" | "void" | "genz";
   userType?: string;
   onboardingComplete?: boolean;
-  createdAt?: string;
 }
 
 export interface AuthResponse {
@@ -225,14 +224,9 @@ export const userAPI = {
       body: JSON.stringify(data),
     }),
 
-  updateProfile: (data: { language?: string; voice?: string; personality?: string; theme?: string; connectedApps?: string[] }) =>
+  updateProfile: (data: { language?: string; voice?: string; personality?: string; theme?: string }) =>
     request<{ success: boolean; user: Partial<AuthUser> }>("/api/user/profile", {
       method: "PUT",
       body: JSON.stringify(data),
-    }),
-
-  deleteAccount: () =>
-    request<{ success: boolean; message: string }>("/api/user/account", {
-      method: "DELETE",
     }),
 };
