@@ -144,11 +144,17 @@ memorySchema.pre("save", function () {
   this.updatedAt = new Date();
 });
 
+function stripBrackets(text) {
+  if (!text || typeof text !== "string") return text;
+  return text.replace(/\s*\([^)]*\)/g, "").replace(/\s*\[[^\]]*\]/g, "").trim();
+}
+
 // Get history for specific agent
 memorySchema.methods.getAgentHistory = function (agentName, limit = 10) {
   return this.chatHistory
     .filter((m) => m.agent === agentName)
-    .slice(-limit);
+    .slice(-limit)
+    .map((m) => ({ ...m.toObject(), content: stripBrackets(m.content) }));
 };
 
 // Add message to history
