@@ -167,10 +167,14 @@ function fmtDate(iso: string): string {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
-const SEED: Msg[] = [{
-  from: "nexus",
-  text: "Hey! I'm NEXUS ⚡ — your master AI agent. Tell me anything and I'll handle it.\n\nTry:\n• \"Help me lose weight\"\n• \"Prepare me for interviews\"\n• \"Explain quantum computing\"\n• \"Calculate my SIP returns\"",
-}];
+function getSeed(p: Personality): Msg[] {
+  return [{
+    from: "nexus",
+    text: p === "kabir"
+      ? "Ready. What do you need done?"
+      : "Namaste! Main Maya hoon. Kya help kar sakti hoon?",
+  }];
+}
 
 const ALL_APPS = [
   { name: "WhatsApp", icon: "💬" }, { name: "Gmail", icon: "📧" },
@@ -447,7 +451,7 @@ export const NexusChat = ({
     return () => clearTimeout(timer);
   }, [theme, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [msgs,       setMsgs]        = useState<Msg[]>(SEED);
+  const [msgs,       setMsgs]        = useState<Msg[]>(() => getSeed(user?.personality ?? "maya"));
   const [input,      setInput]       = useState("");
   const [sending,    setSending]     = useState(false);
   const [sendError,  setSendError]   = useState("");
@@ -642,11 +646,11 @@ export const NexusChat = ({
     navigator.clipboard.writeText(code).then(()=>{ setRefCopied(true); setTimeout(()=>setRefCopied(false),2000); });
   };
 
-  const loadSession = (s: Session) => { setActiveSessionId(s.id); setMsgs(s.messages.length ? s.messages : SEED); };
+  const loadSession = (s: Session) => { setActiveSessionId(s.id); setMsgs(s.messages.length ? s.messages : getSeed(personality)); };
   const deleteSession = (e: React.MouseEvent, s: Session) => {
     e.stopPropagation();
     setSessions((p) => p.filter((x) => x.id !== s.id));
-    if (activeSessionId === s.id) { setActiveSessionId(null); setMsgs(SEED); }
+    if (activeSessionId === s.id) { setActiveSessionId(null); setMsgs(getSeed(personality)); }
   };
 
   const usagePct = limitStatus && limitStatus.totalLimit > 0
@@ -713,7 +717,7 @@ export const NexusChat = ({
           {/* LEFT SIDEBAR */}
           <aside className={`nx-left${leftOpen ? "" : " nx-left--closed"}`}>
             <div className="nx-left-scroll">
-              <button className="nx-new-btn" onClick={()=>{setMsgs(SEED);setActiveSessionId(null);}}>
+              <button className="nx-new-btn" onClick={()=>{setMsgs(getSeed(personality));setActiveSessionId(null);}}>
                 ＋ {t(language,"newChat")}
               </button>
 
