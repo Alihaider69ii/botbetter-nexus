@@ -261,7 +261,9 @@ const PROVIDERS = {
     },
   ],
 
+  // ─── NEXUS — smart routing + full 26-key fallback pool ──────────────────────
   nexus: [
+    // Primary dedicated keys with smart query-type tags
     {
       id: "gemini",
       type: "gemini",
@@ -269,6 +271,24 @@ const PROVIDERS = {
       apiKey: () => process.env.GEMINI_NEXUS,
       dailyLimit: 1500,
       limitType: "requests",
+      queryTypes: ["english"],
+    },
+    {
+      id: "together",
+      type: "together",
+      model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
+      apiKey: () => process.env.TOGETHER_NEXUS,
+      dailyLimit: null,
+      queryTypes: ["hindi_urdu"],
+    },
+    {
+      id: "groq-70b",
+      type: "groq",
+      model: "llama-3.3-70b-versatile",
+      apiKey: () => process.env.GROQ_NEXUS,
+      dailyLimit: 200000,
+      limitType: "tokens",
+      queryTypes: ["complex"],
     },
     {
       id: "groq",
@@ -294,11 +314,49 @@ const PROVIDERS = {
       dailyLimit: null,
       oneTimeCredit: true,
     },
+    // ── Fallback pool: all other agent keys (auto-rotate when primary exhausted) ──
+    { id: "gemini-buddy",    type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_BUDDY,    dailyLimit: null },
+    { id: "groq-buddy",      type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_BUDDY,      dailyLimit: null },
+    { id: "mistral-buddy",   type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_BUDDY,   dailyLimit: null },
+    { id: "gemini-cracky",   type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_CRACKY,   dailyLimit: null },
+    { id: "groq-cracky",     type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_CRACKY,     dailyLimit: null },
+    { id: "mistral-cracky",  type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_CRACKY,  dailyLimit: null },
+    { id: "gemini-sellio",   type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_SELLIO,   dailyLimit: null },
+    { id: "groq-sellio",     type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_SELLIO,     dailyLimit: null },
+    { id: "mistral-sellio",  type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_SELLIO,  dailyLimit: null },
+    { id: "gemini-finio",    type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_FINIO,    dailyLimit: null },
+    { id: "groq-finio",      type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_FINIO,      dailyLimit: null },
+    { id: "mistral-finio",   type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_FINIO,   dailyLimit: null },
+    { id: "gemini-prepify",  type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_PREPIFY,  dailyLimit: null },
+    { id: "groq-prepify",    type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_PREPIFY,    dailyLimit: null },
+    { id: "mistral-prepify", type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_PREPIFY, dailyLimit: null },
+    { id: "gemini-flexai",   type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_FLEXAI,   dailyLimit: null },
+    { id: "groq-flexai",     type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_FLEXAI,     dailyLimit: null },
+    { id: "mistral-flexai",  type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_FLEXAI,  dailyLimit: null },
+    { id: "gemini-creato",   type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_CREATO,   dailyLimit: null },
+    { id: "groq-creato",     type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_CREATO,     dailyLimit: null },
+    { id: "mistral-creato",  type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_CREATO,  dailyLimit: null },
   ],
 };
 
-// Returns providers in priority order, filtering those over daily limit
-async function getOrderedProviders(agentName) {
+// ─── Smart query-type detection ──────────────────────────────────────────────
+
+function detectQueryType(message) {
+  if (!message) return "english";
+  // Devanagari (Hindi/Marathi) or Arabic script (Urdu)
+  if (/[ऀ-ॿ؀-ۿ]/.test(message)) return "hindi_urdu";
+  // Complex: long, multi-question, or analytical/technical keywords
+  if (
+    message.length > 200 ||
+    (message.match(/\?/g) || []).length > 1 ||
+    /\b(code|debug|algorithm|explain|analyze|compare|difference|implement|architecture|why does|how does|what is the difference|step[- ]by[- ]step)\b/i.test(message)
+  ) return "complex";
+  return "english";
+}
+
+// Returns providers in priority order, filtering those over daily limit.
+// For Nexus, applies smart query-type routing when userMessage is provided.
+async function getOrderedProviders(agentName, userMessage = "") {
   const providers = PROVIDERS[agentName];
   if (!providers) throw new Error(`Unknown agent: ${agentName}`);
 
@@ -325,6 +383,17 @@ async function getOrderedProviders(agentName) {
         `[Router] ${provider.id}/${agentName}: limit reached (${used}/${provider.dailyLimit} ${provider.limitType})`
       );
     }
+  }
+
+  // Smart routing: promote best-fit provider to front for Nexus queries
+  if (agentName === "nexus" && userMessage) {
+    const queryType = detectQueryType(userMessage);
+    const preferred = available.filter((p) => p.queryTypes?.includes(queryType));
+    const rest      = available.filter((p) => !p.queryTypes?.includes(queryType));
+    if (preferred.length) {
+      console.log(`[Router] nexus smart routing: ${queryType} → ${preferred[0].id} (${preferred[0].model})`);
+    }
+    return [...preferred, ...rest];
   }
 
   return available;
@@ -379,4 +448,4 @@ async function getUsageSummary() {
   return summary;
 }
 
-module.exports = { PROVIDERS, getOrderedProviders, getUsageSummary };
+module.exports = { PROVIDERS, getOrderedProviders, getUsageSummary, detectQueryType };
