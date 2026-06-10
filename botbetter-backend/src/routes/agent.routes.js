@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const router = express.Router();
-const { chat, voiceChat, getHistory, clearHistory, getStats } = require("../controllers/agent.controller");
+const { chat, chatStream, voiceChat, getHistory, clearHistory, getStats } = require("../controllers/agent.controller");
 const { protect } = require("../middleware/auth.middleware");
 const { chatLimiter } = require("../middleware/rateLimit.middleware");
 const { textToSpeech } = require("../utils/sarvam");
@@ -33,6 +33,9 @@ router.post("/voice/intro", async (req, res) => {
 
 // Chat with agent
 router.post("/chat/:agentName", protect, chatLimiter, chat);
+
+// Streaming chat (SSE) — text only, no TTS
+router.post("/chat/:agentName/stream", protect, chatLimiter, chatStream);
 
 // Voice-to-voice chat through Nexus
 router.post("/voice/chat", protect, chatLimiter, upload.single("audio"), voiceChat);

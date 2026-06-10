@@ -10,6 +10,8 @@ const { runPrepify } = require("../agents/prepify");
 const { runFlexAI } = require("../agents/flexai");
 const { runCreato } = require("../agents/creato");
 const { runNexus } = require("../agents/nexus");
+const { callAI, callAIStream } = require("../utils/aiCaller");
+const { getNexusPrompt } = require("../agents/nexus/prompt");
 
 function deduplicateResponse(text) {
   if (!text || typeof text !== "string") return text;
@@ -241,6 +243,109 @@ const clearHistory = async (req, res, next) => {
   }
 };
 
+// @route POST /api/chat/:agentName/stream  (SSE streaming — text only, no TTS)
+const chatStream = async (req, res, next) => {
+  try {
+    const { message, personality, language } = req.body;
+    const userId = req.user._id;
+
+    if (!message || message.trim() === "") {
+      return res.status(400).json({ success: false, message: "Message cannot be empty" });
+    }
+
+    const planLimit = PLAN_LIMITS[req.user.plan];
+    if (req.user.messagesCount >= planLimit) {
+      return res.status(403).json({
+        success: false,
+        message: `Message limit reached for ${req.user.plan} plan. Please upgrade!`,
+        upgrade: true,
+      });
+    }
+
+    const limitStatus = await checkDailyLimit(userId);
+    if (!limitStatus.canSend) {
+      return res.status(429).json({
+        success: false,
+        limitReached: true,
+        message: "Daily message limit reached. Come back tomorrow!",
+        messagesLeft: 0,
+        resetTime: limitStatus.resetTime,
+      });
+    }
+
+    // Commit to SSE — no JSON errors after this point
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    const resolvedPersonality = personality || req.user.personality || "maya";
+    const resolvedLanguage    = language    || req.user.language    || "en-IN";
+
+    const memory = await getMemory(userId);
+    const systemPrompt = getNexusPrompt(memory, { personality: resolvedPersonality, language: resolvedLanguage });
+    const history = memory.getAgentHistory("nexus", 8).map((m) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content,
+    }));
+
+    let fullReply = "";
+
+    const onChunk = (delta) => {
+      if (res.writableEnded) return;
+      fullReply += delta;
+      res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+    };
+
+    try {
+      await callAIStream(
+        "nexus",
+        [...history, { role: "user", content: message }],
+        systemPrompt,
+        onChunk
+      );
+    } catch (streamErr) {
+      console.error("[Stream] AI error, falling back to non-streaming:", streamErr.message);
+      if (!fullReply) {
+        const result = await callAI(
+          "nexus",
+          [...history, { role: "user", content: message }],
+          systemPrompt
+        );
+        fullReply = result.reply;
+        if (!res.writableEnded) {
+          res.write(`data: ${JSON.stringify({ delta: fullReply })}\n\n`);
+        }
+      }
+    }
+
+    fullReply = deduplicateResponse(fullReply);
+
+    try {
+      await memory.addMessage("nexus", "user", message);
+      await memory.addMessage("nexus", "assistant", fullReply);
+    } catch (e) {
+      console.error("[Stream] History save error:", e.message);
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      $inc: { messagesCount: 1, tokensUsed: 100, dailyMessageCount: 1 },
+    });
+
+    if (!res.writableEnded) {
+      res.write(`data: ${JSON.stringify({ done: true, messagesLeft: limitStatus.messagesLeft - 1, resetTime: limitStatus.resetTime })}\n\n`);
+      res.end();
+    }
+  } catch (err) {
+    if (!res.headersSent) {
+      next(err);
+    } else if (!res.writableEnded) {
+      res.write(`data: ${JSON.stringify({ error: "Something went wrong" })}\n\n`);
+      res.end();
+    }
+  }
+};
+
 // @route GET /api/stats
 const getStats = async (req, res, next) => {
   try {
@@ -266,4 +371,4 @@ const getStats = async (req, res, next) => {
   }
 };
 
-module.exports = { chat, voiceChat, getHistory, clearHistory, getStats };
+module.exports = { chat, chatStream, voiceChat, getHistory, clearHistory, getStats };
