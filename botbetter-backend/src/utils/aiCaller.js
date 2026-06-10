@@ -231,7 +231,120 @@ async function callProvider(provider, messages, systemPrompt, tools = []) {
   return callOpenAICompat(baseURL, provider, messages, systemPrompt, tools);
 }
 
+// ─── Streaming: Gemini ────────────────────────────────────────────────────────
+
+async function callGeminiStream(provider, messages, systemPrompt, onChunk) {
+  const genAI = new GoogleGenerativeAI(provider.apiKey());
+  const model = genAI.getGenerativeModel({ model: provider.model, systemInstruction: systemPrompt });
+
+  const history = messages.slice(0, -1).map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+
+  const lastMessage = messages[messages.length - 1];
+  const chat = model.startChat({ history });
+  const result = await chat.sendMessageStream(lastMessage.content);
+
+  let fullText = "";
+  for await (const chunk of result.stream) {
+    const text = chunk.text();
+    if (text) { fullText += text; onChunk(text); }
+  }
+
+  const finalResponse = await result.response;
+  return { reply: fullText, tokensUsed: finalResponse.usageMetadata?.totalTokenCount || 0 };
+}
+
+// ─── Streaming: OpenAI-compatible (Groq / Mistral / DeepSeek) ────────────────
+
+async function callOpenAICompatStream(baseURL, provider, messages, systemPrompt, onChunk) {
+  const body = {
+    model: provider.model,
+    messages: [{ role: "system", content: systemPrompt }, ...messages],
+    temperature: 0.7,
+    stream: true,
+  };
+
+  const response = await fetch(`${baseURL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${provider.apiKey()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const bodyText = await response.text();
+    throw new Error(`${provider.id} HTTP ${response.status}: ${bodyText.slice(0, 200)}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const data = line.slice(6).trim();
+      if (data === "[DONE]") continue;
+      try {
+        const parsed = JSON.parse(data);
+        const delta = parsed.choices?.[0]?.delta?.content ?? "";
+        if (delta) { fullText += delta; onChunk(delta); }
+      } catch { /* ignore malformed chunk */ }
+    }
+  }
+
+  return { reply: fullText, tokensUsed: 0 };
+}
+
+async function callProviderStream(provider, messages, systemPrompt, onChunk) {
+  if (provider.type === "gemini") {
+    return callGeminiStream(provider, messages, systemPrompt, onChunk);
+  }
+  const baseURL = BASE_URLS[provider.type];
+  if (!baseURL) throw new Error(`No base URL for provider type: ${provider.type}`);
+  return callOpenAICompatStream(baseURL, provider, messages, systemPrompt, onChunk);
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
+
+async function callAIStream(agentName, messages, systemPrompt, onChunk) {
+  let providers;
+  try {
+    providers = await getOrderedProviders(agentName);
+  } catch (e) {
+    console.error(`[AI Stream] Failed to get providers for ${agentName}:`, e.message);
+    throw e;
+  }
+
+  if (providers.length === 0) throw new Error(`No providers available for ${agentName}`);
+
+  for (const provider of providers) {
+    try {
+      console.log(`[AI Stream] ${agentName} -> ${provider.id} (${provider.model})`);
+      const result = await callProviderStream(provider, messages, systemPrompt, onChunk);
+      ApiUsage.incrementUsage(provider.id, agentName, result.tokensUsed).catch((e) =>
+        console.error(`[AI Stream] Usage tracking failed:`, e.message)
+      );
+      console.log(`[AI Stream] ${agentName} <- ${provider.id} OK`);
+      return result;
+    } catch (e) {
+      console.error(`[AI Stream] ${provider.id} failed for ${agentName}: ${e.message}`);
+    }
+  }
+
+  throw new Error(`All providers failed for ${agentName}`);
+}
 
 async function callAI(agentName, messages, systemPrompt, tools = []) {
   let providers;
@@ -275,4 +388,4 @@ function fallbackResponse() {
   };
 }
 
-module.exports = { callAI };
+module.exports = { callAI, callAIStream };

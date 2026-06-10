@@ -614,27 +614,98 @@ export const NexusChat = ({
     if (!text || busy) return;
     if (!user) { setAuthModal({open:true,tab:"login"}); return; }
     setInput(""); setSendError("");
-    setMsgs((m) => [...m, { from:"user", text }]);
     setSending(true); flashRef.current = 0.9;
+
+    if (voice === "on") {
+      // Voice mode — non-streaming so TTS audio can be returned
+      setMsgs((m) => [...m, { from:"user", text }]);
+      try {
+        const token = localStorage.getItem("bb_token") ?? "";
+        const res = await fetch("/api/chat/nexus", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
+          body:JSON.stringify({ message:text, personality, language, tts: true }),
+        });
+        const data = await res.json() as { reply?:string; audioBase64?:string; message?:string; limitReached?:boolean };
+        if (!res.ok) {
+          if (data.limitReached) { setMsgs((m)=>m.slice(0,-1)); setInput(text); setSendError("Daily message limit reached. Refer a friend for +20 bonus messages!"); }
+          else { setSendError(data.message ?? "Something went wrong"); setMsgs((m)=>[...m,{from:"nexus",text:"Sorry, something went wrong. Please try again 🙏"}]); }
+          return;
+        }
+        setMsgs((m) => [...m, { from:"nexus", text: data.reply ?? "" }]);
+        if (data.audioBase64) { playBase64Audio(data.audioBase64).catch(()=>{}); }
+        refreshSidebar();
+      } catch (err) {
+        setSendError(err instanceof Error ? err.message : "Something went wrong");
+        setMsgs((m) => [...m, { from:"nexus", text:"Sorry, something went wrong. Please try again 🙏" }]);
+      } finally { setSending(false); }
+      return;
+    }
+
+    // Text mode — SSE streaming for ChatGPT-style word-by-word output
+    setMsgs((m) => [...m, { from:"user", text }, { from:"nexus", text:"" }]);
     try {
       const token = localStorage.getItem("bb_token") ?? "";
-      const res = await fetch("/api/chat/nexus", {
+      const res = await fetch("/api/chat/nexus/stream", {
         method:"POST",
         headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
-        body:JSON.stringify({ message:text, personality, language, tts: voice === "on" }),
+        body:JSON.stringify({ message:text, personality, language }),
       });
-      const data = await res.json() as { reply?:string; audioBase64?:string; message?:string; limitReached?:boolean };
+
       if (!res.ok) {
-        if (data.limitReached) { setMsgs((m)=>m.slice(0,-1)); setInput(text); setSendError("Daily message limit reached. Refer a friend for +20 bonus messages!"); }
-        else { setSendError(data.message ?? "Something went wrong"); setMsgs((m)=>[...m,{from:"nexus",text:"Sorry, something went wrong. Please try again 🙏"}]); }
+        const errData = await res.json() as { message?:string; limitReached?:boolean };
+        // Remove the empty nexus placeholder
+        setMsgs((m) => m.slice(0, -1));
+        if (errData.limitReached) { setMsgs((m)=>m.slice(0,-1)); setInput(text); setSendError("Daily message limit reached. Refer a friend for +20 bonus messages!"); }
+        else { setSendError(errData.message ?? "Something went wrong"); setMsgs((m)=>[...m,{from:"nexus",text:"Sorry, something went wrong. Please try again 🙏"}]); }
         return;
       }
-      setMsgs((m) => [...m, { from:"nexus", text: data.reply ?? "" }]);
-      if (voice === "on" && data.audioBase64) { playBase64Audio(data.audioBase64).catch(()=>{}); }
+
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const evt = JSON.parse(line.slice(6)) as { delta?: string; done?: boolean; error?: string };
+            if (evt.delta) {
+              setMsgs((m) => {
+                const msgs = [...m];
+                const last = msgs[msgs.length - 1];
+                if (last.from === "nexus") msgs[msgs.length - 1] = { from:"nexus", text: last.text + evt.delta! };
+                return msgs;
+              });
+            }
+            if (evt.error) {
+              setMsgs((m) => {
+                const msgs = [...m];
+                const last = msgs[msgs.length - 1];
+                if (last.from === "nexus" && !last.text) msgs[msgs.length - 1] = { from:"nexus", text:"Sorry, something went wrong. Please try again 🙏" };
+                return msgs;
+              });
+            }
+          } catch { /* ignore malformed SSE line */ }
+        }
+      }
+
       refreshSidebar();
     } catch (err) {
       setSendError(err instanceof Error ? err.message : "Something went wrong");
-      setMsgs((m) => [...m, { from:"nexus", text:"Sorry, something went wrong. Please try again 🙏" }]);
+      setMsgs((m) => {
+        const msgs = [...m];
+        const last = msgs[msgs.length - 1];
+        if (last.from === "nexus" && !last.text) msgs[msgs.length - 1] = { from:"nexus", text:"Sorry, something went wrong. Please try again 🙏" };
+        else msgs.push({ from:"nexus", text:"Sorry, something went wrong. Please try again 🙏" });
+        return msgs;
+      });
     } finally { setSending(false); }
   };
 
