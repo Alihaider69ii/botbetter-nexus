@@ -319,9 +319,10 @@ async function callProviderStream(provider, messages, systemPrompt, onChunk) {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 async function callAIStream(agentName, messages, systemPrompt, onChunk) {
+  const userMessage = messages[messages.length - 1]?.content ?? "";
   let providers;
   try {
-    providers = await getOrderedProviders(agentName);
+    providers = await getOrderedProviders(agentName, userMessage);
   } catch (e) {
     console.error(`[AI Stream] Failed to get providers for ${agentName}:`, e.message);
     throw e;
@@ -347,9 +348,10 @@ async function callAIStream(agentName, messages, systemPrompt, onChunk) {
 }
 
 async function callAI(agentName, messages, systemPrompt, tools = []) {
+  const userMessage = messages[messages.length - 1]?.content ?? "";
   let providers;
   try {
-    providers = await getOrderedProviders(agentName);
+    providers = await getOrderedProviders(agentName, userMessage);
   } catch (e) {
     console.error(`[AI] Failed to get providers for ${agentName}:`, e.message);
     return fallbackResponse();
