@@ -171,8 +171,8 @@ function getSeed(p: Personality): Msg[] {
   return [{
     from: "nexus",
     text: p === "kabir"
-      ? "Ready. What do you need done?"
-      : "Namaste! Main Maya hoon. Kya help kar sakti hoon?",
+      ? "Kabir here. Ready to execute.\nGive me a task — I'll get it done.\nWhat's the mission? ⚡"
+      : "Hey! I'm Maya — your personal AI.\nWarm, intuitive, always here for you.\nWhat can I help you with today? 🌸",
   }];
 }
 
@@ -202,6 +202,9 @@ const CSS = `
 @keyframes nx-rec-pulse  { 0%,100%{box-shadow:0 0 0 0 rgba(255,0,127,.4)} 50%{box-shadow:0 0 0 8px rgba(255,0,127,0)} }
 @keyframes nx-prog-shift { 0%,100%{filter:hue-rotate(0deg)} 50%{filter:hue-rotate(30deg)} }
 @keyframes nx-voice-bar  { 0%,100%{transform:scaleY(.4)} 50%{transform:scaleY(1)} }
+@keyframes nx-jarvis-ring { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(2.4);opacity:0} }
+@keyframes nx-jarvis-glow { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+@keyframes nx-jarvis-proc { 0%,100%{opacity:.4;transform:scale(.9)} 50%{opacity:1;transform:scale(1.08)} }
 
 /* HEADER */
 .nx-header {
@@ -338,52 +341,79 @@ const CSS = `
 .nx-freq:nth-child(3n)   { animation-delay:.1s; }
 .nx-freq--active { opacity:1; background:#ff007f; }
 
-/* RIGHT SIDEBAR */
-.nx-right {
-  width:218px; flex-shrink:0;
-  background:rgba(10,4,30,.55);
-  border-left:1px solid rgba(0,240,255,.11);
-  backdrop-filter:blur(20px);
-  display:flex; flex-direction:column;
-  padding:14px; z-index:10; overflow-y:auto;
-}
-.nx-right::-webkit-scrollbar { width:2px; }
-.nx-right::-webkit-scrollbar-thumb { background:rgba(0,240,255,.1); }
+/* LEFT SIDEBAR — bottom nav + user section */
+.nx-sb-nav-divider  { height:1px; background:rgba(0,240,255,.08); margin:10px 0 6px; }
+.nx-sb-nav-item     { width:100%; text-align:left; display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:9px; border:none; background:transparent; color:rgba(232,249,255,.48); font-size:12px; font-weight:600; cursor:pointer; transition:all .16s; font-family:'Space Grotesk',sans-serif; }
+.nx-sb-nav-item:hover { background:rgba(0,240,255,.07); color:#e8f9ff; }
+.nx-sb-nav-item span:first-child { font-size:14px; }
 
-.nx-prof-card { background:rgba(0,240,255,.025); border:1px solid rgba(0,240,255,.12); border-radius:12px; padding:12px; margin-bottom:14px; display:flex; flex-direction:column; align-items:center; gap:3px; text-align:center; }
-.nx-prof-av   { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#00f0ff,#ff007f); box-shadow:0 0 12px rgba(0,240,255,.35); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px; color:#fff; margin-bottom:3px; }
-.nx-prof-name { font-weight:700; font-size:13px; color:#fff; }
-.nx-prof-mail { font-size:9px; color:rgba(232,249,255,.33); margin-bottom:3px; word-break:break-all; }
-.nx-plan-tag  { font-size:8px; font-weight:900; padding:2px 7px; border-radius:20px; border:1px solid #00f0ff; color:#00f0ff; letter-spacing:1px; text-transform:uppercase; }
-.nx-plan-tag--admin { border-color:#ff007f; color:#ff007f; }
+.nx-left-bottom     { flex-shrink:0; border-top:1px solid rgba(0,240,255,.1); padding:8px 10px; position:relative; }
+.nx-sb-user         { display:flex; align-items:center; gap:9px; padding:8px 9px; border-radius:10px; cursor:pointer; transition:all .16s; }
+.nx-sb-user:hover   { background:rgba(0,240,255,.06); }
+.nx-sb-av           { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#00f0ff,#ff007f); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; color:#fff; flex-shrink:0; box-shadow:0 0 8px rgba(0,240,255,.3); }
+.nx-sb-info         { flex:1; min-width:0; }
+.nx-sb-name         { font-size:12px; font-weight:700; color:#e8f9ff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nx-sb-plan         { font-size:9px; font-weight:700; color:rgba(0,240,255,.55); letter-spacing:1px; text-transform:uppercase; }
+.nx-sb-chevron      { font-size:11px; color:rgba(232,249,255,.3); flex-shrink:0; transition:transform .2s; display:inline-block; }
+.nx-sb-chevron--open{ transform:rotate(180deg); }
 
-.nx-stitle    { font-size:9px; font-weight:700; letter-spacing:2.5px; color:rgba(232,249,255,.27); text-transform:uppercase; margin:12px 0 7px; font-family:'Syne',sans-serif; }
-.nx-divider   { height:1px; background:rgba(0,240,255,.07); margin:10px 0; }
-
-.nx-tgl-group { display:flex; gap:3px; margin-bottom:10px; }
-.nx-tgl-opt   { flex:1; padding:7px 2px; border-radius:8px; font-size:9px; font-weight:700; letter-spacing:.6px; border:1px solid rgba(0,240,255,.13); background:transparent; color:rgba(232,249,255,.3); cursor:pointer; transition:all .15s; text-align:center; font-family:'Space Grotesk',sans-serif; text-transform:uppercase; }
-.nx-tgl-opt:hover       { color:rgba(232,249,255,.65); border-color:rgba(0,240,255,.26); }
-.nx-tgl-opt--on         { background:rgba(0,240,255,.09); border-color:rgba(0,240,255,.38); color:#00f0ff; }
-.nx-tgl-opt--maya-on    { background:rgba(124,107,255,.11); border-color:rgba(124,107,255,.38); color:#7C6BFF; }
-.nx-tgl-opt--kabir-on   { background:rgba(14,165,233,.09); border-color:rgba(14,165,233,.36); color:#0ea5e9; }
-
-.nx-lang-sel { width:100%; padding:7px 9px; border-radius:9px; border:1px solid rgba(0,240,255,.18); background:rgba(0,240,255,.02); color:#e8f9ff; font-size:11px; font-family:'Space Grotesk',sans-serif; outline:none; cursor:pointer; transition:border-color .14s; }
-.nx-lang-sel:hover, .nx-lang-sel:focus { border-color:rgba(0,240,255,.35); }
+.nx-sb-drop         { position:absolute; bottom:calc(100% + 4px); left:8px; right:8px; background:rgba(5,3,18,.98); border:1px solid rgba(0,240,255,.28); border-radius:13px; padding:12px 13px; z-index:60; box-shadow:0 -10px 32px rgba(0,0,0,.75); animation:nx-fade-up .18s ease; }
+.nx-stitle          { font-size:9px; font-weight:700; letter-spacing:2.5px; color:rgba(232,249,255,.27); text-transform:uppercase; margin:8px 0 5px; font-family:'Syne',sans-serif; }
+.nx-tgl-group       { display:flex; gap:3px; margin-bottom:8px; }
+.nx-tgl-opt         { flex:1; padding:6px 2px; border-radius:8px; font-size:9px; font-weight:700; letter-spacing:.6px; border:1px solid rgba(0,240,255,.13); background:transparent; color:rgba(232,249,255,.3); cursor:pointer; transition:all .15s; text-align:center; font-family:'Space Grotesk',sans-serif; text-transform:uppercase; }
+.nx-tgl-opt:hover         { color:rgba(232,249,255,.65); border-color:rgba(0,240,255,.26); }
+.nx-tgl-opt--on           { background:rgba(0,240,255,.09); border-color:rgba(0,240,255,.38); color:#00f0ff; }
+.nx-tgl-opt--maya-on      { background:rgba(124,107,255,.11); border-color:rgba(124,107,255,.38); color:#7C6BFF; }
+.nx-tgl-opt--kabir-on     { background:rgba(14,165,233,.09); border-color:rgba(14,165,233,.36); color:#0ea5e9; }
+.nx-lang-sel        { width:100%; padding:6px 8px; border-radius:8px; border:1px solid rgba(0,240,255,.18); background:rgba(0,240,255,.02); color:#e8f9ff; font-size:11px; font-family:'Space Grotesk',sans-serif; outline:none; cursor:pointer; transition:border-color .14s; margin-bottom:8px; }
+.nx-lang-sel:hover,.nx-lang-sel:focus { border-color:rgba(0,240,255,.35); }
 .nx-lang-sel option { background:#050312; color:#e8f9ff; }
+.nx-sb-logout       { width:100%; text-align:left; padding:7px 10px; border-radius:8px; border:none; background:transparent; color:rgba(255,0,127,.65); font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; font-family:'Space Grotesk',sans-serif; margin-top:2px; }
+.nx-sb-logout:hover { background:rgba(255,0,127,.08); color:#ff007f; }
+.nx-save-toast      { font-size:9px; text-align:center; letter-spacing:1px; animation:nx-fade-up .2s ease; color:#39ff14; padding:2px 0; }
+.nx-save-saving     { color:rgba(0,240,255,.45); }
 
-.nx-login-card { background:rgba(0,240,255,.025); border:1px dashed rgba(0,240,255,.17); border-radius:11px; padding:14px; text-align:center; font-size:11px; color:rgba(232,249,255,.38); line-height:1.7; margin-bottom:12px; }
-.nx-login-card button { margin-top:8px; padding:6px 14px; border-radius:8px; border:1px solid rgba(0,240,255,.28); background:rgba(0,240,255,.05); color:#00f0ff; font-size:11px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; width:100%; transition:all .17s; }
-.nx-login-card button:hover { background:rgba(0,240,255,.12); }
+.nx-sb-login        { display:flex; gap:6px; padding:2px 0; }
+.nx-sb-login-btn    { flex:1; padding:7px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:all .16s; background:rgba(0,240,255,.06); border:1px solid rgba(0,240,255,.25); color:#00f0ff; }
+.nx-sb-login-btn:hover   { background:rgba(0,240,255,.13); }
+.nx-sb-signup-btn   { flex:1; padding:7px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:opacity .16s; background:linear-gradient(135deg,#00f0ff,#ff007f); border:none; color:#fff; }
+.nx-sb-signup-btn:hover  { opacity:.88; }
 
-.nx-save-toast { margin-top:6px; font-size:9px; text-align:center; letter-spacing:1px; animation:nx-fade-up .2s ease; color:#39ff14; }
-.nx-save-saving { color:rgba(0,240,255,.45); }
+/* JARVIS VOICE BUTTON */
+.nx-voice-btn       { position:relative; width:40px; height:40px; min-width:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; background:none; border:none; padding:0; }
+.nx-voice-btn:disabled   { opacity:.4; cursor:not-allowed; }
+.nx-voice-core      { width:13px; height:13px; border-radius:50%; background:rgba(0,240,255,.75); box-shadow:0 0 9px rgba(0,240,255,.55); position:relative; z-index:2; transition:all .3s; flex-shrink:0; }
+.nx-voice-ring      { position:absolute; border-radius:50%; border:1.5px solid rgba(0,240,255,.45); opacity:0; pointer-events:none; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); }
+.nx-voice-ring-1    { width:22px; height:22px; }
+.nx-voice-ring-2    { width:32px; height:32px; }
+.nx-voice-ring-3    { width:40px; height:40px; }
+/* Idle: subtle static visible rings */
+.nx-voice-btn--idle .nx-voice-ring { opacity:.2; }
+.nx-voice-btn--idle:hover .nx-voice-core  { animation:nx-jarvis-glow .9s ease-in-out infinite; box-shadow:0 0 14px rgba(0,240,255,.9); }
+.nx-voice-btn--idle:hover .nx-voice-ring  { animation:nx-jarvis-ring 1.6s ease-out infinite; }
+.nx-voice-btn--idle:hover .nx-voice-ring-1 { animation-delay:0s; }
+.nx-voice-btn--idle:hover .nx-voice-ring-2 { animation-delay:.38s; }
+.nx-voice-btn--idle:hover .nx-voice-ring-3 { animation-delay:.76s; }
+/* Recording: fast pink pulse */
+.nx-voice-btn--rec .nx-voice-core  { background:#ff007f; box-shadow:0 0 16px rgba(255,0,127,.85); width:15px; height:15px; animation:nx-jarvis-glow .6s ease-in-out infinite; }
+.nx-voice-btn--rec .nx-voice-ring  { border-color:rgba(255,0,127,.6); animation:nx-jarvis-ring 1s ease-out infinite; }
+.nx-voice-btn--rec .nx-voice-ring-1 { animation-delay:0s; }
+.nx-voice-btn--rec .nx-voice-ring-2 { animation-delay:.28s; }
+.nx-voice-btn--rec .nx-voice-ring-3 { animation-delay:.56s; }
+/* Processing: amber steady pulse */
+.nx-voice-btn--proc .nx-voice-core  { background:#f0aa00; box-shadow:0 0 12px rgba(240,170,0,.7); animation:nx-jarvis-proc .9s ease-in-out infinite; }
+.nx-voice-btn--proc .nx-voice-ring  { border-color:rgba(240,170,0,.4); opacity:.35; animation:nx-jarvis-proc .9s ease-in-out infinite; }
+.nx-voice-btn--proc .nx-voice-ring-1 { animation-delay:0s; }
+.nx-voice-btn--proc .nx-voice-ring-2 { animation-delay:.2s; }
+.nx-voice-btn--proc .nx-voice-ring-3 { animation-delay:.4s; }
 
 /* ── VOID theme ── */
 [data-theme="void"] .nx-root { background:#000 !important; }
 [data-theme="void"] .nx-header { background:rgba(0,0,0,.97) !important; border-color:#1A1A1A !important; }
 [data-theme="void"] .nx-dock { background:rgba(0,0,0,.97) !important; border-color:#1A1A1A !important; }
 [data-theme="void"] .nx-left { background:rgba(8,0,22,.6) !important; border-color:#1A1A1A !important; }
-[data-theme="void"] .nx-right { background:rgba(8,0,22,.6) !important; border-color:#1A1A1A !important; }
+[data-theme="void"] .nx-left-bottom { border-color:#1A1A1A !important; }
+[data-theme="void"] .nx-sb-drop { background:rgba(0,0,0,.99) !important; border-color:rgba(124,107,255,.35) !important; }
 [data-theme="void"] .nx-brand-name,[data-theme="void"] .nx-clock,[data-theme="void"] .nx-new-btn,[data-theme="void"] .nx-bbl-name { color:#7C6BFF !important; }
 [data-theme="void"] .nx-hdr-btn { color:#7C6BFF !important; border-color:rgba(124,107,255,.28) !important; background:rgba(124,107,255,.04) !important; }
 [data-theme="void"] .nx-hdr-btn:hover { background:linear-gradient(135deg,#7C6BFF,#FF007F) !important; color:#fff !important; }
@@ -402,7 +432,10 @@ const CSS = `
 [data-theme="genz"] .nx-header { background:rgba(255,255,255,.97) !important; border-color:#E5E7EB !important; }
 [data-theme="genz"] .nx-dock { background:rgba(255,255,255,.97) !important; border-color:#E5E7EB !important; }
 [data-theme="genz"] .nx-left { background:rgba(248,247,255,.92) !important; border-color:#E5E7EB !important; }
-[data-theme="genz"] .nx-right { background:rgba(248,247,255,.92) !important; border-color:#E5E7EB !important; }
+[data-theme="genz"] .nx-left-bottom { border-color:#E5E7EB !important; }
+[data-theme="genz"] .nx-sb-drop { background:rgba(255,255,255,.99) !important; border-color:rgba(108,0,255,.3) !important; }
+[data-theme="genz"] .nx-sb-name { color:#0A0A0F !important; }
+[data-theme="genz"] .nx-sb-nav-item { color:rgba(10,10,15,.45) !important; }
 [data-theme="genz"] .nx-brand-name,[data-theme="genz"] .nx-clock,[data-theme="genz"] .nx-new-btn,[data-theme="genz"] .nx-bbl-name { color:#6C00FF !important; }
 [data-theme="genz"] .nx-hdr-btn { color:#6C00FF !important; border-color:rgba(108,0,255,.22) !important; background:rgba(108,0,255,.04) !important; }
 [data-theme="genz"] .nx-hdr-btn:hover { background:linear-gradient(135deg,#6C00FF,#FF3CAC) !important; color:#fff !important; }
@@ -426,7 +459,6 @@ const CSS = `
 [data-theme="genz"] .nx-prog-fill { background:linear-gradient(90deg,#6C00FF,#FF3CAC) !important; }
 [data-theme="genz"] .nx-ref-code,[data-theme="genz"] .nx-ref-copy { color:#6C00FF !important; border-color:rgba(108,0,255,.25) !important; }
 [data-theme="genz"] .nx-stat-tag { background:rgba(255,60,172,.08) !important; border-color:rgba(255,60,172,.25) !important; color:#FF3CAC !important; }
-[data-theme="genz"] .nx-plan-tag { border-color:#6C00FF !important; color:#6C00FF !important; }
 [data-theme="genz"] .nx-tgl-opt { border-color:rgba(108,0,255,.15) !important; color:rgba(10,10,15,.4) !important; }
 [data-theme="genz"] .nx-drop-row { color:rgba(10,10,15,.6) !important; }
 [data-theme="genz"] .nx-av-drop { background:rgba(255,255,255,.99) !important; border-color:rgba(108,0,255,.3) !important; }
@@ -470,6 +502,7 @@ export const NexusChat = ({
   const [refCopied,        setRefCopied]        = useState(false);
   const [clock,            setClock]            = useState("00:00:00");
   const [avatarOpen,       setAvatarOpen]       = useState(false);
+  const [sbDropOpen,       setSbDropOpen]       = useState(false);
   const [authModal,        setAuthModal]        = useState<{open:boolean;tab:"login"|"signup"}>({open:false,tab:"login"});
 
   const canvasRef  = useRef<HTMLCanvasElement>(null);
@@ -737,7 +770,7 @@ export const NexusChat = ({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="nx-root" onClick={() => avatarOpen && setAvatarOpen(false)}>
+      <div className="nx-root" onClick={() => { if (avatarOpen) setAvatarOpen(false); if (sbDropOpen) setSbDropOpen(false); }}>
 
         {/* HEADER */}
         <header className="nx-header">
@@ -787,11 +820,19 @@ export const NexusChat = ({
 
           {/* LEFT SIDEBAR */}
           <aside className={`nx-left${leftOpen ? "" : " nx-left--closed"}`}>
-            <div className="nx-left-scroll">
+            {/* TOP: Brand + New Chat */}
+            <div style={{padding:"12px 13px 4px",flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,padding:"2px 2px 0"}}>
+                <div className="nx-logo nx-hf" style={{width:26,height:26,fontSize:13}}>N</div>
+                <span className="nx-brand-name nx-hf" style={{fontSize:14,letterSpacing:"1.2px"}}>NEXUS</span>
+              </div>
               <button className="nx-new-btn" onClick={()=>{setMsgs(getSeed(personality));setActiveSessionId(null);}}>
                 ＋ {t(language,"newChat")}
               </button>
+            </div>
 
+            {/* MIDDLE: History + Nav */}
+            <div className="nx-left-scroll">
               <div className="nx-section-head">{t(language,"history")}</div>
               {user && (
                 <input className="nx-search" placeholder={t(language,"search")}
@@ -814,40 +855,68 @@ export const NexusChat = ({
                 </div>
               ))}
 
-              <div className="nx-section-head">{t(language,"connectors")}</div>
-              {ALL_APPS.map(({name,icon})=>(
-                <div key={name} className="nx-app-row">
-                  <span className={`nx-app-dot ${connApps.includes(name)?"nx-dot-on":"nx-dot-off"}`}/>
-                  <span>{icon} {name}</span>
-                </div>
-              ))}
+              <div className="nx-sb-nav-divider"/>
+              <button className="nx-sb-nav-item" onClick={()=>onNavigate("dashboard")}>
+                <span>📊</span><span>Dashboard</span>
+              </button>
+              <button className="nx-sb-nav-item" onClick={()=>onNavigate("connectors")}>
+                <span>🔌</span><span>{t(language,"connectors")}</span>
+              </button>
 
-              <div className="nx-section-head">{t(language,"usageToday")}</div>
-              {!user ? (
-                <p className="nx-empty">Log in to see usage</p>
-              ) : !limitStatus ? (
-                <p className="nx-empty">Loading…</p>
-              ) : (
+              {user && limitStatus && (
                 <>
-                  <div className="nx-stat-row">
-                    <span>Messages</span>
-                    <span className="nx-stat-tag">{limitStatus.messagesUsed} / {limitStatus.totalLimit}</span>
+                  <div className="nx-sb-nav-divider"/>
+                  <div className="nx-stat-row" style={{padding:"0 2px"}}>
+                    <span style={{fontSize:11,color:"rgba(232,249,255,.45)"}}>Usage today</span>
+                    <span className="nx-stat-tag">{limitStatus.messagesUsed}/{limitStatus.totalLimit}</span>
                   </div>
                   <div className="nx-prog-bar"><div className="nx-prog-fill" style={{width:`${usagePct}%`}}/></div>
-                  <div style={{fontSize:10,color:"rgba(57,255,20,.65)",marginBottom:4}}>{limitStatus.messagesLeft} left today</div>
                 </>
               )}
+            </div>
 
-              {user && (
-                <>
-                  <div className="nx-section-head">{t(language,"referralCode")}</div>
-                  {refCode ? (
-                    <div className="nx-ref-row">
-                      <span className="nx-ref-code nx-mono">{refCode}</span>
-                      <button className={`nx-ref-copy${refCopied?" nx-ref-copy--done":""}`} onClick={copyRef}>{refCopied?"✓":"Copy"}</button>
-                    </div>
-                  ) : <p className="nx-empty">Loading…</p>}
-                </>
+            {/* BOTTOM: User + Settings Dropdown */}
+            <div className="nx-left-bottom" onClick={(e)=>e.stopPropagation()}>
+              {sbDropOpen && (
+                <div className="nx-sb-drop">
+                  <div className="nx-stitle">{t(language,"voice")}</div>
+                  <div className="nx-tgl-group">
+                    <button className={`nx-tgl-opt${voice==="off"?" nx-tgl-opt--on":""}`} onClick={()=>setVoice("off")}>🔇 {t(language,"textOnly")}</button>
+                    <button className={`nx-tgl-opt${voice==="on"?" nx-tgl-opt--on":""}`} onClick={()=>setVoice("on")}>🔊 {t(language,"voiceOn")}</button>
+                  </div>
+                  <div className="nx-stitle">{t(language,"personality")}</div>
+                  <div className="nx-tgl-group">
+                    <button className={`nx-tgl-opt${personality==="maya"?" nx-tgl-opt--maya-on":""}`} onClick={()=>setPersonality("maya")}>🌸 MAYA</button>
+                    <button className={`nx-tgl-opt${personality==="kabir"?" nx-tgl-opt--kabir-on":""}`} onClick={()=>setPersonality("kabir")}>⚡ KABIR</button>
+                  </div>
+                  <div className="nx-stitle">{t(language,"language")}</div>
+                  <select className="nx-lang-sel" value={language} onChange={(e)=>setLanguage(e.target.value)}>
+                    {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label} — {l.native}</option>)}
+                  </select>
+                  <div className="nx-stitle">THEME</div>
+                  <ThemeSwitcher style={{width:"100%",marginBottom:6}}/>
+                  {savedToast && <div className="nx-save-toast">✓ SAVED</div>}
+                  {savingPref && !savedToast && <div className="nx-save-toast nx-save-saving">Saving…</div>}
+                  {user && (
+                    <button className="nx-sb-logout" onClick={()=>{handleLogout();setSbDropOpen(false);}}>⏻ Logout</button>
+                  )}
+                </div>
+              )}
+
+              {user ? (
+                <div className="nx-sb-user" onClick={()=>setSbDropOpen((v)=>!v)}>
+                  <div className="nx-sb-av">{userInitial}</div>
+                  <div className="nx-sb-info">
+                    <div className="nx-sb-name">{user.name}</div>
+                    <div className="nx-sb-plan">{isAdmin?"ADMIN":(user.plan??"FREE").toUpperCase()}</div>
+                  </div>
+                  <span className={`nx-sb-chevron${sbDropOpen?" nx-sb-chevron--open":""}`}>⌃</span>
+                </div>
+              ) : (
+                <div className="nx-sb-login">
+                  <button className="nx-sb-login-btn" onClick={()=>setAuthModal({open:true,tab:"login"})}>{t(language,"logIn")}</button>
+                  <button className="nx-sb-signup-btn" onClick={()=>setAuthModal({open:true,tab:"signup"})}>{t(language,"signUp")}</button>
+                </div>
               )}
             </div>
           </aside>
@@ -896,12 +965,15 @@ export const NexusChat = ({
               <div className="nx-capsule">
                 {voice === "on" && (
                   <button
-                    className={`nx-ibtn nx-ibtn--mic${voiceHook.recording?" nx-rec":""}`}
+                    className={`nx-voice-btn${voiceHook.processing?" nx-voice-btn--proc":voiceHook.recording?" nx-voice-btn--rec":" nx-voice-btn--idle"}`}
                     onClick={()=>{if(!user){setAuthModal({open:true,tab:"login"});return;}voiceHook.toggleRecording();}}
                     disabled={voiceHook.processing||sending}
                     aria-label={voiceHook.recording?"Stop recording":"Voice input"}
                   >
-                    {voiceHook.processing?"⏳":voiceHook.recording?"⏹":"🎤"}
+                    <div className="nx-voice-ring nx-voice-ring-1"/>
+                    <div className="nx-voice-ring nx-voice-ring-2"/>
+                    <div className="nx-voice-ring nx-voice-ring-3"/>
+                    <div className="nx-voice-core"/>
                   </button>
                 )}
                 <input className="nx-input nx-mono" value={input} onChange={(e)=>setInput(e.target.value)} onKeyDown={onKey}
@@ -919,49 +991,6 @@ export const NexusChat = ({
             </div>
           </main>
 
-          {/* RIGHT SIDEBAR */}
-          <aside className="nx-right">
-            {user ? (
-              <div className="nx-prof-card">
-                <div className="nx-prof-av">{userInitial}</div>
-                <div className="nx-prof-name">{user.name}</div>
-                <div className="nx-prof-mail nx-mono">{user.email}</div>
-                <span className={`nx-plan-tag${isAdmin?" nx-plan-tag--admin":""}`}>
-                  {isAdmin?"ADMIN":(user.plan??"FREE").toUpperCase()}
-                </span>
-              </div>
-            ) : (
-              <div className="nx-login-card">
-                <div style={{fontSize:20,marginBottom:4}}>⚡</div>
-                Log in to unlock all NEXUS features
-                <button onClick={()=>setAuthModal({open:true,tab:"login"})}>{t(language,"logIn")}</button>
-              </div>
-            )}
-
-            <div className="nx-stitle">{t(language,"voice")}</div>
-            <div className="nx-tgl-group">
-              <button className={`nx-tgl-opt${voice==="off"?" nx-tgl-opt--on":""}`} onClick={()=>setVoice("off")}>🔇 {t(language,"textOnly")}</button>
-              <button className={`nx-tgl-opt${voice==="on"?" nx-tgl-opt--on":""}`} onClick={()=>setVoice("on")}>🔊 {t(language,"voiceOn")}</button>
-            </div>
-
-            <div className="nx-divider"/>
-
-            <div className="nx-stitle">{t(language,"personality")}</div>
-            <div className="nx-tgl-group">
-              <button className={`nx-tgl-opt${personality==="maya"?" nx-tgl-opt--maya-on":""}`} onClick={()=>setPersonality("maya")}>🌸 MAYA</button>
-              <button className={`nx-tgl-opt${personality==="kabir"?" nx-tgl-opt--kabir-on":""}`} onClick={()=>setPersonality("kabir")}>⚡ KABIR</button>
-            </div>
-
-            <div className="nx-divider"/>
-
-            <div className="nx-stitle">{t(language,"language")}</div>
-            <select className="nx-lang-sel" value={language} onChange={(e)=>setLanguage(e.target.value)}>
-              {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label} — {l.native}</option>)}
-            </select>
-
-            {savedToast && <div className="nx-save-toast">✓ SAVED</div>}
-            {savingPref && !savedToast && <div className="nx-save-toast nx-save-saving">Saving…</div>}
-          </aside>
         </div>
       </div>
 
