@@ -10,11 +10,12 @@ import { AgentDetail } from "@/components/botbetter/screens/AgentDetail";
 import { AgentChat } from "@/components/botbetter/screens/AgentChat";
 import { Connections } from "@/components/botbetter/screens/Connections";
 import { CreateAgent } from "@/components/botbetter/screens/CreateAgent";
+import { Usage } from "@/components/botbetter/screens/Usage";
 import { AuthModal } from "@/components/botbetter/screens/AuthModal";
 import { OnboardingModal } from "@/components/botbetter/screens/OnboardingModal";
 
 // Protected screens that require a login
-const PROTECTED: ScreenKey[] = ["dashboard", "chat", "agent", "agent-chat", "connections", "create"];
+const PROTECTED: ScreenKey[] = ["dashboard", "chat", "agent", "agent-chat", "connections", "create", "usage"];
 
 const App = () => {
   const { user, initializing, logout } = useAuth();
@@ -84,7 +85,9 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {screen !== "chat" && screen !== "landing" && <TopNav active={screen} onChange={navigate} />}
+      {screen !== "chat" && screen !== "landing" && screen !== "dashboard" && screen !== "connections" && screen !== "usage" && (
+        <TopNav active={screen} onChange={navigate} />
+      )}
       <div key={screen} className="fade-in">
         {screen === "landing" && (
           <Landing onNavigate={navigate} onShowAuth={showAuth} />
@@ -110,6 +113,9 @@ const App = () => {
         )}
         {screen === "create" && (
           <CreateAgent active={screen} onNavigate={navigate} />
+        )}
+        {screen === "usage" && (
+          <Usage active={screen} onNavigate={navigate} />
         )}
       </div>
 
