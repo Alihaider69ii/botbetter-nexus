@@ -472,7 +472,7 @@ export const NexusChat = ({
   onNavigate: (s: ScreenKey) => void;
 }) => {
   const { user, logout, updateUser } = useAuth();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   // Save theme to backend when it changes (debounced)
   useEffect(() => {
@@ -894,7 +894,22 @@ export const NexusChat = ({
                     {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label} — {l.native}</option>)}
                   </select>
                   <div className="nx-stitle">THEME</div>
-                  <ThemeSwitcher style={{width:"100%",marginBottom:6}}/>
+                  <div className="nx-tgl-group" style={{marginBottom:8}}>
+                    {(["nexus","void","genz"] as const).map((t) => (
+                      <button
+                        key={t}
+                        className={`nx-tgl-opt${theme === t ? " nx-tgl-opt--on" : ""}`}
+                        onClick={() => setTheme(t)}
+                        style={theme === t ? {
+                          background: `rgba(${t==="nexus"?"0,212,255":t==="void"?"124,107,255":"108,0,255"},.12)`,
+                          borderColor: t==="nexus"?"#00D4FF":t==="void"?"#7C6BFF":"#6C00FF",
+                          color: t==="nexus"?"#00D4FF":t==="void"?"#7C6BFF":"#6C00FF",
+                        } : {}}
+                      >
+                        {t==="nexus"?"⚡ NEXUS":t==="void"?"◼ VOID":"🌈 GENZ"}
+                      </button>
+                    ))}
+                  </div>
                   {savedToast && <div className="nx-save-toast">✓ SAVED</div>}
                   {savingPref && !savedToast && <div className="nx-save-toast nx-save-saving">Saving…</div>}
                   {user && (

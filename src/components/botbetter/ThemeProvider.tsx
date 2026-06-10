@@ -46,7 +46,7 @@ export const ThemeSwitcher = ({ style = {} }: { style?: React.CSSProperties }) =
   const options: NexusTheme[] = ["nexus", "void", "genz"];
   const labels: Record<NexusTheme, string> = { nexus: "NEXUS (Dark)", void: "VOID (Black)", genz: "GEN Z (Light)" };
   return (
-    <div style={{ display: "flex", gap: 6, alignItems: "center", ...style }}>
+    <div style={{ display: "flex", gap: 4, alignItems: "center", ...style }}>
       {options.map((t) => (
         <button
           key={t}
@@ -54,14 +54,24 @@ export const ThemeSwitcher = ({ style = {} }: { style?: React.CSSProperties }) =
           title={labels[t]}
           aria-label={`Switch to ${labels[t]} theme`}
           style={{
-            width: 13, height: 13, borderRadius: "50%",
-            background: THEME_COLORS[t],
-            border: theme === t ? "2px solid rgba(255,255,255,0.95)" : "2px solid rgba(255,255,255,0.18)",
+            width: 32, height: 32, borderRadius: "50%",
+            background: "transparent",
+            border: "none",
             cursor: "pointer", padding: 0,
-            boxShadow: theme === t ? `0 0 8px ${THEME_COLORS[t]}` : "none",
-            transition: "all .18s", flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
           }}
-        />
+        >
+          <div style={{
+            width: 16, height: 16, borderRadius: "50%",
+            background: THEME_COLORS[t],
+            border: theme === t ? "2.5px solid rgba(255,255,255,0.95)" : "2px solid rgba(255,255,255,0.2)",
+            boxShadow: theme === t ? `0 0 10px ${THEME_COLORS[t]}, 0 0 3px ${THEME_COLORS[t]}` : "none",
+            transition: "all .18s",
+            transform: theme === t ? "scale(1.2)" : "scale(1)",
+            pointerEvents: "none",
+          }} />
+        </button>
       ))}
     </div>
   );
