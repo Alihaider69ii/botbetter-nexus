@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { agents } from "@/data/agents";
 import { ScreenKey } from "../TopNav";
 import { DashShell } from "../DashShell";
-import { AgentCard } from "../AgentCard";
 import {
-  Activity, MessageSquare, Plug, Zap,
-  Mail, Calendar, Send, Plus, ArrowUpRight, LogOut, Loader2,
-  Copy, Share2, Gift, Users, Settings2,
+  MessageSquare, Plug, Zap,
+  Mail, Calendar, Send, ArrowUpRight, LogOut, Loader2,
+  Copy, Share2, Gift, Users, Settings2, Volume2, VolumeX,
 } from "lucide-react";
 import { statsAPI, userAPI, type StatsResponse, type LimitStatusResponse } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { ThemeSwitcher } from "../ThemeProvider";
 
 const LANGUAGES = [
   { code: "en-IN", label: "English" }, { code: "hi-IN", label: "Hindi" },
@@ -47,8 +47,14 @@ export const Dashboard = ({
 }) => {
   const { user, updateUser } = useAuth();
   const nexus = agents[0];
+
   const [prefLang, setPrefLang] = useState(user?.language ?? "en-IN");
-  const [prefVoice, setPrefVoice] = useState(user?.voice ?? "off");
+
+  const initVoice = user?.voice ?? "off";
+  const [personality, setPersonality] = useState<"maya" | "kabir">(
+    initVoice === "male" ? "kabir" : "maya"
+  );
+  const [voiceOn, setVoiceOn] = useState(initVoice !== "off");
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [prefSaved, setPrefSaved] = useState(false);
 
@@ -89,9 +95,10 @@ export const Dashboard = ({
 
   const savePrefs = async () => {
     setSavingPrefs(true);
+    const voiceVal = voiceOn ? (personality === "kabir" ? "male" : "female") : "off";
     try {
-      await userAPI.updateOnboarding({ language: prefLang, voice: prefVoice });
-      updateUser({ language: prefLang, voice: prefVoice });
+      await userAPI.updateOnboarding({ language: prefLang, voice: voiceVal });
+      updateUser({ language: prefLang, voice: voiceVal });
       setPrefSaved(true);
       setTimeout(() => setPrefSaved(false), 2000);
     } catch { /* ignore */ } finally {
@@ -118,12 +125,6 @@ export const Dashboard = ({
 
   const statCards = [
     {
-      label: "ACTIVE AGENTS",
-      value: loadingStats ? "—" : String(stats.activeAgents.length || agents.length),
-      icon: Activity,
-      sub: loadingStats ? "" : `${stats.activeAgents.length || agents.length} active`,
-    },
-    {
       label: "MESSAGES TODAY",
       value: loadingStats || !limitStatus ? "—" : String(limitStatus.messagesUsed),
       icon: MessageSquare,
@@ -148,32 +149,28 @@ export const Dashboard = ({
   const referralCount = limitStatus?.referralCount ?? 0;
   const totalLimit = limitStatus ? limitStatus.totalLimit : 50;
   const shareText = encodeURIComponent(
-    `BotBetter AI try karo — India ka smartest AI agent platform! 🤖\nMera referral code use karo signup pe: ${referralCode}\nHum dono ko +20 free messages milenge! 🎁\nhttps://botbetter.in`
+    `BotBetter AI try karo — India ka smartest AI platform! 🤖\nMera referral code use karo signup pe: ${referralCode}\nHum dono ko +20 free messages milenge! 🎁\nhttps://botbetter.in`
   );
 
   return (
     <DashShell active={active} onNavigate={onNavigate} title="Dashboard">
       <div className="p-4 sm:p-8 space-y-8 max-w-7xl mx-auto">
 
-        {/* User greeting + logout + Beta badge */}
+        {/* User greeting + logout */}
         {user && (
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-bold tracking-tight text-slate-900">Hey, {user.name.split(" ")[0]} 👋</h2>
-                  <span className="px-2.5 py-1 rounded-full bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC] text-white text-[11px] font-bold uppercase tracking-widest shadow-md">
-                    Beta
-                  </span>
-                </div>
-                <p className="text-sm text-slate-500 mt-1 font-medium">
-                  {user.email}
-                </p>
+            <div>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">Hey, {user.name.split(" ")[0]} 👋</h2>
+                <span className="px-2.5 py-1 rounded-full bg-gradient-to-r from-[#6C00FF] to-[#FF3CAC] text-white text-[11px] font-bold uppercase tracking-widest shadow-md">
+                  Beta
+                </span>
               </div>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">{user.email}</p>
             </div>
             <button
               onClick={onLogout}
-              className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:text-[#FF3CAC] transition-colors text-slate-600"
+              className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border border-border bg-card shadow-sm hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
             >
               <LogOut className="h-4 w-4" /> Log out
             </button>
@@ -181,52 +178,51 @@ export const Dashboard = ({
         )}
 
         {statsError && (
-          <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm font-medium text-red-600">
+          <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm font-medium text-red-400">
             ⚠ Could not load live stats: {statsError}
           </div>
         )}
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stat cards — 3 only */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {statCards.map((s) => (
             <div key={s.label} className="bento-card p-5 hover:-translate-y-1">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold tracking-wider text-slate-400 uppercase">{s.label}</span>
+                <span className="text-xs font-bold tracking-wider text-muted-foreground uppercase">{s.label}</span>
                 {loadingStats
-                  ? <Loader2 className="h-4 w-4 text-purple-400 animate-spin" />
-                  : <div className="h-8 w-8 rounded-full bg-purple-50 flex items-center justify-center">
-                      <s.icon className="h-4 w-4 text-purple-600" />
+                  ? <Loader2 className="h-4 w-4 text-primary/60 animate-spin" />
+                  : <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <s.icon className="h-4 w-4 text-primary" />
                     </div>}
               </div>
-              <div className="text-3xl font-bold text-slate-900">{s.value}</div>
-              <div className="text-xs font-semibold text-slate-500 mt-2">{s.sub}</div>
+              <div className="text-3xl font-bold text-foreground">{s.value}</div>
+              <div className="text-xs font-semibold text-muted-foreground mt-2">{s.sub}</div>
             </div>
           ))}
         </div>
 
-        {/* ── Referral & Bonus section ─────────────────────────────────── */}
+        {/* Referral & Bonus */}
         {user && (
-          <div className="bento-card border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 sm:p-8 space-y-6">
+          <div className="bento-card border-emerald-500/20 bg-emerald-500/5 p-6 sm:p-8 space-y-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-emerald-100 grid place-items-center shadow-sm">
-                  <Gift className="h-6 w-6 text-emerald-600" />
+                <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 grid place-items-center shadow-sm">
+                  <Gift className="h-6 w-6 text-emerald-500" />
                 </div>
                 <div>
-                  <div className="font-bold text-lg text-slate-900">Refer & Earn</div>
-                  <div className="text-sm font-medium text-slate-600">
+                  <div className="font-bold text-lg text-foreground">Refer & Earn</div>
+                  <div className="text-sm font-medium text-muted-foreground">
                     Dost ko refer karo — dono ko +20 messages milenge
                   </div>
                 </div>
               </div>
-
               <div className="flex gap-3 flex-wrap">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-sm border border-slate-100 text-sm">
-                  <Users className="h-4 w-4 text-slate-400" />
-                  <span className="font-bold text-slate-900">{referralCount}</span>
-                  <span className="font-medium text-slate-500">referred</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border text-sm">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-bold text-foreground">{referralCount}</span>
+                  <span className="font-medium text-muted-foreground">referred</span>
                 </div>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-sm text-emerald-700 shadow-sm">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-sm text-emerald-400 shadow-sm">
                   <Zap className="h-4 w-4" />
                   <span className="font-bold">+{bonusMessages}</span>
                   <span className="font-medium">bonus msgs</span>
@@ -236,44 +232,41 @@ export const Dashboard = ({
 
             {limitStatus && (
               <div>
-                <div className="flex justify-between text-xs font-semibold text-slate-500 mb-2">
+                <div className="flex justify-between text-xs font-semibold text-muted-foreground mb-2">
                   <span>Daily messages: {limitStatus.messagesUsed} / {totalLimit}</span>
-                  <span className="text-emerald-600">{limitStatus.messagesLeft} left today</span>
+                  <span className="text-emerald-400">{limitStatus.messagesLeft} left today</span>
                 </div>
-                <div className="h-3 rounded-full bg-slate-100 overflow-hidden shadow-inner">
+                <div className="h-3 rounded-full bg-muted overflow-hidden shadow-inner">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${Math.min(100, (limitStatus.messagesUsed / totalLimit) * 100)}%`,
                       background:
-                        limitStatus.messagesLeft / totalLimit > 0.5
-                          ? "#10b981"
-                          : limitStatus.messagesLeft / totalLimit > 0.25
-                          ? "#f59e0b"
-                          : "#ef4444",
+                        limitStatus.messagesLeft / totalLimit > 0.5 ? "#10b981"
+                        : limitStatus.messagesLeft / totalLimit > 0.25 ? "#f59e0b"
+                        : "#ef4444",
                     }}
                   />
                 </div>
               </div>
             )}
 
-            <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-emerald-100">
+            <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-emerald-500/10">
               <div className="space-y-3">
-                <div className="text-xs font-bold tracking-wider text-slate-400 uppercase">YOUR REFERRAL CODE</div>
-                <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-emerald-200 bg-white px-4 py-3 shadow-sm">
-                  <span className="flex-1 font-mono text-2xl font-bold tracking-widest text-emerald-600 text-center">
+                <div className="text-xs font-bold tracking-wider text-muted-foreground uppercase">YOUR REFERRAL CODE</div>
+                <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-emerald-500/20 bg-card px-4 py-3 shadow-sm">
+                  <span className="flex-1 font-mono text-2xl font-bold tracking-widest text-emerald-400 text-center">
                     {referralCode || "—"}
                   </span>
                   <button
                     onClick={copyCode}
                     title="Copy code"
-                    className="h-10 w-10 grid place-items-center rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:scale-105 transition-all shrink-0"
+                    className="h-10 w-10 grid place-items-center rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:scale-105 transition-all shrink-0"
                   >
                     <Copy className="h-4 w-4" />
                   </button>
                 </div>
-                {codeCopied && <p className="text-xs font-bold text-emerald-600 text-center">✓ Copied to clipboard!</p>}
-
+                {codeCopied && <p className="text-xs font-bold text-emerald-400 text-center">✓ Copied!</p>}
                 <a
                   href={`https://wa.me/?text=${shareText}`}
                   target="_blank"
@@ -286,29 +279,29 @@ export const Dashboard = ({
               </div>
 
               <div className="space-y-3">
-                <div className="text-xs font-bold tracking-wider text-slate-400 uppercase">APPLY FRIEND'S CODE</div>
+                <div className="text-xs font-bold tracking-wider text-muted-foreground uppercase">APPLY FRIEND'S CODE</div>
                 <div className="flex gap-2">
                   <input
                     value={referralInput}
                     onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
                     placeholder="ENTER 6-CHAR CODE"
                     maxLength={6}
-                    className="flex-1 rounded-2xl border-2 border-slate-100 bg-white px-4 py-3 text-sm font-mono font-bold tracking-widest text-slate-900 outline-none focus:border-emerald-400 transition-colors shadow-sm placeholder:text-slate-300 placeholder:font-medium placeholder:tracking-normal"
+                    className="flex-1 rounded-2xl border-2 border-border bg-card px-4 py-3 text-sm font-mono font-bold tracking-widest text-foreground outline-none focus:border-emerald-400 transition-colors shadow-sm placeholder:text-muted-foreground/50"
                   />
                   <button
                     onClick={applyReferral}
                     disabled={applyingReferral || referralInput.trim().length < 6}
-                    className="px-6 py-3 rounded-2xl bg-emerald-500 text-white text-sm font-bold shadow-md hover:bg-emerald-600 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 transition-all shrink-0"
+                    className="px-6 py-3 rounded-2xl bg-emerald-500 text-white text-sm font-bold shadow-md hover:bg-emerald-600 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 transition-all shrink-0"
                   >
                     {applyingReferral ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
                   </button>
                 </div>
                 {referralMsg && (
-                  <p className={`text-xs font-bold ${referralMsg.ok ? "text-emerald-600" : "text-red-500"}`}>
+                  <p className={`text-xs font-bold ${referralMsg.ok ? "text-emerald-400" : "text-red-400"}`}>
                     {referralMsg.ok ? "✓ " : "✗ "}{referralMsg.text}
                   </p>
                 )}
-                <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                   Dost ka code apply karo — dono ko +20 free messages milenge permanently.
                 </p>
               </div>
@@ -317,7 +310,7 @@ export const Dashboard = ({
         )}
 
         {/* Nexus status */}
-        <div className="bento-card border-purple-200 bg-gradient-to-br from-purple-50 to-white p-6 sm:p-8 hover:-translate-y-1">
+        <div className="bento-card border-primary/20 bg-primary/5 p-6 sm:p-8 hover:-translate-y-1">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="flex items-center gap-5">
               <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#6C00FF] to-[#FF3CAC] grid place-items-center text-3xl shadow-lg shadow-purple-500/30">
@@ -325,15 +318,15 @@ export const Dashboard = ({
               </div>
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xl font-bold text-slate-900">{nexus.name} Status</span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold tracking-widest uppercase">
+                  <span className="text-xl font-bold text-foreground">{nexus.name} Status</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold tracking-widest uppercase border border-emerald-500/20">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
                   </span>
                 </div>
-                <p className="text-sm font-medium text-slate-500 mt-2">
+                <p className="text-sm font-medium text-muted-foreground mt-2">
                   {loadingStats
                     ? "Loading activity..."
-                    : `${stats.messagesUsed} requests handled · ${stats.totalChats} total chats across all agents.`}
+                    : `${stats.messagesUsed} requests handled · ${stats.totalChats} total chats`}
                 </p>
               </div>
             </div>
@@ -344,37 +337,16 @@ export const Dashboard = ({
               Open Chat <ArrowUpRight className="h-4 w-4" />
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-purple-100">
+          <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-primary/10">
             {[
               { l: "ROUTES/HR", v: "32" },
               { l: "AVG LATENCY", v: "240ms" },
               { l: "SUCCESS", v: "98.4%" },
             ].map((m) => (
-              <div key={m.l} className="rounded-xl bg-white/60 border border-purple-100 p-4">
-                <div className="text-xs font-bold tracking-wider text-purple-400 mb-1">{m.l}</div>
-                <div className="text-lg font-bold text-slate-900">{m.v}</div>
+              <div key={m.l} className="rounded-xl bg-card/60 border border-border p-4">
+                <div className="text-xs font-bold tracking-wider text-primary/70 mb-1">{m.l}</div>
+                <div className="text-lg font-bold text-foreground">{m.v}</div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* My agents */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <div className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-1">MY AGENTS</div>
-              <h3 className="text-2xl font-bold text-slate-900">Your Active Workforce</h3>
-            </div>
-            <button
-              onClick={() => onNavigate("create")}
-              className="inline-flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl bg-slate-900 text-white shadow-md hover:bg-slate-800 hover:-translate-y-0.5 transition-all"
-            >
-              <Plus className="h-4 w-4" /> New Agent
-            </button>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {agents.map((a, i) => (
-              <AgentCard key={a.name} agent={a} active={i < 5} onClick={() => onNavigate("agent")} />
             ))}
           </div>
         </div>
@@ -383,8 +355,8 @@ export const Dashboard = ({
           {/* Connected apps */}
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-900">Connected Apps</h3>
-              <button onClick={() => onNavigate("connections")} className="text-sm font-bold text-[#6C00FF] hover:underline">
+              <h3 className="text-xl font-bold text-foreground">Connected Apps</h3>
+              <button onClick={() => onNavigate("connections")} className="text-sm font-bold text-primary hover:underline">
                 Manage all →
               </button>
             </div>
@@ -393,18 +365,18 @@ export const Dashboard = ({
                 const connected = stats.connectedApps.includes(app.id);
                 return (
                   <div key={app.name} className="bento-card p-5 text-center flex flex-col items-center justify-center hover:-translate-y-1">
-                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center mb-3 ${connected ? 'bg-emerald-100' : 'bg-slate-100'}`}>
-                      <app.icon className={`h-6 w-6 ${connected ? 'text-emerald-600' : 'text-slate-400'}`} />
+                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center mb-3 ${connected ? "bg-emerald-500/10" : "bg-primary/10"}`}>
+                      <app.icon className={`h-6 w-6 ${connected ? "text-emerald-400" : "text-primary/70"}`} />
                     </div>
-                    <div className="text-sm font-bold text-slate-900">{app.name}</div>
+                    <div className="text-sm font-bold text-foreground">{app.name}</div>
                     {connected ? (
-                      <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-widest border border-emerald-100">
+                      <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Connected
                       </div>
                     ) : (
                       <button
                         onClick={() => onNavigate("connections")}
-                        className="mt-3 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                        className="mt-3 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full bg-primary/10 text-primary/80 hover:bg-primary/20 transition-colors"
                       >
                         Connect
                       </button>
@@ -417,80 +389,137 @@ export const Dashboard = ({
 
           {/* Recent conversations */}
           <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-6">Recent Conversations</h3>
-            <div className="bento-card divide-y divide-slate-100">
+            <h3 className="text-xl font-bold text-foreground mb-6">Recent Conversations</h3>
+            <div className="bento-card divide-y divide-border/50">
               {[
-                { agent: "Nexus", text: "Routed tasks to Prepify and Gmail", time: "2m ago", color: "bg-purple-100 text-purple-700" },
-                { agent: "Sellio", text: "Generated 12 product titles for Meesho", time: "18m ago", color: "bg-pink-100 text-pink-700" },
-                { agent: "Finio", text: "Reviewed monthly budget — saved ₹2,400", time: "1h ago", color: "bg-emerald-100 text-emerald-700" },
-                { agent: "Buddy", text: "Set 3 reminders for tomorrow", time: "3h ago", color: "bg-blue-100 text-blue-700" },
+                { text: "Planned weekly schedule and tasks", time: "2m ago" },
+                { text: "Drafted reply to client email", time: "18m ago" },
+                { text: "Reviewed monthly budget breakdown", time: "1h ago" },
+                { text: "Set 3 reminders for tomorrow", time: "3h ago" },
               ].map((c) => (
                 <div
                   key={c.text}
-                  className="p-5 flex items-center justify-between hover:bg-slate-50 transition cursor-pointer"
+                  className="p-5 flex items-center justify-between hover:bg-primary/5 transition cursor-pointer"
                   onClick={() => onNavigate("chat")}
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-widest shrink-0 ${c.color}`}>
-                      {c.agent}
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-widest shrink-0 bg-primary/10 text-primary">
+                      NEXUS
                     </span>
-                    <span className="text-sm font-medium text-slate-700 truncate">{c.text}</span>
+                    <span className="text-sm font-medium text-foreground/80 truncate">{c.text}</span>
                   </div>
-                  <span className="text-xs font-semibold text-slate-400 shrink-0 ml-4">{c.time}</span>
+                  <span className="text-xs font-semibold text-muted-foreground shrink-0 ml-4">{c.time}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* ── Preferences ──────────────────────────────────────────── */}
+        {/* Preferences */}
         <div className="bento-card p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="h-10 w-10 rounded-xl bg-purple-50 grid place-items-center">
-              <Settings2 className="h-5 w-5 text-purple-600" />
+            <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center">
+              <Settings2 className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <div className="font-bold text-slate-900">Language & Voice</div>
-              <div className="text-xs text-slate-500">Change how agents communicate with you</div>
+              <div className="font-bold text-foreground">Preferences</div>
+              <div className="text-xs text-muted-foreground">Customize your Nexus experience</div>
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-5">
+
+          <div className="space-y-6">
+            {/* Language */}
             <div className="space-y-2">
-              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase">Response Language</label>
+              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Response Language</label>
               <select
                 value={prefLang}
                 onChange={(e) => setPrefLang(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-[14px] font-medium text-slate-900 outline-none focus:border-purple-400 transition"
+                className="w-full px-3 py-2.5 rounded-xl border border-border bg-card text-[14px] font-medium text-foreground outline-none focus:border-primary transition"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.code} value={l.code}>{l.label}</option>
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold tracking-wider text-slate-400 uppercase">Voice</label>
-              <select
-                value={prefVoice}
-                onChange={(e) => setPrefVoice(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-[14px] font-medium text-slate-900 outline-none focus:border-purple-400 transition"
+
+            {/* Nexus Personality */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Nexus Personality</label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { key: "maya" as const, name: "Maya", desc: "Warm & expressive", gradient: "from-pink-500 to-purple-600", emoji: "🎙️" },
+                  { key: "kabir" as const, name: "Kabir", desc: "Deep & authoritative", gradient: "from-blue-500 to-cyan-600", emoji: "🎙️" },
+                ].map((p) => {
+                  const isSelected = personality === p.key;
+                  return (
+                    <button
+                      key={p.key}
+                      onClick={() => { setPersonality(p.key); if (!voiceOn) setVoiceOn(true); }}
+                      className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-[0_0_20px_rgba(0,212,255,0.08)]"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <div className={`h-11 w-11 rounded-full bg-gradient-to-br ${p.gradient} flex items-center justify-center text-xl shadow-md shrink-0`}>
+                        {p.emoji}
+                      </div>
+                      <div>
+                        <div className={`font-bold text-sm ${isSelected ? "text-primary" : "text-foreground"}`}>{p.name}</div>
+                        <div className="text-[11px] text-muted-foreground">{p.desc}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Voice on/off toggle */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+              <div className="flex items-center gap-3">
+                {voiceOn
+                  ? <Volume2 className="h-5 w-5 text-primary" />
+                  : <VolumeX className="h-5 w-5 text-muted-foreground" />}
+                <div>
+                  <div className="font-semibold text-sm text-foreground">Voice Responses</div>
+                  <div className="text-xs text-muted-foreground">
+                    {voiceOn ? `${personality === "maya" ? "Maya" : "Kabir"} will speak replies` : "Text only mode"}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setVoiceOn(!voiceOn)}
+                className="relative w-12 h-6 rounded-full transition-all duration-200"
+                style={{ background: voiceOn ? "var(--color-primary, #00D4FF)" : "hsl(var(--muted))" }}
               >
-                <option value="female">👩 Female</option>
-                <option value="male">👨 Male</option>
-                <option value="off">🔇 No voice</option>
-              </select>
+                <div
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-200"
+                  style={{ left: voiceOn ? "1.5rem" : "0.125rem" }}
+                />
+              </button>
+            </div>
+
+            {/* Theme selector */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+              <div>
+                <div className="font-semibold text-sm text-foreground">Theme</div>
+                <div className="text-xs text-muted-foreground">Nexus · Void · Gen Z</div>
+              </div>
+              <ThemeSwitcher />
             </div>
           </div>
-          <div className="mt-5 flex items-center gap-3">
+
+          <div className="mt-6 flex items-center gap-3">
             <button
               onClick={savePrefs}
               disabled={savingPrefs}
-              className="px-6 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-60 transition flex items-center gap-2"
-              style={{ background: "#7C6BFF" }}
+              className="px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-60 transition flex items-center gap-2 text-white"
+              style={{ background: "linear-gradient(135deg, #6C00FF, #FF3CAC)" }}
             >
               {savingPrefs && <Loader2 className="h-4 w-4 animate-spin" />}
               Save preferences
             </button>
-            {prefSaved && <span className="text-sm font-semibold text-emerald-600">✓ Saved!</span>}
+            {prefSaved && <span className="text-sm font-semibold text-emerald-400">✓ Saved!</span>}
           </div>
         </div>
 

@@ -45,6 +45,29 @@
 @tailwind utilities;
 
 @layer base {
+  .dark {
+    --background: 231 78% 4%;
+    --foreground: 195 100% 94%;
+    --card: 220 50% 6%;
+    --card-foreground: 195 100% 94%;
+    --popover: 220 50% 6%;
+    --popover-foreground: 195 100% 94%;
+    --primary: 190 100% 50%;
+    --primary-foreground: 231 78% 4%;
+    --secondary: 220 40% 12%;
+    --secondary-foreground: 195 100% 94%;
+    --muted: 220 40% 10%;
+    --muted-foreground: 195 25% 55%;
+    --border: 215 30% 20%;
+    --input: 220 40% 10%;
+    --ring: 190 100% 50%;
+    --sidebar-background: 231 78% 3%;
+    --sidebar-foreground: 195 100% 94%;
+    --sidebar-border: 215 30% 18%;
+  }
+}
+
+@layer base {
   :root {
     /* Global Light Theme */
     --background: 0 0% 100%;       /* #FFFFFF */
@@ -114,6 +137,17 @@
 @layer utilities {
   .bento-card {
     @apply bg-white border border-slate-200 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(108,0,255,0.08)] hover:border-purple-200 overflow-hidden;
+  }
+
+  .dark .bento-card {
+    background: rgba(0, 212, 255, 0.04) !important;
+    border-color: rgba(0, 212, 255, 0.12) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  .dark .bento-card:hover {
+    box-shadow: 0 8px 40px rgba(0, 212, 255, 0.12) !important;
+    border-color: rgba(0, 212, 255, 0.22) !important;
   }
   
   .text-gradient-primary {
