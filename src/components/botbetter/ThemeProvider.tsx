@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type NexusTheme = "nexus" | "void" | "genz";
 
@@ -29,7 +29,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     root.classList.toggle("dark", theme !== "genz");
   }, [theme]);
 
-  const setTheme = (t: NexusTheme) => setThemeState(t);
+  const setTheme = useCallback((t: NexusTheme) => setThemeState(t), []);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
