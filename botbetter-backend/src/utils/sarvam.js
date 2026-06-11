@@ -70,7 +70,7 @@ async function textToSpeech(text, language = DEFAULT_LANGUAGE, personality = "ma
       speaker:  voice.speaker,
       pace:     voice.pace,
       loudness: voice.loudness,
-      model:    "bulbul:v1",
+      model:    "bulbul:v2",
     }),
   });
 
