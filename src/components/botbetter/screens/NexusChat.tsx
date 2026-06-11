@@ -202,11 +202,13 @@ const CSS = `
 @keyframes nx-rec-pulse  { 0%,100%{box-shadow:0 0 0 0 rgba(255,0,127,.4)} 50%{box-shadow:0 0 0 8px rgba(255,0,127,0)} }
 @keyframes nx-prog-shift { 0%,100%{filter:hue-rotate(0deg)} 50%{filter:hue-rotate(30deg)} }
 @keyframes nx-voice-bar  { 0%,100%{transform:scaleY(.4)} 50%{transform:scaleY(1)} }
-@keyframes nx-jt-cw  { from{transform:translate(-50%,-50%) rotate(0deg)} to{transform:translate(-50%,-50%) rotate(360deg)} }
-@keyframes nx-jt-ccw { from{transform:translate(-50%,-50%) rotate(0deg)} to{transform:translate(-50%,-50%) rotate(-360deg)} }
-@keyframes nx-jr-sonar-expand { 0%{width:0;height:0;opacity:1;border-width:2px} 100%{width:300px;height:300px;opacity:0;border-width:1px} }
+@keyframes nx-jt-cw         { from{transform:translate(-50%,-50%) rotate(0deg)}   to{transform:translate(-50%,-50%) rotate(360deg)} }
+@keyframes nx-jt-ccw        { from{transform:translate(-50%,-50%) rotate(0deg)}   to{transform:translate(-50%,-50%) rotate(-360deg)} }
+@keyframes nx-jr-sonar      { 0%{width:0;height:0;opacity:.8;border-width:2px}    100%{width:400px;height:400px;opacity:0;border-width:1px} }
+@keyframes nx-jt-orb-glow   { 0%,100%{box-shadow:0 0 20px #00D4FF,0 0 40px rgba(0,212,255,.4)} 50%{box-shadow:0 0 35px #00D4FF,0 0 65px rgba(0,212,255,.65)} }
+@keyframes nx-jt-txt-blink  { 0%,100%{opacity:1} 50%{opacity:.35} }
 @keyframes nx-mic-idle-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,.45)} 50%{box-shadow:0 0 0 10px rgba(0,212,255,0)} }
-@keyframes nx-mic-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes nx-mic-spin       { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 
 /* HEADER */
 .nx-header {
@@ -381,57 +383,72 @@ const CSS = `
 .nx-sb-signup-btn   { flex:1; padding:7px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:opacity .16s; background:linear-gradient(135deg,#00f0ff,#ff007f); border:none; color:#fff; }
 .nx-sb-signup-btn:hover  { opacity:.88; }
 
-/* JARVIS — AI STATE OVERLAY (fixed center of viewport) */
+/* JARVIS — AI STATE OVERLAY */
+/* Outer: full-viewport fixed layer — set via inline style in JSX */
 .nx-jarvis-panel {
-  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-  z-index:999; pointer-events:none;
-  width:300px; height:300px;
+  position:relative;
+  width:340px;
   background:rgba(2,5,16,.88); border-radius:20px;
-  border:1px solid rgba(0,212,255,.18);
-  box-shadow:0 0 60px rgba(0,212,255,.15), inset 0 0 40px rgba(0,212,255,.05);
+  border:1px solid rgba(0,212,255,.22);
+  box-shadow:0 0 60px rgba(0,212,255,.18), 0 0 120px rgba(0,212,255,.06), inset 0 0 40px rgba(0,212,255,.04);
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  animation:nx-fade-up .28s ease both;
+  padding:28px 20px 24px;
+  overflow:visible;
+  animation:nx-fade-up .25s ease both;
 }
-.nx-jt-stage { position:relative; width:240px; height:240px; display:flex; align-items:center; justify-content:center; }
+
+/* ── THINKING: 5 rotating rings ── */
+.nx-jt-stage {
+  position:relative; width:260px; height:260px;
+  display:flex; align-items:center; justify-content:center;
+}
 .nx-jt-ring {
   position:absolute; top:50%; left:50%;
   border-radius:50%; border:1px solid rgba(0,212,255,.6);
 }
-.nx-jt-ring-1 { width:60px;  height:60px;  animation:nx-jt-cw  3s linear infinite; }
-.nx-jt-ring-2 { width:100px; height:100px; animation:nx-jt-ccw 5s linear infinite; }
-.nx-jt-ring-3 { width:140px; height:140px; animation:nx-jt-cw  7s linear infinite; }
-.nx-jt-ring-4 { width:180px; height:180px; animation:nx-jt-ccw 4s linear infinite; }
-.nx-jt-ring-5 { width:220px; height:220px; animation:nx-jt-cw  6s linear infinite; }
-.nx-jt-core {
-  width:40px; height:40px; border-radius:50%; z-index:2;
+.nx-jt-ring-1 { width:80px;  height:80px;  animation:nx-jt-cw  3s linear infinite; }
+.nx-jt-ring-2 { width:120px; height:120px; animation:nx-jt-ccw 5s linear infinite; }
+.nx-jt-ring-3 { width:160px; height:160px; animation:nx-jt-cw  7s linear infinite; }
+.nx-jt-ring-4 { width:200px; height:200px; animation:nx-jt-ccw 4s linear infinite; }
+.nx-jt-ring-5 { width:240px; height:240px; animation:nx-jt-cw  6s linear infinite; }
+.nx-jt-orb {
+  width:60px; height:60px; border-radius:50%; z-index:2;
   background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), rgba(0,212,255,.85) 45%, transparent 75%);
-  box-shadow:0 0 20px #00D4FF, 0 0 40px rgba(0,212,255,.35);
+  box-shadow:0 0 20px #00D4FF, 0 0 40px rgba(0,212,255,.4);
+  animation:nx-jt-orb-glow 2.4s ease-in-out infinite;
 }
 .nx-jt-label {
-  margin-top:18px; font-family:'Share Tech Mono',monospace;
+  margin-top:20px; font-family:'Share Tech Mono',monospace;
   font-size:13px; letter-spacing:5px; color:rgba(0,212,255,.95);
-  text-shadow:0 0 12px rgba(0,212,255,.55);
+  text-shadow:0 0 12px rgba(0,212,255,.6);
+  animation:nx-jt-txt-blink 1.6s ease-in-out infinite;
 }
 
-.nx-jr-stage { position:relative; width:260px; height:260px; display:flex; align-items:center; justify-content:center; overflow:visible; }
+/* ── RESPONDING: sonar pulse rings ── */
+.nx-jr-stage {
+  position:relative; width:260px; height:260px;
+  display:flex; align-items:center; justify-content:center;
+  overflow:visible;
+}
 .nx-jr-pulse {
   position:absolute; top:50%; left:50%;
   width:0; height:0; border-radius:50%;
   border:2px solid #00D4FF;
   transform:translate(-50%,-50%);
-  animation:nx-jr-sonar-expand 2s ease-out infinite;
+  animation:nx-jr-sonar 2s ease-out infinite;
 }
 .nx-jr-pulse-2 { animation-delay:.7s; }
 .nx-jr-pulse-3 { animation-delay:1.4s; }
-.nx-jr-core {
+.nx-jr-orb {
   width:40px; height:40px; border-radius:50%; z-index:2;
   background:radial-gradient(circle at 35% 35%, #fff, #00D4FF 55%, rgba(0,100,150,.6));
-  box-shadow:0 0 20px #00D4FF, 0 0 35px rgba(0,212,255,.45);
+  box-shadow:0 0 20px #00D4FF, 0 0 35px rgba(0,212,255,.5);
+  animation:nx-jt-orb-glow 1.8s ease-in-out infinite;
 }
 .nx-jr-label {
-  margin-top:18px; font-family:'Share Tech Mono',monospace;
+  margin-top:20px; font-family:'Share Tech Mono',monospace;
   font-size:13px; letter-spacing:5px; color:rgba(0,212,255,.95);
-  text-shadow:0 0 12px rgba(0,212,255,.55);
+  text-shadow:0 0 12px rgba(0,212,255,.6);
 }
 
 /* JARVIS — VOICE MIC BUTTON */
@@ -998,33 +1015,43 @@ export const NexusChat = ({
 
           {/* CHAT CENTER */}
           <main className="nx-chat">
-            {/* Jarvis AI State — center overlay, hidden when idle */}
+            {/* Jarvis AI State — full-screen fixed overlay, hidden when idle */}
             {aiState !== "idle" && (
-              <div className="nx-jarvis-panel" aria-live="polite" aria-label={aiState === "thinking" ? "Analyzing" : "Nexus active"}>
-                {aiState === "thinking" && (
-                  <>
-                    <div className="nx-jt-stage">
-                      <div className="nx-jt-ring nx-jt-ring-1"/>
-                      <div className="nx-jt-ring nx-jt-ring-2"/>
-                      <div className="nx-jt-ring nx-jt-ring-3"/>
-                      <div className="nx-jt-ring nx-jt-ring-4"/>
-                      <div className="nx-jt-ring nx-jt-ring-5"/>
-                      <div className="nx-jt-core"/>
-                    </div>
-                    <div className="nx-jt-label">ANALYZING...</div>
-                  </>
-                )}
-                {aiState === "responding" && (
-                  <>
-                    <div className="nx-jr-stage">
-                      <div className="nx-jr-pulse nx-jr-pulse-1"/>
-                      <div className="nx-jr-pulse nx-jr-pulse-2"/>
-                      <div className="nx-jr-pulse nx-jr-pulse-3"/>
-                      <div className="nx-jr-core"/>
-                    </div>
-                    <div className="nx-jr-label">NEXUS ACTIVE</div>
-                  </>
-                )}
+              <div
+                style={{
+                  position:"fixed", inset:0, zIndex:999,
+                  pointerEvents:"none",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                }}
+                aria-live="polite"
+                aria-label={aiState === "thinking" ? "Analyzing" : "Nexus active"}
+              >
+                <div className="nx-jarvis-panel">
+                  {aiState === "thinking" && (
+                    <>
+                      <div className="nx-jt-stage">
+                        <div className="nx-jt-ring nx-jt-ring-1"/>
+                        <div className="nx-jt-ring nx-jt-ring-2"/>
+                        <div className="nx-jt-ring nx-jt-ring-3"/>
+                        <div className="nx-jt-ring nx-jt-ring-4"/>
+                        <div className="nx-jt-ring nx-jt-ring-5"/>
+                        <div className="nx-jt-orb"/>
+                      </div>
+                      <div className="nx-jt-label">ANALYZING...</div>
+                    </>
+                  )}
+                  {aiState === "responding" && (
+                    <>
+                      <div className="nx-jr-stage">
+                        <div className="nx-jr-pulse"/>
+                        <div className="nx-jr-pulse nx-jr-pulse-2"/>
+                        <div className="nx-jr-pulse nx-jr-pulse-3"/>
+                        <div className="nx-jr-orb"/>
+                      </div>
+                      <div className="nx-jr-label">NEXUS ACTIVE</div>
+                    </>
+                  )}
+                </div>
               </div>
             )}
 
