@@ -3,10 +3,9 @@ const config = require("../config/env");
 const SARVAM_BASE_URL = "https://api.sarvam.ai";
 const DEFAULT_LANGUAGE = "en-IN";
 
-// Maya = female voice (manisha), Kabir = male voice (karun)
-const PERSONALITY_SPEAKERS = {
-  maya:  "manisha",
-  kabir: "karun",
+const PERSONALITY_VOICE = {
+  maya:  { speaker: "anushka", pace: 1.0,  loudness: 1.5 },
+  kabir: { speaker: "kabir",   pace: 0.95, loudness: 1.5 },
 };
 
 function getApiKey() {
@@ -58,7 +57,9 @@ async function speechToText(audioBlob, language = DEFAULT_LANGUAGE) {
 }
 
 async function textToSpeech(text, language = DEFAULT_LANGUAGE, personality = "maya") {
-  const speaker = PERSONALITY_SPEAKERS[personality] || PERSONALITY_SPEAKERS.maya;
+  if (!text || !text.trim()) throw new Error("TTS requires non-empty text");
+
+  const voice = PERSONALITY_VOICE[personality] ?? PERSONALITY_VOICE.maya;
 
   const res = await fetch(`${SARVAM_BASE_URL}/text-to-speech`, {
     method: "POST",
@@ -66,15 +67,20 @@ async function textToSpeech(text, language = DEFAULT_LANGUAGE, personality = "ma
     body: JSON.stringify({
       inputs: [text.slice(0, 500)],
       target_language_code: language,
-      speaker,
-      model: "bulbul:v2",
+      speaker:  voice.speaker,
+      pace:     voice.pace,
+      loudness: voice.loudness,
+      model:    "bulbul:v1",
     }),
   });
 
-  const data = await parseSarvamResponse(res, "Sarvam text-to-speech failed");
-  console.log("[TTS] response keys:", Object.keys(data));
-  const audioB64 = data.audios?.[0] ?? data.audio ?? data.audio_base64 ?? "";
-  console.log("[TTS] audioBase64 length:", typeof audioB64 === "string" ? audioB64.length : `non-string: ${typeof audioB64}`);
+  const data = await parseSarvamResponse(res, "Sarvam TTS failed");
+
+  const audioB64 = data.audios?.[0] ?? data.audio ?? data.audio_base64 ?? null;
+  if (!audioB64 || typeof audioB64 !== "string" || audioB64.length === 0) {
+    throw new Error(`Sarvam TTS returned no audio (speaker: ${voice.speaker}, lang: ${language})`);
+  }
+
   return audioB64;
 }
 
