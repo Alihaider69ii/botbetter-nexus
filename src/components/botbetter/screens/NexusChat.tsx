@@ -205,6 +205,13 @@ const CSS = `
 @keyframes nx-jarvis-ring { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(2.4);opacity:0} }
 @keyframes nx-jarvis-glow { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
 @keyframes nx-jarvis-proc { 0%,100%{opacity:.4;transform:scale(.9)} 50%{opacity:1;transform:scale(1.08)} }
+@keyframes nx-jt-rotate-cw  { from{transform:translate(-50%,-50%) rotate(0deg)}   to{transform:translate(-50%,-50%) rotate(360deg)} }
+@keyframes nx-jt-rotate-ccw { from{transform:translate(-50%,-50%) rotate(0deg)}   to{transform:translate(-50%,-50%) rotate(-360deg)} }
+@keyframes nx-jt-orb-pulse  { 0%,100%{box-shadow:0 0 20px #00FF88,0 0 40px rgba(0,255,136,.4)} 50%{box-shadow:0 0 35px #00FF88,0 0 60px rgba(0,212,255,.5),0 0 80px rgba(0,255,136,.2)} }
+@keyframes nx-jt-blink      { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes nx-jr-sonar      { 0%{transform:translate(-50%,-50%) scale(.3);opacity:.8} 100%{transform:translate(-50%,-50%) scale(3);opacity:0} }
+@keyframes nx-jr-core-pulse { 0%,100%{box-shadow:0 0 15px #00D4FF,0 0 30px rgba(0,212,255,.4);transform:scale(1)} 50%{box-shadow:0 0 25px #00D4FF,0 0 50px rgba(0,212,255,.6);transform:scale(1.1)} }
+@keyframes nx-ji-breathe    { 0%,100%{transform:scale(1);box-shadow:0 0 12px rgba(0,212,255,.2);opacity:.3} 50%{transform:scale(1.1);box-shadow:0 0 20px rgba(0,212,255,.35);opacity:.5} }
 
 /* HEADER */
 .nx-header {
@@ -382,30 +389,56 @@ const CSS = `
 /* JARVIS VOICE BUTTON */
 .nx-voice-btn       { position:relative; width:40px; height:40px; min-width:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; background:none; border:none; padding:0; }
 .nx-voice-btn:disabled   { opacity:.4; cursor:not-allowed; }
-.nx-voice-core      { width:13px; height:13px; border-radius:50%; background:rgba(0,240,255,.75); box-shadow:0 0 9px rgba(0,240,255,.55); position:relative; z-index:2; transition:all .3s; flex-shrink:0; }
-.nx-voice-ring      { position:absolute; border-radius:50%; border:1.5px solid rgba(0,240,255,.45); opacity:0; pointer-events:none; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); }
+.nx-voice-core      { width:13px; height:13px; border-radius:50%; background:rgba(0,212,255,.75); box-shadow:0 0 9px rgba(0,212,255,.55); position:relative; z-index:2; transition:all .3s; flex-shrink:0; }
+.nx-voice-ring      { position:absolute; border-radius:50%; border:1.5px solid rgba(0,212,255,.45); opacity:0; pointer-events:none; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); }
 .nx-voice-ring-1    { width:22px; height:22px; }
 .nx-voice-ring-2    { width:32px; height:32px; }
 .nx-voice-ring-3    { width:40px; height:40px; }
-/* Idle: subtle static visible rings */
-.nx-voice-btn--idle .nx-voice-ring { opacity:.2; }
-.nx-voice-btn--idle:hover .nx-voice-core  { animation:nx-jarvis-glow .9s ease-in-out infinite; box-shadow:0 0 14px rgba(0,240,255,.9); }
-.nx-voice-btn--idle:hover .nx-voice-ring  { animation:nx-jarvis-ring 1.6s ease-out infinite; }
-.nx-voice-btn--idle:hover .nx-voice-ring-1 { animation-delay:0s; }
-.nx-voice-btn--idle:hover .nx-voice-ring-2 { animation-delay:.38s; }
-.nx-voice-btn--idle:hover .nx-voice-ring-3 { animation-delay:.76s; }
-/* Recording: fast pink pulse */
-.nx-voice-btn--rec .nx-voice-core  { background:#ff007f; box-shadow:0 0 16px rgba(255,0,127,.85); width:15px; height:15px; animation:nx-jarvis-glow .6s ease-in-out infinite; }
-.nx-voice-btn--rec .nx-voice-ring  { border-color:rgba(255,0,127,.6); animation:nx-jarvis-ring 1s ease-out infinite; }
+/* Idle: slow pulse cyan rings - always on */
+.nx-voice-btn--idle .nx-voice-core { animation:nx-jarvis-glow 3s ease-in-out infinite; }
+.nx-voice-btn--idle .nx-voice-ring { border-color:rgba(0,212,255,.55); animation:nx-jarvis-ring 2.8s ease-out infinite; }
+.nx-voice-btn--idle .nx-voice-ring-1 { animation-delay:0s; }
+.nx-voice-btn--idle .nx-voice-ring-2 { animation-delay:.9s; }
+.nx-voice-btn--idle .nx-voice-ring-3 { animation-delay:1.8s; }
+/* Recording: fast red/orange pulse */
+.nx-voice-btn--rec .nx-voice-core  { background:#ff4500; box-shadow:0 0 16px rgba(255,69,0,.85); width:15px; height:15px; animation:nx-jarvis-glow .5s ease-in-out infinite; }
+.nx-voice-btn--rec .nx-voice-ring  { border-color:rgba(255,69,0,.75); animation:nx-jarvis-ring .75s ease-out infinite; }
 .nx-voice-btn--rec .nx-voice-ring-1 { animation-delay:0s; }
-.nx-voice-btn--rec .nx-voice-ring-2 { animation-delay:.28s; }
-.nx-voice-btn--rec .nx-voice-ring-3 { animation-delay:.56s; }
-/* Processing: amber steady pulse */
-.nx-voice-btn--proc .nx-voice-core  { background:#f0aa00; box-shadow:0 0 12px rgba(240,170,0,.7); animation:nx-jarvis-proc .9s ease-in-out infinite; }
-.nx-voice-btn--proc .nx-voice-ring  { border-color:rgba(240,170,0,.4); opacity:.35; animation:nx-jarvis-proc .9s ease-in-out infinite; }
-.nx-voice-btn--proc .nx-voice-ring-1 { animation-delay:0s; }
-.nx-voice-btn--proc .nx-voice-ring-2 { animation-delay:.2s; }
-.nx-voice-btn--proc .nx-voice-ring-3 { animation-delay:.4s; }
+.nx-voice-btn--rec .nx-voice-ring-2 { animation-delay:.25s; }
+.nx-voice-btn--rec .nx-voice-ring-3 { animation-delay:.5s; }
+/* Processing: rotating rings like thinking state */
+.nx-voice-btn--proc .nx-voice-core  { background:#00D4FF; box-shadow:0 0 12px rgba(0,212,255,.7); animation:nx-jarvis-glow 1s ease-in-out infinite; }
+.nx-voice-btn--proc .nx-voice-ring  { border-color:rgba(0,212,255,.65); border-style:dashed; opacity:.65; animation:nx-jt-rotate-cw 1.5s linear infinite; }
+.nx-voice-btn--proc .nx-voice-ring-1 { animation-duration:1s; }
+.nx-voice-btn--proc .nx-voice-ring-2 { animation:nx-jt-rotate-ccw 1.8s linear infinite; opacity:.5; }
+.nx-voice-btn--proc .nx-voice-ring-3 { animation-duration:2.5s; opacity:.35; }
+
+/* JARVIS AI STATE ANIMATIONS */
+.nx-jarvis-anim { position:absolute; top:42%; left:50%; transform:translate(-50%,-50%); z-index:3; pointer-events:none; display:flex; align-items:center; justify-content:center; }
+
+/* Thinking */
+.nx-jt-wrap  { position:relative; width:200px; height:200px; display:flex; align-items:center; justify-content:center; }
+.nx-jt-ring  { position:absolute; border-radius:50%; border:1.5px solid; top:50%; left:50%; }
+.nx-jt-ring-1 { width:80px;  height:80px;  border-color:rgba(0,255,136,.65); margin-top:-40px; margin-left:-40px; animation:nx-jt-rotate-cw 2s linear infinite; box-shadow:0 0 10px rgba(0,255,136,.25) inset; }
+.nx-jt-ring-2 { width:130px; height:130px; border-color:rgba(0,212,255,.5);  margin-top:-65px; margin-left:-65px; border-style:dashed; animation:nx-jt-rotate-ccw 3s linear infinite; }
+.nx-jt-ring-3 { width:190px; height:190px; border-color:rgba(0,255,136,.22); margin-top:-95px; margin-left:-95px; animation:nx-jt-rotate-cw 5.5s linear infinite; }
+.nx-jt-orb   { width:36px; height:36px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#00FF88,#00D4FF 60%,#007a5e); box-shadow:0 0 20px #00FF88,0 0 40px rgba(0,255,136,.4); animation:nx-jt-orb-pulse 1.8s ease-in-out infinite; z-index:2; }
+.nx-jt-hud   { position:absolute; top:22px; right:18px; display:flex; flex-direction:column; gap:5px; }
+.nx-jt-hud-dot { width:5px; height:5px; border-radius:50%; background:#00D4FF; box-shadow:0 0 5px #00D4FF; animation:nx-jt-blink 1.2s ease-in-out infinite; }
+.nx-jt-hud-dot:last-child { animation-delay:.6s; background:#00FF88; box-shadow:0 0 5px #00FF88; }
+.nx-jt-hud-bar { width:18px; height:2px; background:linear-gradient(90deg,#00FF88,#00D4FF); border-radius:1px; animation:nx-jt-blink 1.8s ease-in-out infinite; }
+.nx-jt-label  { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); font-size:9px; letter-spacing:3px; color:#00FF88; white-space:nowrap; animation:nx-jt-blink 1.4s ease-in-out infinite; text-shadow:0 0 8px rgba(0,255,136,.6); }
+
+/* Responding */
+.nx-jr-wrap  { position:relative; width:240px; height:240px; display:flex; align-items:center; justify-content:center; }
+.nx-jr-ring  { position:absolute; top:50%; left:50%; width:60px; height:60px; border-radius:50%; border:1.5px solid rgba(0,212,255,.8); animation:nx-jr-sonar 2.4s ease-out infinite; }
+.nx-jr-ring-2 { animation-delay:.8s; }
+.nx-jr-ring-3 { animation-delay:1.6s; }
+.nx-jr-core  { width:30px; height:30px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#fff,#00D4FF); box-shadow:0 0 15px #00D4FF,0 0 30px rgba(0,212,255,.4); animation:nx-jr-core-pulse 1.5s ease-in-out infinite; z-index:2; }
+.nx-jr-label { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); font-size:9px; letter-spacing:3px; color:#00D4FF; white-space:nowrap; text-shadow:0 0 8px rgba(0,212,255,.6); }
+
+/* Idle */
+.nx-ji-orb { width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#00D4FF,rgba(0,100,150,.5)); animation:nx-ji-breathe 4s ease-in-out infinite; }
 
 /* ── VOID theme ── */
 [data-theme="void"] .nx-root { background:#000 !important; }
@@ -504,6 +537,7 @@ export const NexusChat = ({
   const [avatarOpen,       setAvatarOpen]       = useState(false);
   const [sbDropOpen,       setSbDropOpen]       = useState(false);
   const [authModal,        setAuthModal]        = useState<{open:boolean;tab:"login"|"signup"}>({open:false,tab:"login"});
+  const [isStreaming,      setIsStreaming]      = useState(false);
 
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const bottomRef  = useRef<HTMLDivElement>(null);
@@ -547,6 +581,8 @@ export const NexusChat = ({
   });
 
   const busy = sending || voiceHook.processing;
+  type AIState = "idle" | "thinking" | "responding";
+  const aiState: AIState = !sending && !voiceHook.processing ? "idle" : isStreaming ? "responding" : "thinking";
 
   /* ── Clock ── */
   useEffect(() => {
@@ -647,7 +683,7 @@ export const NexusChat = ({
     if (!text || busy) return;
     if (!user) { setAuthModal({open:true,tab:"login"}); return; }
     setInput(""); setSendError("");
-    setSending(true); flashRef.current = 0.9;
+    setSending(true); setIsStreaming(false); flashRef.current = 0.9;
 
     if (voice === "on") {
       // Voice mode — non-streaming so TTS audio can be returned
@@ -697,6 +733,7 @@ export const NexusChat = ({
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let streamingStarted = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -710,6 +747,7 @@ export const NexusChat = ({
           try {
             const evt = JSON.parse(line.slice(6)) as { delta?: string; done?: boolean; error?: string };
             if (evt.delta) {
+              if (!streamingStarted) { streamingStarted = true; setIsStreaming(true); }
               setMsgs((m) => {
                 const msgs = [...m];
                 const last = msgs[msgs.length - 1];
@@ -739,7 +777,7 @@ export const NexusChat = ({
         else msgs.push({ from:"nexus", text:"Sorry, something went wrong. Please try again 🙏" });
         return msgs;
       });
-    } finally { setSending(false); }
+    } finally { setSending(false); setIsStreaming(false); }
   };
 
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key==="Enter") { e.preventDefault(); void send(); } };
@@ -938,6 +976,36 @@ export const NexusChat = ({
 
           {/* CHAT CENTER */}
           <main className="nx-chat">
+            {/* Jarvis AI State Animation */}
+            <div className="nx-jarvis-anim" aria-hidden="true">
+              {aiState === "thinking" && (
+                <div className="nx-jt-wrap">
+                  <div className="nx-jt-ring nx-jt-ring-1"/>
+                  <div className="nx-jt-ring nx-jt-ring-2"/>
+                  <div className="nx-jt-ring nx-jt-ring-3"/>
+                  <div className="nx-jt-orb"/>
+                  <div className="nx-jt-hud">
+                    <div className="nx-jt-hud-dot"/>
+                    <div className="nx-jt-hud-bar"/>
+                    <div className="nx-jt-hud-dot"/>
+                  </div>
+                  <div className="nx-jt-label nx-mono">ANALYZING...</div>
+                </div>
+              )}
+              {aiState === "responding" && (
+                <div className="nx-jr-wrap">
+                  <div className="nx-jr-ring"/>
+                  <div className="nx-jr-ring nx-jr-ring-2"/>
+                  <div className="nx-jr-ring nx-jr-ring-3"/>
+                  <div className="nx-jr-core"/>
+                  <div className="nx-jr-label nx-mono">NEXUS ACTIVE</div>
+                </div>
+              )}
+              {aiState === "idle" && (
+                <div className="nx-ji-orb"/>
+              )}
+            </div>
+
             <div className="nx-msgs">
               {msgs.map((m, i) =>
                 m.from === "user" ? (
