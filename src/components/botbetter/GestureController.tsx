@@ -190,16 +190,19 @@ export const GestureController = ({
 
   useEffect(() => {
     if (!enabled) {
-      cameraRef.current?.stop();
+      // Stop stream tracks if any
+      const stream = cameraRef.current as MediaStream | null;
+      stream?.getTracks().forEach(t => t.stop());
+      cameraRef.current = null;
       return;
     }
 
     let mounted = true;
+    let rafId = 0;
 
     const init = async () => {
       try {
         const { Hands } = await import("@mediapipe/hands");
-        const { Camera } = await import("@mediapipe/camera_utils");
 
         const hands = new Hands({
           locateFile: (file: string) =>
@@ -216,25 +219,33 @@ export const GestureController = ({
         hands.onResults(handleResults);
         await hands.initialize();
 
-        if (!mounted) return;
+        if (!mounted) { hands.close(); return; }
         handsRef.current = hands;
 
         const video = videoRef.current;
         if (!video) return;
 
-        const camera = new Camera(video, {
-          onFrame: async () => {
-            if (handsRef.current) await handsRef.current.send({ image: video });
-          },
-          width: 320,
-          height: 240,
-          facingMode: "user",
+        // Use native getUserMedia — no @mediapipe/camera_utils needed
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 320, height: 240, facingMode: "user" },
+          audio: false,
         });
 
-        await camera.start();
-        if (mounted) cameraRef.current = camera;
+        if (!mounted) { stream.getTracks().forEach(t => t.stop()); return; }
+        cameraRef.current = stream;
+        video.srcObject = stream;
+        await video.play();
+
+        const sendFrame = async () => {
+          if (!mounted || !handsRef.current) return;
+          if (video.readyState >= 2) {
+            await handsRef.current.send({ image: video });
+          }
+          rafId = requestAnimationFrame(sendFrame);
+        };
+        rafId = requestAnimationFrame(sendFrame);
       } catch (err) {
-        console.warn("MediaPipe init failed:", err);
+        console.warn("MediaPipe / camera init failed:", err);
       }
     };
 
@@ -242,7 +253,9 @@ export const GestureController = ({
 
     return () => {
       mounted = false;
-      cameraRef.current?.stop();
+      cancelAnimationFrame(rafId);
+      const stream = cameraRef.current as MediaStream | null;
+      stream?.getTracks().forEach(t => t.stop());
       handsRef.current?.close();
       handsRef.current = null;
       cameraRef.current = null;
