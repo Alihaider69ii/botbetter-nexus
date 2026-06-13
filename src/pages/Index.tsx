@@ -3,6 +3,7 @@ import { ThemeProvider, useTheme, type NexusTheme } from "@/components/botbetter
 import { TopNav, ScreenKey } from "@/components/botbetter/TopNav";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { VoiceModeProvider } from "@/context/VoiceModeContext";
+import { HologramMenu } from "@/components/botbetter/HologramMenu";
 import { Landing } from "@/components/botbetter/screens/Landing";
 import { Dashboard } from "@/components/botbetter/screens/Dashboard";
 import { NexusChat } from "@/components/botbetter/screens/NexusChat";
@@ -34,6 +35,7 @@ const App = () => {
     tab: "login",
   });
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [gestureEnabled, setGestureEnabled] = useState(false);
 
   // After Google OAuth redirect: token is in localStorage, navigate to chat
   useEffect(() => {
@@ -118,6 +120,12 @@ const App = () => {
           <Usage active={screen} onNavigate={navigate} />
         )}
       </div>
+
+      <HologramMenu
+        gestureEnabled={gestureEnabled}
+        onNavigate={navigate}
+        onToggleGesture={() => setGestureEnabled(v => !v)}
+      />
 
       <AuthModal
         open={authModal.open}
