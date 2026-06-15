@@ -1,0 +1,449 @@
+/* ═══════════════════════════════════════════════
+   TaskWindow — Jarvis / Arc Reactor Theme
+   ═══════════════════════════════════════════════ */
+
+.tw-root {
+  position: fixed;
+  inset: 0;
+  background: #020510;
+  overflow: hidden;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  color: #c8dce8;
+}
+
+/* Ambient background */
+.tw-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(0, 100, 200, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Subtle grid lines */
+.tw-root::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   ARC REACTOR HEART
+   ═══════════════════════════════════════════════ */
+.tw-heart {
+  position: absolute;
+  z-index: 10;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.tw-heart--center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.tw-heart--left {
+  top: 50%;
+  left: 22%;
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 1;
+}
+
+.tw-heart--top {
+  top: 8%;
+  left: 50%;
+  transform: translate(-50%, 0) scale(0.4);
+  opacity: 1;
+}
+
+.tw-heart--corner {
+  top: 4%;
+  left: 5%;
+  transform: scale(0.28);
+  opacity: 0.8;
+}
+
+.tw-heart--hidden {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.1);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Reactor ── */
+.tw-reactor {
+  position: relative;
+  width: 220px;
+  height: 220px;
+}
+
+.tw-reactor__core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, #00d4ff 50%, #005f73 100%);
+  transform: translate(-50%, -50%);
+  animation: tw-core-breathe 2.4s ease-in-out infinite;
+  box-shadow:
+    0 0 20px 6px rgba(0, 212, 255, 0.7),
+    0 0 60px 20px rgba(0, 212, 255, 0.3);
+}
+
+@keyframes tw-core-breathe {
+  0%, 100% { box-shadow: 0 0 20px 6px rgba(0,212,255,0.7), 0 0 60px 20px rgba(0,212,255,0.3); }
+  50%      { box-shadow: 0 0 30px 10px rgba(0,212,255,0.9), 0 0 90px 30px rgba(0,212,255,0.45); }
+}
+
+.tw-reactor__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  transform: translate(-50%, -50%);
+}
+
+.tw-reactor__ring--1 {
+  width: 60px;
+  height: 60px;
+  border-color: rgba(0, 212, 255, 0.5);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  animation: tw-ring-spin 4s linear infinite;
+}
+
+.tw-reactor__ring--2 {
+  width: 100px;
+  height: 100px;
+  border-color: rgba(0, 212, 255, 0.35);
+  border-left-color: transparent;
+  border-right-color: transparent;
+  animation: tw-ring-spin 6s linear infinite reverse;
+}
+
+.tw-reactor__ring--3 {
+  width: 150px;
+  height: 150px;
+  border-color: rgba(0, 212, 255, 0.2);
+  border-top-color: transparent;
+  animation: tw-ring-spin 8s linear infinite;
+}
+
+.tw-reactor__ring--4 {
+  width: 200px;
+  height: 200px;
+  border-color: rgba(0, 212, 255, 0.1);
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  animation: tw-ring-spin 12s linear infinite reverse;
+}
+
+.tw-reactor__ring--2::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 212, 255, 0.12);
+}
+
+.tw-reactor__ring--4::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 212, 255, 0.06);
+}
+
+@keyframes tw-ring-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.tw-reactor__glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 260px;
+  height: 260px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+  animation: tw-glow-breathe 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes tw-glow-breathe {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* ═══════════════════════════════════════════════
+   TASK GRID LAYOUTS
+   ═══════════════════════════════════════════════ */
+.tw-task-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+}
+
+/* 1 task: right half */
+.tw-grid--single {
+  grid-template-columns: 45% 1fr;
+  grid-template-rows: 1fr;
+  align-items: center;
+}
+.tw-grid--single .tw-card {
+  grid-column: 2;
+}
+
+/* 2 tasks: 50/50 split */
+.tw-grid--split {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  padding-top: 80px;
+}
+
+/* 3 tasks: 2 top + 1 bottom center */
+.tw-grid--tri {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  padding-top: 60px;
+}
+.tw-grid--tri .tw-card:nth-child(3) {
+  grid-column: 1 / -1;
+  max-width: 50%;
+  justify-self: center;
+}
+
+/* 4 tasks: 2×2 grid */
+.tw-grid--quad {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* ═══════════════════════════════════════════════
+   TASK CARD
+   ═══════════════════════════════════════════════ */
+.tw-card {
+  position: relative;
+  background: rgba(0, 5, 16, 0.9);
+  border: 1px solid #00d4ff;
+  border-radius: 10px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  transition: border-color 0.4s, box-shadow 0.4s;
+  container-type: size;
+}
+
+.tw-card--in {
+  animation: tw-card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes tw-card-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.tw-card--out {
+  animation: tw-card-out 0.45s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+@keyframes tw-card-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.8); }
+}
+
+.tw-card--done {
+  border-color: #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.35);
+}
+
+/* ── Card Header ── */
+.tw-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tw-card__icon {
+  font-size: 1.3rem;
+}
+
+.tw-card__name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  flex: 1;
+  color: #e0f0ff;
+}
+
+/* ── Status Badge ── */
+.tw-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.tw-badge--analyzing {
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  animation: tw-badge-pulse 1.2s ease-in-out infinite;
+}
+
+.tw-badge--working {
+  color: #00d4ff;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.tw-badge--done {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+@keyframes tw-badge-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* ── Progress Bar ── */
+.tw-card__progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tw-card__progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.12s linear;
+  position: relative;
+}
+
+.tw-card__progress-fill--analyzing {
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+  width: 0% !important;
+  animation: tw-progress-indeterminate 1.4s ease-in-out infinite;
+}
+
+@keyframes tw-progress-indeterminate {
+  0%   { width: 0% !important; margin-left: 0; }
+  50%  { width: 30% !important; margin-left: 35%; }
+  100% { width: 0% !important; margin-left: 100%; }
+}
+
+.tw-card__progress-fill--working {
+  background: linear-gradient(90deg, #00a0cc, #00d4ff, #66e5ff);
+  background-size: 200% 100%;
+  animation: tw-shimmer 1.5s linear infinite;
+}
+
+.tw-card__progress-fill--done {
+  background: linear-gradient(90deg, #00cc66, #00ff88);
+}
+
+@keyframes tw-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ── Footer ── */
+.tw-card__footer {
+  min-height: 20px;
+}
+
+.tw-card__status {
+  font-size: 0.78rem;
+  color: rgba(200, 220, 232, 0.6);
+  font-family: "Consolas", "Fira Code", monospace;
+}
+
+.tw-card__result {
+  font-size: 0.82rem;
+  color: #00ff88;
+  font-weight: 600;
+  font-family: "Consolas", "Fira Code", monospace;
+}
+
+/* ── Scan Line ── */
+.tw-card__scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 212, 255, 0.5) 40%,
+    rgba(0, 212, 255, 0.9) 50%,
+    rgba(0, 212, 255, 0.5) 60%,
+    transparent 100%
+  );
+  animation: tw-scanline 2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes tw-scanline {
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(100cqh + 40px)); }
+}
+
+/* ═══════════════════════════════════════════════
+   QUEUE BADGE
+   ═══════════════════════════════════════════════ */
+.tw-queue-badge {
+  position: fixed;
+  bottom: 24px;
+  right: 28px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 5, 16, 0.92);
+  border: 1px solid rgba(255, 170, 0, 0.4);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffaa00;
+  box-shadow: 0 0 12px rgba(255, 170, 0, 0.2);
+  animation: tw-card-in 0.3s ease-out both;
+}
+
+.tw-queue-badge__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffaa00;
+  animation: tw-badge-pulse 1s ease-in-out infinite;
+}
