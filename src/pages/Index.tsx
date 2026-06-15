@@ -14,6 +14,7 @@ import { CreateAgent } from "@/components/botbetter/screens/CreateAgent";
 import { Usage } from "@/components/botbetter/screens/Usage";
 import { AuthModal } from "@/components/botbetter/screens/AuthModal";
 import { OnboardingModal } from "@/components/botbetter/screens/OnboardingModal";
+import TaskWindow from "@/components/botbetter/TaskWindow";
 
 // Protected screens that require a login
 const PROTECTED: ScreenKey[] = ["dashboard", "chat", "agent", "agent-chat", "connections", "create", "usage"];
@@ -118,6 +119,9 @@ const App = () => {
         )}
         {screen === "usage" && (
           <Usage active={screen} onNavigate={navigate} />
+        )}
+        {screen === "tasks" && (
+          <TaskWindow />
         )}
       </div>
 

@@ -2,7 +2,7 @@ import { Sparkles, Volume2, VolumeX } from "lucide-react";
 import { useTheme, ThemeSwitcher } from "./ThemeProvider";
 import { useVoiceMode } from "@/context/VoiceModeContext";
 
-export type ScreenKey = "landing" | "dashboard" | "chat" | "agent" | "agent-chat" | "connections" | "create" | "usage";
+export type ScreenKey = "landing" | "dashboard" | "chat" | "agent" | "agent-chat" | "connections" | "create" | "usage" | "tasks";
 
 export const TopNav = ({ active, onChange }: { active: ScreenKey; onChange: (s: ScreenKey) => void }) => {
   const { theme } = useTheme();
