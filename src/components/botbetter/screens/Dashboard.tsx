@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { agents } from "@/data/agents";
 import { ScreenKey } from "../TopNav";
 import { DashShell } from "../DashShell";
@@ -6,6 +6,7 @@ import {
   MessageSquare, Plug, Zap,
   Mail, Calendar, Send, ArrowUpRight, LogOut, Loader2,
   Copy, Share2, Gift, Users, Settings2, Volume2, VolumeX,
+  Mic, MicOff, Bot, Sparkles,
 } from "lucide-react";
 import { statsAPI, userAPI, type StatsResponse, type LimitStatusResponse } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -68,6 +69,23 @@ export const Dashboard = ({
   const [applyingReferral, setApplyingReferral] = useState(false);
   const [referralMsg, setReferralMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  // Custom prompts
+  const [customPrompt, setCustomPrompt] = useState(
+    user?.personality === "kabir"
+      ? "You are Kabir — professional, direct, and results-focused. Help me get things done efficiently."
+      : "You are Maya — warm, friendly, and creative. Help me with everything in a personalized way."
+  );
+  const [savingPrompt, setSavingPrompt] = useState(false);
+  const [promptSaved, setPromptSaved] = useState(false);
+
+  // Voice project creation
+  const [voiceProjectMode, setVoiceProjectMode] = useState(false);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [projectName, setProjectName] = useState("");
+  const [projectCreated, setProjectCreated] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     setLoadingStats(true);
@@ -121,6 +139,39 @@ export const Dashboard = ({
     } finally {
       setApplyingReferral(false);
     }
+  };
+
+  const saveCustomPrompt = async () => {
+    setSavingPrompt(true);
+    try {
+      await userAPI.updateProfile({ customPrompt } as Parameters<typeof userAPI.updateProfile>[0]);
+      setPromptSaved(true);
+      setTimeout(() => setPromptSaved(false), 2000);
+    } catch { /* ignore */ } finally { setSavingPrompt(false); }
+  };
+
+  const startVoiceProject = () => {
+    const SpeechRecognition = window.SpeechRecognition || (window as unknown as { webkitSpeechRecognition: typeof SpeechRecognition }).webkitSpeechRecognition;
+    if (!SpeechRecognition) { alert("Speech recognition not supported in this browser."); return; }
+    const rec = new SpeechRecognition();
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.lang = user?.language ?? "en-IN";
+    rec.onstart = () => setVoiceListening(true);
+    rec.onend = () => setVoiceListening(false);
+    rec.onresult = (e: SpeechRecognitionEvent) => {
+      const transcript = Array.from(e.results).map((r) => r[0].transcript).join("");
+      setVoiceTranscript(transcript);
+      if (e.results[0].isFinal) {
+        setProjectName(transcript.trim());
+        setTimeout(() => setProjectCreated(true), 400);
+      }
+    };
+    recognitionRef.current = rec;
+    rec.start();
+    setVoiceProjectMode(true);
+    setVoiceTranscript("");
+    setProjectCreated(false);
   };
 
   const statCards = [
@@ -414,6 +465,115 @@ export const Dashboard = ({
             </div>
           </div>
         </div>
+
+        {/* Custom Prompts */}
+        {user && (
+          <div className="bento-card p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center">
+                <Bot className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className="font-bold text-foreground">Custom Behavior</div>
+                <div className="text-xs text-muted-foreground">Tell Nexus exactly how to behave for you</div>
+              </div>
+            </div>
+            <textarea
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              rows={4}
+              placeholder="Example: Always respond in Hindi. Keep answers concise. Focus on actionable steps..."
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground outline-none focus:border-primary transition resize-none placeholder:text-muted-foreground/50"
+            />
+            <div className="flex items-center gap-3 mt-4">
+              <button
+                onClick={saveCustomPrompt}
+                disabled={savingPrompt}
+                className="px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-60 transition flex items-center gap-2 text-white"
+                style={{ background:"linear-gradient(135deg,#6C00FF,#FF3CAC)" }}
+              >
+                {savingPrompt && <Loader2 className="h-4 w-4 animate-spin" />}
+                Save Behavior
+              </button>
+              {promptSaved && <span className="text-sm font-semibold text-emerald-400">✓ Saved!</span>}
+              <button
+                onClick={() => setCustomPrompt("")}
+                className="text-xs font-semibold text-muted-foreground hover:text-destructive transition"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Voice Project Creation */}
+        {user && (
+          <div className="bento-card p-6 sm:p-8">
+            <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-bold text-foreground">Voice Project Creation</div>
+                  <div className="text-xs text-muted-foreground">Speak to create a new project — Jarvis style</div>
+                </div>
+              </div>
+              <button
+                onClick={startVoiceProject}
+                disabled={voiceListening}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-60 transition hover:-translate-y-0.5"
+                style={{ background:"linear-gradient(135deg,#00D4FF,#0088AA)" }}
+              >
+                {voiceListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {voiceListening ? "Listening…" : "Start Voice"}
+              </button>
+            </div>
+
+            {voiceProjectMode && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div
+                    className="h-8 w-8 rounded-full grid place-items-center"
+                    style={{
+                      background: voiceListening
+                        ? "rgba(255,59,48,0.15)"
+                        : projectCreated
+                        ? "rgba(16,185,129,0.15)"
+                        : "rgba(0,212,255,0.1)",
+                      border: voiceListening
+                        ? "1.5px solid rgba(255,59,48,0.5)"
+                        : projectCreated
+                        ? "1.5px solid rgba(16,185,129,0.4)"
+                        : "1.5px solid rgba(0,212,255,0.3)",
+                    }}
+                  >
+                    {voiceListening ? (
+                      <div className="h-3 w-3 rounded-full bg-red-400 animate-ping" />
+                    ) : projectCreated ? (
+                      <span className="text-emerald-400 text-xs font-bold">✓</span>
+                    ) : (
+                      <Mic className="h-3.5 w-3.5 text-primary" />
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold" style={{ color: voiceListening ? "#FF3B30" : projectCreated ? "#10B981" : "var(--color-primary)" }}>
+                    {voiceListening ? "Listening — speak your project name…" : projectCreated ? "Project created!" : "Ready"}
+                  </span>
+                </div>
+                {voiceTranscript && (
+                  <p className="text-lg font-bold text-foreground italic">"{voiceTranscript}"</p>
+                )}
+                {projectCreated && projectName && (
+                  <div className="mt-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">New Project Created</div>
+                    <div className="text-base font-bold text-foreground">{projectName}</div>
+                    <div className="text-xs text-muted-foreground mt-1">Nexus will remember context for this project</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Preferences */}
         <div className="bento-card p-6 sm:p-8">

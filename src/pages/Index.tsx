@@ -12,12 +12,17 @@ import { AgentChat } from "@/components/botbetter/screens/AgentChat";
 import { Connections } from "@/components/botbetter/screens/Connections";
 import { CreateAgent } from "@/components/botbetter/screens/CreateAgent";
 import { Usage } from "@/components/botbetter/screens/Usage";
+import { GetHelp } from "@/components/botbetter/screens/GetHelp";
+import { LearnMore } from "@/components/botbetter/screens/LearnMore";
+import { GiftNexus } from "@/components/botbetter/screens/GiftNexus";
+import { Plugins } from "@/components/botbetter/screens/Plugins";
+import { Webhooks } from "@/components/botbetter/screens/Webhooks";
 import { AuthModal } from "@/components/botbetter/screens/AuthModal";
 import { OnboardingModal } from "@/components/botbetter/screens/OnboardingModal";
 import TaskWindow from "@/components/botbetter/TaskWindow";
 
 // Protected screens that require a login
-const PROTECTED: ScreenKey[] = ["dashboard", "chat", "agent", "agent-chat", "connections", "create", "usage"];
+const PROTECTED: ScreenKey[] = ["dashboard", "chat", "agent", "agent-chat", "connections", "create", "usage", "webhooks", "plugins"];
 
 const App = () => {
   const { user, initializing, logout } = useAuth();
@@ -88,7 +93,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {screen !== "chat" && screen !== "landing" && screen !== "dashboard" && screen !== "connections" && screen !== "usage" && (
+      {!["chat","landing","dashboard","connections","usage","help","learn-more","gift","plugins","webhooks"].includes(screen) && (
         <TopNav active={screen} onChange={navigate} />
       )}
       <div key={screen} className="fade-in">
@@ -122,6 +127,21 @@ const App = () => {
         )}
         {screen === "tasks" && (
           <TaskWindow />
+        )}
+        {screen === "help" && (
+          <GetHelp active={screen} onNavigate={navigate} />
+        )}
+        {screen === "learn-more" && (
+          <LearnMore active={screen} onNavigate={navigate} />
+        )}
+        {screen === "gift" && (
+          <GiftNexus active={screen} onNavigate={navigate} />
+        )}
+        {screen === "plugins" && (
+          <Plugins active={screen} onNavigate={navigate} />
+        )}
+        {screen === "webhooks" && (
+          <Webhooks active={screen} onNavigate={navigate} />
         )}
       </div>
 

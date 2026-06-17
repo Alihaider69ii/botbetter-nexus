@@ -9,8 +9,11 @@ const MENU_ITEMS: { id: string; icon: string; label: string; screen: ScreenKey }
   { id: "connections", icon: "🔗", label: "CONNECTORS",    screen: "connections" },
   { id: "usage",       icon: "📈", label: "HISTORY",       screen: "usage" },
   { id: "create",      icon: "⚙️", label: "SETTINGS",      screen: "create" },
-  { id: "agent",       icon: "🎙️", label: "VOICE CONTROL", screen: "agent" },
-  { id: "landing",     icon: "🎨", label: "THEME",         screen: "landing" },
+  { id: "webhooks",    icon: "🪝", label: "WEBHOOKS",      screen: "webhooks" },
+  { id: "plugins",     icon: "🧩", label: "PLUGINS",       screen: "plugins" },
+  { id: "help",        icon: "❓", label: "GET HELP",      screen: "help" },
+  { id: "gift",        icon: "🎁", label: "GIFT NEXUS",    screen: "gift" },
+  { id: "learn-more",  icon: "🌟", label: "LEARN MORE",    screen: "learn-more" },
 ];
 
 interface HologramMenuProps {
