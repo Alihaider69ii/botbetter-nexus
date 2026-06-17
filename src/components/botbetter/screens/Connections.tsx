@@ -438,6 +438,70 @@ const RequestModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
+/* ── ConnectorCard — module-level (never re-defined on re-render) ─────────── */
+const ConnectorCard = ({
+  c,
+  activePanel,
+  setActivePanel,
+  toggle,
+}: {
+  c: Connector;
+  activePanel: string | null;
+  setActivePanel: (v: string | null) => void;
+  toggle: (name: string) => void;
+}) => {
+  const isActionable = c.connected && (c.name === "WhatsApp" || c.name === "Gmail" || c.name === "Google Calendar");
+  const panelOpen = activePanel === c.name;
+
+  return (
+    <div className="space-y-2">
+      <div className="bento-card p-5 flex flex-col hover:-translate-y-1">
+        <div className="flex items-start justify-between mb-4">
+          <BrandIcon name={c.name} color={c.color} letter={c.letter} gradient={c.gradient} />
+          {c.connected && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
+            </span>
+          )}
+        </div>
+        <div className="text-[15px] font-bold text-foreground">{c.name}</div>
+        <p className="text-sm text-muted-foreground mt-1 flex-1 leading-relaxed">{c.desc}</p>
+        <div className="mt-4 flex gap-2">
+          {isActionable ? (
+            <button
+              onClick={() => setActivePanel(panelOpen ? null : c.name)}
+              className="flex-1 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+              style={{ background: `linear-gradient(135deg,${c.color},${c.color}cc)`, border: "none", color: "#fff" }}
+            >
+              Use {panelOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+          ) : (
+            <button
+              onClick={() => toggle(c.name)}
+              className="flex-1 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-widest transition-all"
+              style={
+                c.connected
+                  ? { background: "transparent", border: "1px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
+                  : {
+                      background: `linear-gradient(135deg,${c.color},${c.color}cc)`,
+                      border: "none",
+                      color: c.color === "#FFFFFF" || c.color === "#FF9900" || c.color === "#FFBF00" ? "#111" : "#fff",
+                      boxShadow: `0 4px 12px ${c.color === "#000000" ? "rgba(0,0,0,0.3)" : c.color + "33"}`,
+                    }
+              }
+            >
+              {c.connected ? "Disconnect" : "Connect"}
+            </button>
+          )}
+        </div>
+      </div>
+      {panelOpen && c.name === "WhatsApp" && <WhatsAppPanel onClose={() => setActivePanel(null)} />}
+      {panelOpen && c.name === "Gmail" && <GmailPanel onClose={() => setActivePanel(null)} />}
+      {panelOpen && c.name === "Google Calendar" && <CalendarPanel onClose={() => setActivePanel(null)} />}
+    </div>
+  );
+};
+
 /* ── Component ──────────────────────────────────────────────────────────────── */
 export const Connections = ({
   active, onNavigate,
@@ -465,59 +529,6 @@ export const Connections = ({
   };
 
   const visibleCategories = activeCategory ? [activeCategory] : CATEGORIES;
-
-  const ConnectorCard = ({ c }: { c: Connector }) => {
-    const isActionable = c.connected && (c.name === "WhatsApp" || c.name === "Gmail" || c.name === "Google Calendar");
-    const panelOpen = activePanel === c.name;
-
-    return (
-      <div className="space-y-2">
-        <div className="bento-card p-5 flex flex-col hover:-translate-y-1">
-          <div className="flex items-start justify-between mb-4">
-            <BrandIcon name={c.name} color={c.color} letter={c.letter} gradient={c.gradient} />
-            {c.connected && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
-              </span>
-            )}
-          </div>
-          <div className="text-[15px] font-bold text-foreground">{c.name}</div>
-          <p className="text-sm text-muted-foreground mt-1 flex-1 leading-relaxed">{c.desc}</p>
-          <div className="mt-4 flex gap-2">
-            {isActionable ? (
-              <button
-                onClick={() => setActivePanel(panelOpen ? null : c.name)}
-                className="flex-1 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                style={{ background: `linear-gradient(135deg,${c.color},${c.color}cc)`, border: "none", color: "#fff" }}
-              >
-                Use {panelOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-              </button>
-            ) : (
-              <button
-                onClick={() => toggle(c.name)}
-                className="flex-1 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-widest transition-all"
-                style={
-                  c.connected
-                    ? { background: "transparent", border: "1px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
-                    : {
-                        background: `linear-gradient(135deg,${c.color},${c.color}cc)`,
-                        border: "none",
-                        color: c.color === "#FFFFFF" || c.color === "#FF9900" || c.color === "#FFBF00" ? "#111" : "#fff",
-                        boxShadow: `0 4px 12px ${c.color === "#000000" ? "rgba(0,0,0,0.3)" : c.color + "33"}`,
-                      }
-                }
-              >
-                {c.connected ? "Disconnect" : "Connect"}
-              </button>
-            )}
-          </div>
-        </div>
-        {panelOpen && c.name === "WhatsApp" && <WhatsAppPanel onClose={() => setActivePanel(null)} />}
-        {panelOpen && c.name === "Gmail" && <GmailPanel onClose={() => setActivePanel(null)} />}
-        {panelOpen && c.name === "Google Calendar" && <CalendarPanel onClose={() => setActivePanel(null)} />}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -570,7 +581,7 @@ export const Connections = ({
                 </div>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {items.map((c) => <ConnectorCard key={c.name} c={c} />)}
+                {items.map((c) => <ConnectorCard key={c.name} c={c} activePanel={activePanel} setActivePanel={setActivePanel} toggle={toggle} />)}
               </div>
             </div>
           );
