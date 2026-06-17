@@ -9,6 +9,8 @@ import { useVoiceChat, playBase64Audio } from "@/hooks/use-voice-chat";
 import { ThemeSwitcher, useTheme } from "@/components/botbetter/ThemeProvider";
 import { AuthModal } from "./AuthModal";
 import type { ScreenKey } from "../TopNav";
+import TaskWindow, { type TaskDef } from "../TaskWindow";
+import FloatingMicButton from "../FloatingMicButton";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 type Msg = { from: "user"; text: string } | { from: "nexus"; text: string };
@@ -180,6 +182,84 @@ const ALL_APPS = [
   { name: "WhatsApp", icon: "💬" }, { name: "Gmail", icon: "📧" },
   { name: "Calendar", icon: "📅" }, { name: "Notion",  icon: "📝" },
 ];
+
+/* ── Multi-task detection ──────────────────────────────────────────────────── */
+function getTaskIcon(text: string): string {
+  const t = text.toLowerCase();
+  if (/whatsapp|text\s+message|msg/.test(t)) return "💬";
+  if (/email|gmail|mail/.test(t)) return "📧";
+  if (/calendar|event|schedule|book|meeting|appointment/.test(t)) return "📅";
+  if (/search|find|look\s+up|research/.test(t)) return "🔍";
+  if (/write|draft|create|compose|generate/.test(t)) return "✍️";
+  if (/analyze|review|read|check/.test(t)) return "🔬";
+  if (/remind|reminder|alarm/.test(t)) return "⏰";
+  if (/buy|order|purchase|shop/.test(t)) return "🛒";
+  if (/translate|lang/.test(t)) return "🌐";
+  if (/code|program|script|debug/.test(t)) return "💻";
+  if (/photo|image|picture/.test(t)) return "🖼️";
+  if (/music|song|play/.test(t)) return "🎵";
+  if (/weather|forecast/.test(t)) return "🌤️";
+  if (/news|headline/.test(t)) return "📰";
+  if (/payment|pay|transfer/.test(t)) return "💳";
+  return "⚡";
+}
+
+function getTaskResult(text: string): string {
+  const t = text.toLowerCase();
+  if (/whatsapp|message/.test(t)) return "Message sent ✓";
+  if (/email|gmail/.test(t)) return "Email delivered ✓";
+  if (/calendar|event|schedule/.test(t)) return "Event created ✓";
+  if (/search|find|look/.test(t)) return "Results ready ✓";
+  if (/write|draft|create/.test(t)) return "Draft complete ✓";
+  if (/analyze|review/.test(t)) return "Analysis done ✓";
+  if (/remind/.test(t)) return "Reminder set ✓";
+  if (/buy|order/.test(t)) return "Order placed ✓";
+  if (/translate/.test(t)) return "Translation done ✓";
+  if (/code|program/.test(t)) return "Code generated ✓";
+  return "Task complete ✓";
+}
+
+function detectTasksInMessage(message: string): TaskDef[] | null {
+  // Numbered list: "1. x\n2. y" or "1) x 2) y"
+  const listMatch = message.match(/(?:^|\n)\d+[.)]\s+[^\n]+/g);
+  if (listMatch && listMatch.length >= 2) {
+    return listMatch.slice(0, 4).map((item, i) => ({
+      id: `task-${Date.now()}-${i}`,
+      name: item.replace(/^\d+[.)]\s+/, "").trim().slice(0, 44),
+      icon: getTaskIcon(item),
+      result: getTaskResult(item),
+    }));
+  }
+
+  // Bullet list: "- x\n- y" or "• x\n• y"
+  const bulletMatch = message.match(/(?:^|\n)[•\-\*]\s+[^\n]+/g);
+  if (bulletMatch && bulletMatch.length >= 2) {
+    return bulletMatch.slice(0, 4).map((item, i) => ({
+      id: `task-${Date.now()}-${i}`,
+      name: item.replace(/^[•\-\*]\s+/, "").trim().slice(0, 44),
+      icon: getTaskIcon(item),
+      result: getTaskResult(item),
+    }));
+  }
+
+  // Connector-based: "… and also …" / "… simultaneously …"
+  const hasConnector = /\band\s+also\b|\bsimultaneously\b|\bat\s+the\s+same\s+time\b|\bwhile\s+also\b|\bmoreover\b|\bon\s+top\s+of\s+that\b/i.test(message);
+  if (!hasConnector) return null;
+
+  const parts = message
+    .split(/\band\s+also\b|\bsimultaneously\b|\bat\s+the\s+same\s+time\b/i)
+    .map((p) => p.trim())
+    .filter((p) => p.split(/\s+/).length >= 3);
+
+  if (parts.length < 2) return null;
+
+  return parts.slice(0, 4).map((part, i) => ({
+    id: `task-${Date.now()}-${i}`,
+    name: part.slice(0, 44),
+    icon: getTaskIcon(part),
+    result: getTaskResult(part),
+  }));
+}
 
 /* ── Injected CSS ──────────────────────────────────────────────────────────── */
 const CSS = `
@@ -479,6 +559,17 @@ const CSS = `
 }
 .nx-mic-label--rec { color:#ff3b30; text-shadow:0 0 8px rgba(255,59,48,.5); }
 
+/* TASK OVERLAY SKIP BUTTON */
+.nx-skip-btn {
+  position:absolute; top:18px; right:20px; z-index:10;
+  background:rgba(2,5,16,0.7); border:1px solid rgba(0,212,255,0.3);
+  color:#00D4FF; padding:6px 16px; border-radius:8px;
+  font-size:11px; font-weight:700; letter-spacing:1.5px;
+  cursor:pointer; font-family:'Space Grotesk',sans-serif;
+  backdrop-filter:blur(6px); transition:background 0.15s;
+}
+.nx-skip-btn:hover { background:rgba(0,212,255,0.1); }
+
 /* ── VOID theme ── */
 [data-theme="void"] .nx-root { background:#000 !important; }
 [data-theme="void"] .nx-header { background:rgba(0,0,0,.97) !important; border-color:#1A1A1A !important; }
@@ -577,6 +668,14 @@ export const NexusChat = ({
   const [sbDropOpen,       setSbDropOpen]       = useState(false);
   const [authModal,        setAuthModal]        = useState<{open:boolean;tab:"login"|"signup"}>({open:false,tab:"login"});
   const [isStreaming,      setIsStreaming]      = useState(false);
+  const [overlayTasks,    setOverlayTasks]    = useState<TaskDef[] | null>(null);
+  const [showTaskOverlay, setShowTaskOverlay] = useState(false);
+  const [overlayFading,   setOverlayFading]   = useState(false);
+
+  const dismissOverlay = () => {
+    setOverlayFading(true);
+    setTimeout(() => { setShowTaskOverlay(false); setOverlayTasks(null); setOverlayFading(false); }, 420);
+  };
 
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const bottomRef  = useRef<HTMLDivElement>(null);
@@ -721,6 +820,15 @@ export const NexusChat = ({
     const text = input.trim();
     if (!text || busy) return;
     if (!user) { setAuthModal({open:true,tab:"login"}); return; }
+
+    // Multi-task detection
+    const detectedTasks = detectTasksInMessage(text);
+    if (detectedTasks && detectedTasks.length >= 2) {
+      setOverlayTasks(detectedTasks);
+      setOverlayFading(false);
+      setShowTaskOverlay(true);
+    }
+
     setInput(""); setSendError("");
     setSending(true); setIsStreaming(false); flashRef.current = 0.9;
 
@@ -1140,6 +1248,31 @@ export const NexusChat = ({
       <AuthModal open={authModal.open} defaultTab={authModal.tab}
         onClose={()=>setAuthModal((s)=>({...s,open:false}))}
         onSuccess={()=>setAuthModal((s)=>({...s,open:false}))}/>
+
+      {/* MULTI-TASK OVERLAY */}
+      {showTaskOverlay && overlayTasks && (
+        <div
+          style={{
+            position:"fixed", inset:0, zIndex:200,
+            opacity: overlayFading ? 0 : 1,
+            transition: "opacity 0.42s ease",
+          }}
+        >
+          <TaskWindow tasks={overlayTasks} onAllDone={dismissOverlay} />
+          <button className="nx-skip-btn" onClick={dismissOverlay}>SKIP ✕</button>
+        </div>
+      )}
+
+      {/* FLOATING MIC — mobile only */}
+      <FloatingMicButton
+        disabled={!user}
+        onActivate={() => {
+          if (!user) { setAuthModal({open:true,tab:"login"}); return; }
+          voiceHook.toggleRecording();
+        }}
+        recording={voiceHook.recording}
+        processing={voiceHook.processing}
+      />
     </>
   );
 };

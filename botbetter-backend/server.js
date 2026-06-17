@@ -10,6 +10,8 @@ const authRoutes = require("./src/routes/auth.routes");
 const agentRoutes = require("./src/routes/agent.routes");
 const adminRoutes = require("./src/routes/admin.routes");
 const userRoutes = require("./src/routes/user.routes");
+const webhookRoutes = require("./src/routes/webhooks.routes");
+const connectorRoutes = require("./src/routes/connectors.routes");
 const { apiLimiter } = require("./src/middleware/rateLimit.middleware");
 const { errorHandler } = require("./src/middleware/error.middleware");
 
@@ -64,6 +66,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api", agentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/webhooks", webhookRoutes);
+app.use("/api/connectors", connectorRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

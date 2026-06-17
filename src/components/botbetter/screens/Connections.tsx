@@ -1,10 +1,30 @@
 import { useState } from "react";
 import {
   MessageSquare, Zap, Globe, Briefcase, Smartphone, Bot, Code2,
-  Copy, Check, Plus,
+  Copy, Check, Plus, Send, X, Loader2, Mail, Calendar, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { ScreenKey } from "../TopNav";
 import { DashShell } from "../DashShell";
+
+const BASE = (import.meta.env.VITE_API_URL as string) ?? "";
+
+async function apiPost(path: string, body: unknown) {
+  const token = localStorage.getItem("bb_token");
+  const r = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify(body),
+  });
+  return r.json();
+}
+
+async function apiGet(path: string) {
+  const token = localStorage.getItem("bb_token");
+  const r = await fetch(`${BASE}${path}`, {
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+  });
+  return r.json();
+}
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 type Connector = {
@@ -222,6 +242,202 @@ const BrandIcon = ({
   );
 };
 
+/* ── Action Panels ──────────────────────────────────────────────────────────── */
+const WhatsAppPanel = ({ onClose }: { onClose: () => void }) => {
+  const [to, setTo] = useState("");
+  const [msg, setMsg] = useState("");
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const send = async () => {
+    if (!to.trim() || !msg.trim()) return;
+    setSending(true);
+    const res = await apiPost("/api/connectors/whatsapp/send", { to: to.trim(), message: msg.trim() });
+    setSending(false);
+    setResult(res.success ? "✓ Message sent!" : `✕ ${res.message}`);
+    if (res.success) { setTo(""); setMsg(""); }
+  };
+
+  return (
+    <div className="bento-card border-[#25D366]/30 bg-[#25D366]/5 p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-[#25D366]" />
+          <span className="text-sm font-bold text-foreground">Send WhatsApp Message</span>
+        </div>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+      </div>
+      <input value={to} onChange={(e) => setTo(e.target.value)} placeholder="+91 98765 43210 (with country code)" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#25D366] transition" />
+      <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} placeholder="Your message…" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#25D366] transition resize-none" />
+      <div className="flex items-center gap-3">
+        <button onClick={send} disabled={sending || !to.trim() || !msg.trim()} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition" style={{ background: "#25D366" }}>
+          {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send
+        </button>
+        {result && <span className={`text-xs font-bold ${result.startsWith("✓") ? "text-emerald-400" : "text-red-400"}`}>{result}</span>}
+      </div>
+    </div>
+  );
+};
+
+const GmailPanel = ({ onClose }: { onClose: () => void }) => {
+  const [tab, setTab] = useState<"send" | "read">("send");
+  const [to, setTo] = useState("");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [emails, setEmails] = useState<{ id: string; from: string; subject: string; snippet: string; date: string }[]>([]);
+  const [reading, setReading] = useState(false);
+
+  const sendEmail = async () => {
+    if (!to.trim() || !subject.trim() || !body.trim()) return;
+    setSending(true);
+    const res = await apiPost("/api/connectors/gmail/send", { to, subject, body });
+    setSending(false);
+    setResult(res.success ? "✓ Email sent!" : `✕ ${res.message}`);
+    if (res.success) { setTo(""); setSubject(""); setBody(""); }
+  };
+
+  const readEmails = async () => {
+    setReading(true);
+    const res = await apiGet("/api/connectors/gmail/read");
+    setReading(false);
+    if (res.success) setEmails(res.emails || []);
+    else setResult(`✕ ${res.message}`);
+  };
+
+  return (
+    <div className="bento-card border-[#EA4335]/30 bg-[#EA4335]/5 p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-[#EA4335]" />
+          <span className="text-sm font-bold text-foreground">Gmail</span>
+        </div>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+      </div>
+      <div className="flex gap-2">
+        {(["send", "read"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)} className="px-4 py-1.5 rounded-full text-xs font-bold transition capitalize" style={tab === t ? { background: "#EA4335", color: "#fff" } : { background: "hsl(var(--card))", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}>
+            {t === "send" ? "Compose" : "Read Inbox"}
+          </button>
+        ))}
+      </div>
+      {tab === "send" ? (
+        <>
+          <input value={to} onChange={(e) => setTo(e.target.value)} placeholder="To (email address)" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#EA4335] transition" />
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#EA4335] transition" />
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder="Email body…" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#EA4335] transition resize-none" />
+          <div className="flex items-center gap-3">
+            <button onClick={sendEmail} disabled={sending || !to || !subject || !body} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: "#EA4335" }}>
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send
+            </button>
+            {result && <span className={`text-xs font-bold ${result.startsWith("✓") ? "text-emerald-400" : "text-red-400"}`}>{result}</span>}
+          </div>
+        </>
+      ) : (
+        <>
+          <button onClick={readEmails} disabled={reading} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: "#EA4335" }}>
+            {reading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Load Latest Emails
+          </button>
+          <div className="space-y-2">
+            {emails.map((em) => (
+              <div key={em.id} className="rounded-xl border border-border bg-card p-3">
+                <div className="text-xs font-bold text-foreground truncate">{em.subject}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{em.from}</div>
+                <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{em.snippet}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const CalendarPanel = ({ onClose }: { onClose: () => void }) => {
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [dateTime, setDateTime] = useState("");
+  const [attendees, setAttendees] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const create = async () => {
+    if (!title.trim() || !dateTime) return;
+    setSaving(true);
+    const startDateTime = new Date(dateTime).toISOString();
+    const endDateTime = new Date(new Date(dateTime).getTime() + 3600000).toISOString();
+    const res = await apiPost("/api/connectors/calendar/create", { title, description: desc, startDateTime, endDateTime, attendees });
+    setSaving(false);
+    setResult(res.success ? `✓ Event created!${res.event?.demo ? " (demo)" : ""}` : `✕ ${res.message}`);
+    if (res.success) { setTitle(""); setDesc(""); setDateTime(""); setAttendees(""); }
+  };
+
+  return (
+    <div className="bento-card border-[#4285F4]/30 bg-[#4285F4]/5 p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-[#4285F4]" />
+          <span className="text-sm font-bold text-foreground">Create Calendar Event</span>
+        </div>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+      </div>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event title" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#4285F4] transition" />
+      <input value={dateTime} onChange={(e) => setDateTime(e.target.value)} type="datetime-local" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#4285F4] transition" />
+      <input value={attendees} onChange={(e) => setAttendees(e.target.value)} placeholder="Attendees (comma-separated emails, optional)" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#4285F4] transition" />
+      <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} placeholder="Description (optional)" className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-[#4285F4] transition resize-none" />
+      <div className="flex items-center gap-3">
+        <button onClick={create} disabled={saving || !title.trim() || !dateTime} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: "#4285F4" }}>
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />} Create Event
+        </button>
+        {result && <span className={`text-xs font-bold ${result.startsWith("✓") ? "text-emerald-400" : "text-red-400"}`}>{result}</span>}
+      </div>
+    </div>
+  );
+};
+
+const RequestModal = ({ onClose }: { onClose: () => void }) => {
+  const [name, setName] = useState("");
+  const [reason, setReason] = useState("");
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const submit = async () => {
+    if (!name.trim()) return;
+    setSending(true);
+    await apiPost("/api/connectors/request", { connectorName: name, reason });
+    setSending(false);
+    setDone(true);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="bento-card w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        {done ? (
+          <div className="text-center space-y-3 py-4">
+            <div className="text-4xl">🙌</div>
+            <div className="text-lg font-bold text-foreground">Request Submitted!</div>
+            <p className="text-sm text-muted-foreground">We'll build {name} soon and notify you.</p>
+            <button onClick={onClose} className="px-6 py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: "linear-gradient(135deg,#6C00FF,#FF3CAC)" }}>Done</button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-foreground">Request a Connector</span>
+              <button onClick={onClose}><X className="h-4 w-4 text-muted-foreground" /></button>
+            </div>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Connector name (e.g. Notion, Stripe, Twilio)" className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none focus:border-primary transition" />
+            <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder="Why do you need it? (optional)" className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none focus:border-primary transition resize-none" />
+            <button onClick={submit} disabled={sending || !name.trim()} className="w-full py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: "linear-gradient(135deg,#6C00FF,#FF3CAC)" }}>
+              {sending ? "Submitting…" : "Submit Request"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /* ── Component ──────────────────────────────────────────────────────────────── */
 export const Connections = ({
   active, onNavigate,
@@ -231,9 +447,16 @@ export const Connections = ({
   const [connectors, setConnectors] = useState<Connector[]>(INITIAL_CONNECTORS);
   const [copied, setCopied] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [showRequest, setShowRequest] = useState(false);
 
-  const toggle = (name: string) =>
-    setConnectors((prev) => prev.map((c) => c.name === name ? { ...c, connected: !c.connected } : c));
+  const toggle = (name: string) => {
+    if (name === "WhatsApp" || name === "Gmail" || name === "Google Calendar") {
+      setActivePanel((prev) => prev === name ? null : name);
+    } else {
+      setConnectors((prev) => prev.map((c) => c.name === name ? { ...c, connected: !c.connected } : c));
+    }
+  };
 
   const copy = (val: string) => {
     navigator.clipboard?.writeText(val);
@@ -243,40 +466,61 @@ export const Connections = ({
 
   const visibleCategories = activeCategory ? [activeCategory] : CATEGORIES;
 
-  const ConnectorCard = ({ c }: { c: Connector }) => (
-    <div className="bento-card p-5 flex flex-col hover:-translate-y-1">
-      <div className="flex items-start justify-between mb-4">
-        <BrandIcon name={c.name} color={c.color} letter={c.letter} gradient={c.gradient} />
-        {c.connected && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
-          </span>
-        )}
+  const ConnectorCard = ({ c }: { c: Connector }) => {
+    const isActionable = c.connected && (c.name === "WhatsApp" || c.name === "Gmail" || c.name === "Google Calendar");
+    const panelOpen = activePanel === c.name;
+
+    return (
+      <div className="space-y-2">
+        <div className="bento-card p-5 flex flex-col hover:-translate-y-1">
+          <div className="flex items-start justify-between mb-4">
+            <BrandIcon name={c.name} color={c.color} letter={c.letter} gradient={c.gradient} />
+            {c.connected && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
+              </span>
+            )}
+          </div>
+          <div className="text-[15px] font-bold text-foreground">{c.name}</div>
+          <p className="text-sm text-muted-foreground mt-1 flex-1 leading-relaxed">{c.desc}</p>
+          <div className="mt-4 flex gap-2">
+            {isActionable ? (
+              <button
+                onClick={() => setActivePanel(panelOpen ? null : c.name)}
+                className="flex-1 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                style={{ background: `linear-gradient(135deg,${c.color},${c.color}cc)`, border: "none", color: "#fff" }}
+              >
+                Use {panelOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </button>
+            ) : (
+              <button
+                onClick={() => toggle(c.name)}
+                className="flex-1 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-widest transition-all"
+                style={
+                  c.connected
+                    ? { background: "transparent", border: "1px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
+                    : {
+                        background: `linear-gradient(135deg,${c.color},${c.color}cc)`,
+                        border: "none",
+                        color: c.color === "#FFFFFF" || c.color === "#FF9900" || c.color === "#FFBF00" ? "#111" : "#fff",
+                        boxShadow: `0 4px 12px ${c.color === "#000000" ? "rgba(0,0,0,0.3)" : c.color + "33"}`,
+                      }
+                }
+              >
+                {c.connected ? "Disconnect" : "Connect"}
+              </button>
+            )}
+          </div>
+        </div>
+        {panelOpen && c.name === "WhatsApp" && <WhatsAppPanel onClose={() => setActivePanel(null)} />}
+        {panelOpen && c.name === "Gmail" && <GmailPanel onClose={() => setActivePanel(null)} />}
+        {panelOpen && c.name === "Google Calendar" && <CalendarPanel onClose={() => setActivePanel(null)} />}
       </div>
-      <div className="text-[15px] font-bold text-foreground">{c.name}</div>
-      <p className="text-sm text-muted-foreground mt-1 flex-1 leading-relaxed">{c.desc}</p>
-      <button
-        onClick={() => toggle(c.name)}
-        className="mt-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-widest transition-all"
-        style={
-          c.connected
-            ? { background: "transparent", border: "1px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
-            : {
-                background: `linear-gradient(135deg,${c.color},${c.color}cc)`,
-                border: "none",
-                color: c.color === "#FFFFFF" || c.color === "#FF9900" || c.color === "#FFBF00" ? "#111" : "#fff",
-                boxShadow: `0 4px 12px ${c.color === "#000000" ? "rgba(0,0,0,0.3)" : c.color + "33"}`,
-              }
-        }
-        onMouseEnter={(e) => { if (!c.connected) (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ""; }}
-      >
-        {c.connected ? "Disconnect" : "Connect"}
-      </button>
-    </div>
-  );
+    );
+  };
 
   return (
+    <>
     <DashShell active={active} onNavigate={onNavigate} title="Connectors">
       <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-10">
 
@@ -370,13 +614,18 @@ export const Connections = ({
 
         {/* Request a connector */}
         <div className="flex justify-center pb-4">
-          <button className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl border-2 border-dashed border-border text-sm font-bold text-muted-foreground hover:border-primary hover:text-primary transition-all hover:-translate-y-0.5">
+          <button
+            onClick={() => setShowRequest(true)}
+            className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl border-2 border-dashed border-border text-sm font-bold text-muted-foreground hover:border-primary hover:text-primary transition-all hover:-translate-y-0.5"
+          >
             <Plus className="h-4 w-4" />
-            + Request a Connector
+            Request a Connector
           </button>
         </div>
 
       </div>
     </DashShell>
+    {showRequest && <RequestModal onClose={() => setShowRequest(false)} />}
+    </>
   );
 };
