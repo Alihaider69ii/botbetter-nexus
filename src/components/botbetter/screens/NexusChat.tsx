@@ -169,6 +169,15 @@ function fmtDate(iso: string): string {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
+function timeGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 5) return "Burning the midnight oil";
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  if (h < 21) return "Good evening";
+  return "Working late";
+}
+
 function getSeed(p: Personality): Msg[] {
   return [{
     from: "nexus",
@@ -385,6 +394,13 @@ const CSS = `
 .nx-msgs { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px; padding:22px 24px; z-index:5; }
 .nx-msgs::-webkit-scrollbar { width:3px; }
 .nx-msgs::-webkit-scrollbar-thumb { background:rgba(0,240,255,.11); border-radius:2px; }
+
+.nx-brief-card { margin:18px 24px 0; padding:14px 18px; border-radius:14px; background:rgba(0,240,255,.05); border:1px solid rgba(0,240,255,.18); backdrop-filter:blur(12px); z-index:5; animation:nx-fade-up .24s ease both; }
+.nx-brief-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.nx-brief-title { font-size:13px; font-weight:700; color:#e8f9ff; font-family:'Syne',sans-serif; }
+.nx-brief-close { background:none; border:none; color:rgba(232,249,255,.45); cursor:pointer; font-size:12px; padding:2px 4px; }
+.nx-brief-close:hover { color:#e8f9ff; }
+.nx-brief-list { margin:8px 0 0; padding-left:18px; font-size:12px; line-height:1.7; color:rgba(232,249,255,.7); font-family:'Share Tech Mono',monospace; }
 
 .nx-bbl-row        { display:flex; gap:10px; max-width:660px; animation:nx-fade-up .24s ease both; }
 .nx-bbl-row--right { align-self:flex-end; justify-content:flex-end; }
@@ -671,6 +687,7 @@ export const NexusChat = ({
   const [overlayTasks,    setOverlayTasks]    = useState<TaskDef[] | null>(null);
   const [showTaskOverlay, setShowTaskOverlay] = useState(false);
   const [overlayFading,   setOverlayFading]   = useState(false);
+  const [showBrief,       setShowBrief]       = useState(false);
 
   const dismissOverlay = () => {
     setOverlayFading(true);
@@ -742,6 +759,18 @@ export const NexusChat = ({
   }, [user]);
 
   useEffect(() => { refreshSidebar(); }, [refreshSidebar]);
+
+  /* ── Morning brief: once-per-day daily summary on first chat open ── */
+  useEffect(() => {
+    if (!user || !limitStatus) return;
+    const briefKey = `bb_brief_${user.id}_${new Date().toDateString()}`;
+    if (!localStorage.getItem(briefKey)) setShowBrief(true);
+  }, [user, limitStatus]);
+
+  const dismissBrief = () => {
+    if (user) localStorage.setItem(`bb_brief_${user.id}_${new Date().toDateString()}`, "1");
+    setShowBrief(false);
+  };
 
   /* ── Sync prefs from user profile (on login/account switch) ── */
   useEffect(() => {
@@ -1160,6 +1189,21 @@ export const NexusChat = ({
                     </>
                   )}
                 </div>
+              </div>
+            )}
+
+            {showBrief && user && limitStatus && (
+              <div className="nx-brief-card">
+                <div className="nx-brief-head">
+                  <span className="nx-brief-title">{timeGreeting()}, {user.name?.split(" ")[0] ?? "there"} ☀️</span>
+                  <button className="nx-brief-close" onClick={dismissBrief} aria-label="Dismiss briefing">✕</button>
+                </div>
+                <ul className="nx-brief-list">
+                  <li>{limitStatus.messagesLeft} of {limitStatus.totalLimit} messages left today</li>
+                  {sessions.length > 0 && <li>Last session: "{sessions[0].title}"</li>}
+                  <li>{connApps.length} connector{connApps.length === 1 ? "" : "s"} connected</li>
+                  {limitStatus.referralCount > 0 && <li>{limitStatus.referralCount} referral{limitStatus.referralCount === 1 ? "" : "s"} earned you {limitStatus.bonusMessages} bonus messages</li>}
+                </ul>
               </div>
             )}
 
