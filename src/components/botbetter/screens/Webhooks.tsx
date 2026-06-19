@@ -31,7 +31,7 @@ const CODE_SNIPPETS: Record<string, string> = {
       "matcher": ".*",
       "hooks": [{
         "type": "command",
-        "command": "curl -s -X POST ${WEBHOOK_URL} -H 'Content-Type: application/json' -H 'X-BotBetter-Secret: ${SECRET}' -d '{\\"event\\":\\"task.completed\\",\\"tool\\":\\"$TOOL_NAME\\",\\"output\\":\\"$TOOL_OUTPUT\\"}'",
+        "command": "curl -s -X POST \${WEBHOOK_URL} -H 'Content-Type: application/json' -H 'X-BotBetter-Secret: \${SECRET}' -d '{\\"event\\":\\"task.completed\\",\\"tool\\":\\"$TOOL_NAME\\",\\"output\\":\\"$TOOL_OUTPUT\\"}'",
         "timeout": 5
       }]
     }]
@@ -42,19 +42,19 @@ import requests
 
 def notify_botbetter(event_type, data):
     requests.post(
-        "${WEBHOOK_URL}",
+        "\${WEBHOOK_URL}",
         json={"event": event_type, "data": data},
         headers={
             "Content-Type": "application/json",
-            "X-BotBetter-Secret": "${SECRET}"
+            "X-BotBetter-Secret": "\${SECRET}"
         }
     )
 
 # After each Codex task:
 notify_botbetter("task.completed", {"result": output})`,
-  cURL: `curl -X POST "${WEBHOOK_URL}" \\
+  cURL: `curl -X POST "\${WEBHOOK_URL}" \\
   -H "Content-Type: application/json" \\
-  -H "X-BotBetter-Secret: ${SECRET}" \\
+  -H "X-BotBetter-Secret: \${SECRET}" \\
   -d '{
     "event": "task.completed",
     "payload": {
@@ -63,11 +63,11 @@ notify_botbetter("task.completed", {"result": output})`,
       "result": "task output here"
     }
   }'`,
-  JavaScript: `const response = await fetch("${WEBHOOK_URL}", {
+  JavaScript: `const response = await fetch("\${WEBHOOK_URL}", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "X-BotBetter-Secret": "${SECRET}",
+    "X-BotBetter-Secret": "\${SECRET}",
   },
   body: JSON.stringify({
     event: "task.completed",
