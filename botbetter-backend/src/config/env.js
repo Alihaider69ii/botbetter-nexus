@@ -12,6 +12,14 @@ const config = {
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
   SESSION_SECRET: process.env.SESSION_SECRET || "fallback_session_secret",
   SARVAM_API_KEY: process.env.SARVAM_API_KEY,
+  TAVILY_API_KEY: process.env.TAVILY_API_KEY,
+  NEWSAPI_KEY: process.env.NEWSAPI_KEY,
+  OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY,
+  CRICAPI_KEY: process.env.CRICAPI_KEY,
+  COINGECKO_API_KEY: process.env.COINGECKO_API_KEY,
+  LASTFM_API_KEY: process.env.LASTFM_API_KEY,
+  YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY,
+  CHROMA_URL: process.env.CHROMA_URL,
 
   // Legacy single key (kept for backward compat)
   GROQ_API_KEY: process.env.GROQ_API_KEY,

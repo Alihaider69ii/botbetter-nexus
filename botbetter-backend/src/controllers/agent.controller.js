@@ -12,6 +12,7 @@ const { runCreato } = require("../agents/creato");
 const { runNexus } = require("../agents/nexus");
 const { callAI, callAIStream } = require("../utils/aiCaller");
 const { getNexusPrompt } = require("../agents/nexus/prompt");
+const { getRagContext } = require("../rag/ragSystem");
 
 function deduplicateResponse(text) {
   if (!text || typeof text !== "string") return text;
@@ -283,7 +284,8 @@ const chatStream = async (req, res, next) => {
     const resolvedLanguage    = language    || req.user.language    || "en-IN";
 
     const memory = await getMemory(userId);
-    const systemPrompt = getNexusPrompt(memory, { personality: resolvedPersonality, language: resolvedLanguage });
+    const ragContext = await getRagContext(message);
+    const systemPrompt = getNexusPrompt(memory, { personality: resolvedPersonality, language: resolvedLanguage, ragContext });
     const history = memory.getAgentHistory("nexus", 8).map((m) => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: m.content,

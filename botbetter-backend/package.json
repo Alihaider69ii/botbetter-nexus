@@ -15,7 +15,11 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@langchain/groq": "^1.2.0",
+    "@tavily/core": "^0.7.6",
+    "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
+    "cheerio": "^1.2.0",
+    "chromadb": "^3.5.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -28,9 +32,11 @@
     "mongoose": "^9.5.0",
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
+    "node-cron": "^4.5.0",
     "nodemailer": "^9.0.1",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

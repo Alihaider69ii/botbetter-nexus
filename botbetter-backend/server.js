@@ -12,8 +12,10 @@ const adminRoutes = require("./src/routes/admin.routes");
 const userRoutes = require("./src/routes/user.routes");
 const webhookRoutes = require("./src/routes/webhooks.routes");
 const connectorRoutes = require("./src/routes/connectors.routes");
+const ragRoutes = require("./src/routes/rag.routes");
 const { apiLimiter } = require("./src/middleware/rateLimit.middleware");
 const { errorHandler } = require("./src/middleware/error.middleware");
+const { startRagCron } = require("./src/rag/ragSystem");
 
 const app = express();
 
@@ -68,6 +70,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/webhooks", webhookRoutes);
 app.use("/api/connectors", connectorRoutes);
+app.use("/api/rag", ragRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
@@ -94,6 +97,7 @@ app.use(errorHandler);
 const start = async () => {
   try {
     await connect();
+    startRagCron();
     app.listen(config.PORT, () => {
       console.log(`🚀 BotBetter backend running on port ${config.PORT}`);
       console.log(`🌍 Environment: ${config.NODE_ENV}`);

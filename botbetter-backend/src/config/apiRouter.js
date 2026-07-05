@@ -1,451 +1,182 @@
 const ApiUsage = require("../models/ApiUsage.model");
 
-const PROVIDERS = {
-  cracky: [
-    {
-      id: "gemini",
-      type: "gemini",
-      model: "gemini-2.0-flash",
-      apiKey: () => process.env.GEMINI_CRACKY,
-      dailyLimit: 1500,
-      limitType: "requests",
-    },
-    {
-      id: "groq",
-      type: "groq",
-      model: "llama-3.1-8b-instant",
-      apiKey: () => process.env.GROQ_CRACKY,
-      dailyLimit: 500000,
-      limitType: "tokens",
-    },
-    {
-      id: "mistral",
-      type: "mistral",
-      model: "mistral-small-latest",
-      apiKey: () => process.env.MISTRAL_CRACKY,
-      dailyLimit: null,
-      limitType: "requests",
-    },
-    {
-      id: "together",
-      type: "together",
-      model: "meta-llama/Llama-3-8b-chat-hf",
-      apiKey: () => process.env.TOGETHER_CRACKY,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-    {
-      id: "deepseek",
-      type: "deepseek",
-      model: "deepseek-chat",
-      apiKey: () => process.env.DEEPSEEK_CRACKY,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-  ],
-  sellio: [
-    {
-      id: "gemini",
-      type: "gemini",
-      model: "gemini-2.0-flash",
-      apiKey: () => process.env.GEMINI_SELLIO,
-      dailyLimit: 1500,
-      limitType: "requests",
-    },
-    {
-      id: "groq",
-      type: "groq",
-      model: "llama-3.1-8b-instant",
-      apiKey: () => process.env.GROQ_SELLIO,
-      dailyLimit: 500000,
-      limitType: "tokens",
-    },
-    {
-      id: "mistral",
-      type: "mistral",
-      model: "mistral-small-latest",
-      apiKey: () => process.env.MISTRAL_SELLIO,
-      dailyLimit: null,
-      limitType: "requests",
-    },
-    {
-      id: "together",
-      type: "together",
-      model: "meta-llama/Llama-3-8b-chat-hf",
-      apiKey: () => process.env.TOGETHER_SELLIO,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-    {
-      id: "deepseek",
-      type: "deepseek",
-      model: "deepseek-chat",
-      apiKey: () => process.env.DEEPSEEK_SELLIO,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-  ],
+const JARVIS_USAGE_SCOPE = "jarvis";
 
-  buddy: [
-    {
-      id: "gemini",
-      type: "gemini",
-      model: "gemini-2.0-flash",
-      apiKey: () => process.env.GEMINI_BUDDY,
-      dailyLimit: 1500,
-      limitType: "requests",
-    },
-    {
-      id: "groq",
-      type: "groq",
-      model: "llama-3.1-8b-instant",
-      apiKey: () => process.env.GROQ_BUDDY,
-      dailyLimit: 500000,
-      limitType: "tokens",
-    },
-    {
-      id: "mistral",
-      type: "mistral",
-      model: "mistral-small-latest",
-      apiKey: () => process.env.MISTRAL_BUDDY,
-      dailyLimit: null,
-      limitType: "requests",
-    },
-    {
-      id: "deepseek",
-      type: "deepseek",
-      model: "deepseek-chat",
-      apiKey: () => process.env.DEEPSEEK_BUDDY,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-  ],
-
-  finio: [
-    {
-      id: "gemini",
-      type: "gemini",
-      model: "gemini-2.0-flash",
-      apiKey: () => process.env.GEMINI_FINIO,
-      dailyLimit: 1500,
-      limitType: "requests",
-    },
-    {
-      id: "groq",
-      type: "groq",
-      model: "llama-3.1-8b-instant",
-      apiKey: () => process.env.GROQ_FINIO,
-      dailyLimit: 500000,
-      limitType: "tokens",
-    },
-    {
-      id: "mistral",
-      type: "mistral",
-      model: "mistral-small-latest",
-      apiKey: () => process.env.MISTRAL_FINIO,
-      dailyLimit: null,
-      limitType: "requests",
-    },
-    {
-      id: "deepseek",
-      type: "deepseek",
-      model: "deepseek-chat",
-      apiKey: () => process.env.DEEPSEEK_FINIO,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-  ],
-
-  prepify: [
-    {
-      id: "gemini",
-      type: "gemini",
-      model: "gemini-2.0-flash",
-      apiKey: () => process.env.GEMINI_PREPIFY,
-      dailyLimit: 1500,
-      limitType: "requests",
-    },
-    {
-      id: "groq",
-      type: "groq",
-      model: "llama-3.1-8b-instant",
-      apiKey: () => process.env.GROQ_PREPIFY,
-      dailyLimit: 500000,
-      limitType: "tokens",
-    },
-    {
-      id: "mistral",
-      type: "mistral",
-      model: "mistral-small-latest",
-      apiKey: () => process.env.MISTRAL_PREPIFY,
-      dailyLimit: null,
-      limitType: "requests",
-    },
-    {
-      id: "deepseek",
-      type: "deepseek",
-      model: "deepseek-chat",
-      apiKey: () => process.env.DEEPSEEK_PREPIFY,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-  ],
-
-  flexai: [
-    {
-      id: "gemini",
-      type: "gemini",
-      model: "gemini-2.0-flash",
-      apiKey: () => process.env.GEMINI_FLEXAI,
-      dailyLimit: 1500,
-      limitType: "requests",
-    },
-    {
-      id: "groq",
-      type: "groq",
-      model: "llama-3.1-8b-instant",
-      apiKey: () => process.env.GROQ_FLEXAI,
-      dailyLimit: 500000,
-      limitType: "tokens",
-    },
-    {
-      id: "mistral",
-      type: "mistral",
-      model: "mistral-small-latest",
-      apiKey: () => process.env.MISTRAL_FLEXAI,
-      dailyLimit: null,
-      limitType: "requests",
-    },
-    {
-      id: "deepseek",
-      type: "deepseek",
-      model: "deepseek-chat",
-      apiKey: () => process.env.DEEPSEEK_FLEXAI,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-  ],
-
-  creato: [
-    {
-      id: "gemini",
-      type: "gemini",
-      model: "gemini-2.0-flash",
-      apiKey: () => process.env.GEMINI_CREATO,
-      dailyLimit: 1500,
-      limitType: "requests",
-    },
-    {
-      id: "groq",
-      type: "groq",
-      model: "llama-3.1-8b-instant",
-      apiKey: () => process.env.GROQ_CREATO,
-      dailyLimit: 500000,
-      limitType: "tokens",
-    },
-    {
-      id: "mistral",
-      type: "mistral",
-      model: "mistral-small-latest",
-      apiKey: () => process.env.MISTRAL_CREATO,
-      dailyLimit: null,
-      limitType: "requests",
-    },
-    {
-      id: "deepseek",
-      type: "deepseek",
-      model: "deepseek-chat",
-      apiKey: () => process.env.DEEPSEEK_CREATO,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-  ],
-
-  // ─── NEXUS — smart routing + full 26-key fallback pool ──────────────────────
-  nexus: [
-    // Primary dedicated keys with smart query-type tags
-    {
-      id: "gemini",
-      type: "gemini",
-      model: "gemini-2.0-flash",
-      apiKey: () => process.env.GEMINI_NEXUS,
-      dailyLimit: 1500,
-      limitType: "requests",
-      queryTypes: ["english"],
-    },
-    {
-      id: "together",
-      type: "together",
-      model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
-      apiKey: () => process.env.TOGETHER_NEXUS,
-      dailyLimit: null,
-      queryTypes: ["hindi_urdu"],
-    },
-    {
-      id: "groq-70b",
-      type: "groq",
-      model: "llama-3.3-70b-versatile",
-      apiKey: () => process.env.GROQ_NEXUS,
-      dailyLimit: 200000,
-      limitType: "tokens",
-      queryTypes: ["complex"],
-    },
-    {
-      id: "groq",
-      type: "groq",
-      model: "llama-3.1-8b-instant",
-      apiKey: () => process.env.GROQ_NEXUS,
-      dailyLimit: 500000,
-      limitType: "tokens",
-    },
-    {
-      id: "mistral",
-      type: "mistral",
-      model: "mistral-small-latest",
-      apiKey: () => process.env.MISTRAL_NEXUS,
-      dailyLimit: null,
-      limitType: "requests",
-    },
-    {
-      id: "deepseek",
-      type: "deepseek",
-      model: "deepseek-chat",
-      apiKey: () => process.env.DEEPSEEK_NEXUS,
-      dailyLimit: null,
-      oneTimeCredit: true,
-    },
-    // ── Fallback pool: all other agent keys (auto-rotate when primary exhausted) ──
-    { id: "gemini-buddy",    type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_BUDDY,    dailyLimit: null },
-    { id: "groq-buddy",      type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_BUDDY,      dailyLimit: null },
-    { id: "mistral-buddy",   type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_BUDDY,   dailyLimit: null },
-    { id: "gemini-cracky",   type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_CRACKY,   dailyLimit: null },
-    { id: "groq-cracky",     type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_CRACKY,     dailyLimit: null },
-    { id: "mistral-cracky",  type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_CRACKY,  dailyLimit: null },
-    { id: "gemini-sellio",   type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_SELLIO,   dailyLimit: null },
-    { id: "groq-sellio",     type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_SELLIO,     dailyLimit: null },
-    { id: "mistral-sellio",  type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_SELLIO,  dailyLimit: null },
-    { id: "gemini-finio",    type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_FINIO,    dailyLimit: null },
-    { id: "groq-finio",      type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_FINIO,      dailyLimit: null },
-    { id: "mistral-finio",   type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_FINIO,   dailyLimit: null },
-    { id: "gemini-prepify",  type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_PREPIFY,  dailyLimit: null },
-    { id: "groq-prepify",    type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_PREPIFY,    dailyLimit: null },
-    { id: "mistral-prepify", type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_PREPIFY, dailyLimit: null },
-    { id: "gemini-flexai",   type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_FLEXAI,   dailyLimit: null },
-    { id: "groq-flexai",     type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_FLEXAI,     dailyLimit: null },
-    { id: "mistral-flexai",  type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_FLEXAI,  dailyLimit: null },
-    { id: "gemini-creato",   type: "gemini",  model: "gemini-2.0-flash",        apiKey: () => process.env.GEMINI_CREATO,   dailyLimit: null },
-    { id: "groq-creato",     type: "groq",    model: "llama-3.1-8b-instant",    apiKey: () => process.env.GROQ_CREATO,     dailyLimit: null },
-    { id: "mistral-creato",  type: "mistral", model: "mistral-small-latest",    apiKey: () => process.env.MISTRAL_CREATO,  dailyLimit: null },
-  ],
+const LIMITS = {
+  gemini: { dailyLimit: 1500, limitType: "requests" },
+  groq: { dailyLimit: 500000, limitType: "tokens" },
+  mistral: { dailyLimit: null, limitType: "requests" },
+  together: { dailyLimit: null, limitType: "requests" },
+  deepseek: { dailyLimit: null, limitType: "requests" },
 };
 
-// ─── Smart query-type detection ──────────────────────────────────────────────
+const JARVIS_POOL = [
+  { provider: "gemini", key: process.env.GEMINI_NEXUS, model: "gemini-1.5-flash", keyName: "GEMINI_NEXUS" },
+  { provider: "gemini", key: process.env.GEMINI_CRACKY, model: "gemini-1.5-flash", keyName: "GEMINI_CRACKY" },
+  { provider: "gemini", key: process.env.GEMINI_SELLIO, model: "gemini-1.5-flash", keyName: "GEMINI_SELLIO" },
+  { provider: "gemini", key: process.env.GEMINI_BUDDY, model: "gemini-1.5-flash", keyName: "GEMINI_BUDDY" },
+  { provider: "gemini", key: process.env.GEMINI_PREPIFY, model: "gemini-1.5-flash", keyName: "GEMINI_PREPIFY" },
+  { provider: "gemini", key: process.env.GEMINI_FLEXAI, model: "gemini-1.5-flash", keyName: "GEMINI_FLEXAI" },
+  { provider: "gemini", key: process.env.GEMINI_CREATO, model: "gemini-1.5-flash", keyName: "GEMINI_CREATO" },
+  { provider: "gemini", key: process.env.GEMINI_FINIO, model: "gemini-1.5-flash", keyName: "GEMINI_FINIO" },
+  { provider: "groq", key: process.env.GROQ_NEXUS, model: "qwen-qwq-32b", keyName: "GROQ_NEXUS" },
+  { provider: "groq", key: process.env.GROQ_CRACKY, model: "qwen-qwq-32b", keyName: "GROQ_CRACKY" },
+  { provider: "groq", key: process.env.GROQ_SELLIO, model: "qwen-qwq-32b", keyName: "GROQ_SELLIO" },
+  { provider: "groq", key: process.env.GROQ_BUDDY, model: "qwen-qwq-32b", keyName: "GROQ_BUDDY" },
+  { provider: "groq", key: process.env.GROQ_PREPIFY, model: "qwen-qwq-32b", keyName: "GROQ_PREPIFY" },
+  { provider: "groq", key: process.env.GROQ_FLEXAI, model: "qwen-qwq-32b", keyName: "GROQ_FLEXAI" },
+  { provider: "groq", key: process.env.GROQ_CREATO, model: "qwen-qwq-32b", keyName: "GROQ_CREATO" },
+  { provider: "groq", key: process.env.GROQ_FINIO, model: "qwen-qwq-32b", keyName: "GROQ_FINIO" },
+  { provider: "mistral", key: process.env.MISTRAL_NEXUS, model: "mistral-small-latest", keyName: "MISTRAL_NEXUS" },
+  { provider: "mistral", key: process.env.MISTRAL_CRACKY, model: "mistral-small-latest", keyName: "MISTRAL_CRACKY" },
+  { provider: "mistral", key: process.env.MISTRAL_SELLIO, model: "mistral-small-latest", keyName: "MISTRAL_SELLIO" },
+  { provider: "mistral", key: process.env.MISTRAL_PREPIFY, model: "mistral-small-latest", keyName: "MISTRAL_PREPIFY" },
+  { provider: "mistral", key: process.env.MISTRAL_FLEXAI, model: "mistral-small-latest", keyName: "MISTRAL_FLEXAI" },
+  { provider: "mistral", key: process.env.MISTRAL_CREATO, model: "mistral-small-latest", keyName: "MISTRAL_CREATO" },
+  { provider: "mistral", key: process.env.MISTRAL_FINIO, model: "mistral-small-latest", keyName: "MISTRAL_FINIO" },
+  { provider: "together", key: process.env.TOGETHER_NEXUS, model: "Qwen/Qwen2.5-72B-Instruct-Turbo", keyName: "TOGETHER_NEXUS" },
+  { provider: "deepseek", key: process.env.DEEPSEEK_NEXUS, model: "deepseek-chat", keyName: "DEEPSEEK_NEXUS" },
+];
 
-function detectQueryType(message) {
-  if (!message) return "english";
-  // Devanagari (Hindi/Marathi) or Arabic script (Urdu)
-  if (/[ऀ-ॿ؀-ۿ]/.test(message)) return "hindi_urdu";
-  // Complex: long, multi-question, or analytical/technical keywords
+const PROVIDERS = {
+  jarvis: JARVIS_POOL,
+  nexus: JARVIS_POOL,
+  cracky: JARVIS_POOL,
+  sellio: JARVIS_POOL,
+  buddy: JARVIS_POOL,
+  finio: JARVIS_POOL,
+  prepify: JARVIS_POOL,
+  flexai: JARVIS_POOL,
+  creato: JARVIS_POOL,
+};
+
+function detectQueryType(message = "") {
+  if (/[\u0900-\u097F\u0600-\u06FF]/.test(message)) return "hindi_urdu";
+  if (/\b(today|latest|current|live|breaking|news|score|weather|stock|crypto|price|election|result|market|now)\b/i.test(message)) {
+    return "real_time";
+  }
   if (
     message.length > 200 ||
     (message.match(/\?/g) || []).length > 1 ||
-    /\b(code|debug|algorithm|explain|analyze|compare|difference|implement|architecture|why does|how does|what is the difference|step[- ]by[- ]step)\b/i.test(message)
-  ) return "complex";
-  return "english";
+    /\b(code|debug|algorithm|analyze|compare|architecture|implement|strategy|reasoning|derive|optimize|complex)\b/i.test(message)
+  ) {
+    return "complex";
+  }
+  return "general";
 }
 
-// Returns providers in priority order, filtering those over daily limit.
-// For Nexus, applies smart query-type routing when userMessage is provided.
+function queryProviderPreference(queryType) {
+  if (queryType === "hindi_urdu") return ["together", "gemini", "groq", "deepseek", "mistral"];
+  if (queryType === "real_time") return ["deepseek", "gemini", "groq", "together", "mistral"];
+  if (queryType === "complex") return ["groq", "gemini", "together", "deepseek", "mistral"];
+  return ["gemini", "groq", "mistral", "together", "deepseek"];
+}
+
+function normalizeProvider(entry) {
+  const limits = LIMITS[entry.provider] || {};
+  return {
+    id: entry.keyName,
+    type: entry.provider,
+    provider: entry.provider,
+    model: entry.model,
+    dailyLimit: limits.dailyLimit,
+    limitType: limits.limitType || "requests",
+    usageScope: JARVIS_USAGE_SCOPE,
+    apiKey: () => process.env[entry.keyName] || entry.key,
+  };
+}
+
+function usedForLimit(provider, usage) {
+  return provider.limitType === "tokens" ? usage.tokensUsed : usage.requestsUsed;
+}
+
+async function withUsage(provider) {
+  if (!provider.dailyLimit) {
+    return { ...provider, remaining: Number.MAX_SAFE_INTEGER, status: "available" };
+  }
+
+  const usage = await ApiUsage.getUsage(provider.id, provider.usageScope);
+  const used = usedForLimit(provider, usage);
+  const remaining = provider.dailyLimit - used;
+
+  return {
+    ...provider,
+    requestsUsed: usage.requestsUsed,
+    tokensUsed: usage.tokensUsed,
+    remaining,
+    status: remaining > 0 ? "available" : "exhausted",
+  };
+}
+
 async function getOrderedProviders(agentName, userMessage = "") {
-  const providers = PROVIDERS[agentName];
-  if (!providers) throw new Error(`Unknown agent: ${agentName}`);
+  const pool = PROVIDERS[agentName] || PROVIDERS.jarvis;
+  const queryType = detectQueryType(userMessage);
+  const preference = queryProviderPreference(queryType);
+  const hydrated = [];
 
-  const available = [];
-  for (const provider of providers) {
-    const key = provider.apiKey();
-    if (!key) {
-      console.log(`[Router] ${provider.id}/${agentName}: no API key, skipping`);
+  for (const entry of pool) {
+    const provider = normalizeProvider(entry);
+    if (!provider.apiKey()) {
+      console.log(`[Router] ${provider.id}: no API key, skipping`);
       continue;
     }
 
-    if (!provider.dailyLimit) {
-      available.push(provider);
+    const usageAware = await withUsage(provider);
+    if (usageAware.status === "exhausted") {
+      console.log(`[Router] ${provider.id}: limit reached`);
       continue;
     }
-
-    const usage = await ApiUsage.getUsage(provider.id, agentName);
-    const used = provider.limitType === "tokens" ? usage.tokensUsed : usage.requestsUsed;
-
-    if (used < provider.dailyLimit) {
-      available.push(provider);
-    } else {
-      console.log(
-        `[Router] ${provider.id}/${agentName}: limit reached (${used}/${provider.dailyLimit} ${provider.limitType})`
-      );
-    }
+    hydrated.push(usageAware);
   }
 
-  // Smart routing: promote best-fit provider to front for Nexus queries
-  if (agentName === "nexus" && userMessage) {
-    const queryType = detectQueryType(userMessage);
-    const preferred = available.filter((p) => p.queryTypes?.includes(queryType));
-    const rest      = available.filter((p) => !p.queryTypes?.includes(queryType));
-    if (preferred.length) {
-      console.log(`[Router] nexus smart routing: ${queryType} → ${preferred[0].id} (${preferred[0].model})`);
-    }
-    return [...preferred, ...rest];
+  hydrated.sort((a, b) => {
+    const providerRank = preference.indexOf(a.type) - preference.indexOf(b.type);
+    if (providerRank !== 0) return providerRank;
+    return (b.remaining || 0) - (a.remaining || 0);
+  });
+
+  if (hydrated[0]) {
+    console.log(`[Router] ${agentName} ${queryType} -> ${hydrated[0].id} (${hydrated[0].model})`);
   }
 
-  return available;
+  return hydrated;
 }
 
 async function getUsageSummary() {
   const today = ApiUsage.getISTDate();
   const records = await ApiUsage.getTodayAll();
+  const providers = [];
 
-  const summary = {};
-  for (const [agentName, providers] of Object.entries(PROVIDERS)) {
-    summary[agentName] = { date: today, providers: [] };
+  for (const entry of JARVIS_POOL) {
+    const provider = normalizeProvider(entry);
+    const record = records.find((r) => r.providerId === provider.id && r.agentName === provider.usageScope);
+    const requestsUsed = record?.requestsUsed || 0;
+    const tokensUsed = record?.tokensUsed || 0;
+    const used = provider.limitType === "tokens" ? tokensUsed : requestsUsed;
+    const remaining = provider.dailyLimit ? provider.dailyLimit - used : null;
 
-    for (const provider of providers) {
-      const record = records.find(
-        (r) => r.providerId === provider.id && r.agentName === agentName
-      );
-      const requestsUsed = record?.requestsUsed || 0;
-      const tokensUsed = record?.tokensUsed || 0;
-
-      let remaining = null;
-      let status = "available";
-
-      if (provider.dailyLimit) {
-        const used = provider.limitType === "tokens" ? tokensUsed : requestsUsed;
-        remaining = provider.dailyLimit - used;
-        status = remaining <= 0 ? "exhausted" : "available";
-      } else {
-        status = provider.oneTimeCredit ? "credit" : "rate-limited";
-      }
-
-      summary[agentName].providers.push({
-        id: provider.id,
-        model: provider.model,
-        dailyLimit: provider.dailyLimit,
-        limitType: provider.limitType || null,
-        requestsUsed,
-        tokensUsed,
-        remaining,
-        status,
-        hasKey: !!provider.apiKey(),
-      });
-    }
-
-    // Determine active provider (first available with a key)
-    const active = summary[agentName].providers.find(
-      (p) => p.hasKey && p.status !== "exhausted"
-    );
-    summary[agentName].activeProvider = active?.id || "none";
+    providers.push({
+      id: provider.id,
+      provider: provider.provider,
+      model: provider.model,
+      dailyLimit: provider.dailyLimit,
+      limitType: provider.limitType,
+      requestsUsed,
+      tokensUsed,
+      remaining,
+      status: provider.dailyLimit && remaining <= 0 ? "exhausted" : "available",
+      hasKey: !!provider.apiKey(),
+    });
   }
 
-  return summary;
+  return {
+    jarvis: {
+      date: today,
+      resetTimezone: "Asia/Kolkata",
+      activeProvider: providers.find((p) => p.hasKey && p.status !== "exhausted")?.id || "none",
+      providers,
+    },
+  };
 }
 
-module.exports = { PROVIDERS, getOrderedProviders, getUsageSummary, detectQueryType };
+module.exports = { JARVIS_POOL, PROVIDERS, getOrderedProviders, getUsageSummary, detectQueryType };

@@ -334,7 +334,7 @@ async function callAIStream(agentName, messages, systemPrompt, onChunk) {
     try {
       console.log(`[AI Stream] ${agentName} -> ${provider.id} (${provider.model})`);
       const result = await callProviderStream(provider, messages, systemPrompt, onChunk);
-      ApiUsage.incrementUsage(provider.id, agentName, result.tokensUsed).catch((e) =>
+      ApiUsage.incrementUsage(provider.id, provider.usageScope || agentName, result.tokensUsed).catch((e) =>
         console.error(`[AI Stream] Usage tracking failed:`, e.message)
       );
       console.log(`[AI Stream] ${agentName} <- ${provider.id} OK`);
@@ -367,7 +367,7 @@ async function callAI(agentName, messages, systemPrompt, tools = []) {
       console.log(`[AI] ${agentName} -> ${provider.id} (${provider.model})`);
       const result = await callProvider(provider, messages, systemPrompt, tools);
 
-      ApiUsage.incrementUsage(provider.id, agentName, result.tokensUsed).catch((e) =>
+      ApiUsage.incrementUsage(provider.id, provider.usageScope || agentName, result.tokensUsed).catch((e) =>
         console.error(`[AI] Usage tracking failed:`, e.message)
       );
 

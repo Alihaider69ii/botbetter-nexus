@@ -7,6 +7,10 @@ const { runFlexAI } = require("../flexai");
 const { runCreato } = require("../creato");
 const { runSellio } = require("../sellio");
 const { runCracky } = require("../cracky");
+const { callAI } = require("../../utils/aiCaller");
+const { getNexusPrompt } = require("./prompt");
+const { detectQueryType } = require("../../config/apiRouter");
+const { getRagContext } = require("../../rag/ragSystem");
 
 const AGENT_RUNNERS = {
   buddy:   runBuddy,
@@ -20,6 +24,20 @@ const AGENT_RUNNERS = {
 
 async function runNexus(userId, userMessage, opts = {}) {
   try {
+    if (detectQueryType(userMessage) === "real_time") {
+      const memory = await getMemory(userId);
+      const ragContext = await getRagContext(userMessage);
+      const systemPrompt = getNexusPrompt(memory, { ...opts, ragContext });
+      const history = memory.getAgentHistory("nexus", 8).map((m) => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: m.content,
+      }));
+      const result = await callAI("nexus", [...history, { role: "user", content: userMessage }], systemPrompt);
+      await memory.addMessage("nexus", "user", userMessage);
+      await memory.addMessage("nexus", "assistant", result.reply);
+      return result.reply;
+    }
+
     const agentName = detectIntent(userMessage);
     console.log(`[Nexus] Routing "${userMessage.slice(0, 50)}..." → ${agentName} (personality: ${opts.personality || "maya"})`);
 
