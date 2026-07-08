@@ -63,6 +63,38 @@ async function fetchTavilyNews() {
   }));
 }
 
+// ─── Live per-query web search (Perplexity-style) ────────────────────────────
+// Unlike fetchTavilyNews (broad topics on a cron), this hits Tavily with the
+// user's exact message so Nexus can answer questions the periodic refresh
+// never anticipated (a specific match, a specific price, a specific person).
+async function searchTavily(query) {
+  if (!query) return null;
+  try {
+    const client = tavily({ apiKey: process.env.TAVILY_API_KEY });
+    return await client.search(query, {
+      searchDepth: "advanced",
+      includeAnswer: true,
+      maxResults: 5,
+    });
+  } catch (e) {
+    console.warn("[RAG] Live Tavily search failed:", e.message);
+    return null;
+  }
+}
+
+function formatTavilyResults(data) {
+  if (!data || !Array.isArray(data.results) || data.results.length === 0) return "";
+
+  let context = "";
+  if (data.answer) context += `Direct Answer: ${data.answer}\n\n`;
+
+  data.results.slice(0, 5).forEach((result, i) => {
+    context += `Source ${i + 1}: ${result.title}\nURL: ${result.url}\nContent: ${String(result.content || "").slice(0, 500)}\n\n`;
+  });
+
+  return context.trim();
+}
+
 async function fetchNewsApi(query, category) {
   if (!process.env.NEWSAPI_KEY) return [];
   const response = await axios.get("https://newsapi.org/v2/everything", {
@@ -340,13 +372,22 @@ function startRagCron() {
 }
 
 async function getRagContext(query, limit = 6) {
-  const results = await searchAll(query, limit);
-  if (results.length === 0) return "No live context available.";
+  const [liveResult, indexedResults] = await Promise.all([
+    searchTavily(query),
+    searchAll(query, limit),
+  ]);
 
-  return results.map((item) => {
+  const liveContext = formatTavilyResults(liveResult);
+  const indexedContext = indexedResults.map((item) => {
     const date = item.publishedAt ? item.publishedAt.slice(0, 10) : "recent";
     return `${item.collection}: ${item.title} (${item.source}, ${date}) - ${String(item.content).slice(0, 280)}`;
   }).join("\n");
+
+  const parts = [];
+  if (liveContext) parts.push(`LIVE WEB SEARCH RESULTS (query: "${query}"):\n${liveContext}`);
+  if (indexedContext) parts.push(`INDEXED DATA (news/sports/finance/weather, refreshed periodically):\n${indexedContext}`);
+
+  return parts.length > 0 ? parts.join("\n\n") : "No live context available.";
 }
 
 module.exports = {
@@ -358,6 +399,8 @@ module.exports = {
   refreshEntertainmentAndTech,
   startRagCron,
   getRagContext,
+  searchTavily,
+  formatTavilyResults,
   searchAll,
   getStatus,
 };
