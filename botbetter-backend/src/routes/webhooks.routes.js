@@ -1,11 +1,19 @@
 const express = require("express");
 const crypto = require("crypto");
 const { protect } = require("../middleware/auth.middleware");
+const config = require("../config/env");
 
 const router = express.Router();
 
 // In-memory log store (replace with MongoDB collection for persistence)
 const webhookLogs = new Map(); // userId -> array of log entries
+
+const safeEqual = (provided, expected) => {
+  if (!provided || !expected) return false;
+  const providedBuffer = Buffer.from(String(provided));
+  const expectedBuffer = Buffer.from(String(expected));
+  return providedBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(providedBuffer, expectedBuffer);
+};
 
 // POST /api/webhooks/receive/:userId  — public endpoint called by external tools
 router.post("/receive/:userId", async (req, res) => {
@@ -13,6 +21,10 @@ router.post("/receive/:userId", async (req, res) => {
     const { userId } = req.params;
     const secret = req.headers["x-botbetter-secret"];
     const payload = req.body;
+
+    if (!safeEqual(secret, config.WEBHOOK_SECRET)) {
+      return res.status(401).json({ success: false, message: "Invalid webhook secret" });
+    }
 
     const entry = {
       id: crypto.randomUUID(),

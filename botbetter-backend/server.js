@@ -24,13 +24,11 @@ app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true); // same-origin / curl
-    const allowed = [
-      config.FRONTEND_URL,
-      "http://localhost:5173",
-      "http://localhost:8080",
-      "http://localhost:3000",
-    ];
-    if (allowed.includes(origin) || /\.vercel\.app$/.test(origin)) {
+    const allowed = [config.FRONTEND_URL].filter(Boolean);
+    if (config.NODE_ENV !== "production") {
+      allowed.push("http://localhost:5173", "http://localhost:8080", "http://localhost:3000");
+    }
+    if (allowed.includes(origin)) {
       return callback(null, true);
     }
     return callback(new Error(`CORS: origin ${origin} not allowed`));

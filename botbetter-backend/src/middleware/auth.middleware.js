@@ -37,4 +37,20 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const requireAdmin = (req, res, next) => {
+  const adminEmails = (config.ADMIN_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (adminEmails.includes(req.user?.email?.toLowerCase())) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: "Admin access required",
+  });
+};
+
+module.exports = { protect, requireAdmin };

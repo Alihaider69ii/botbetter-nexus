@@ -4,10 +4,11 @@ const {
   getStatus,
   searchAll,
 } = require("../rag/ragSystem");
+const { protect } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
-router.post("/refresh", async (req, res, next) => {
+router.post("/refresh", protect, async (req, res, next) => {
   try {
     const refreshed = await refreshAll();
     res.json({ success: true, refreshed, status: getStatus() });
@@ -16,11 +17,11 @@ router.post("/refresh", async (req, res, next) => {
   }
 });
 
-router.get("/status", (req, res) => {
+router.get("/status", protect, (req, res) => {
   res.json({ success: true, status: getStatus() });
 });
 
-router.get("/search", async (req, res, next) => {
+router.get("/search", protect, async (req, res, next) => {
   try {
     const query = String(req.query.q || "").trim();
     if (!query) {

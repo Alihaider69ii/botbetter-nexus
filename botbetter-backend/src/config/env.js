@@ -10,7 +10,9 @@ const config = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
-  SESSION_SECRET: process.env.SESSION_SECRET || "fallback_session_secret",
+  SESSION_SECRET: process.env.SESSION_SECRET,
+  ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+  WEBHOOK_SECRET: process.env.WEBHOOK_SECRET,
   SARVAM_API_KEY: process.env.SARVAM_API_KEY,
   TAVILY_API_KEY: process.env.TAVILY_API_KEY,
   NEWSAPI_KEY: process.env.NEWSAPI_KEY,
@@ -38,7 +40,7 @@ const config = {
   DEEPSEEK_SELLIO: process.env.DEEPSEEK_SELLIO,
 };
 
-const required = ["MONGODB_URI", "JWT_SECRET"];
+const required = ["MONGODB_URI", "JWT_SECRET", "SESSION_SECRET", "WEBHOOK_SECRET"];
 required.forEach((key) => {
   if (!config[key]) {
     throw new Error(`Missing required env variable: ${key}`);

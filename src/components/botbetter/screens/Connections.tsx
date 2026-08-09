@@ -7,6 +7,8 @@ import { ScreenKey } from "../TopNav";
 import { DashShell } from "../DashShell";
 
 const BASE = (import.meta.env.VITE_API_URL as string) ?? "";
+const exampleApiKey = "<botbetter-api-key>";
+const exampleWebhookUrl = `${BASE || "http://localhost:3001"}/api/webhooks/receive/<user_id>`;
 
 async function apiPost(path: string, body: unknown) {
   const token = localStorage.getItem("bb_token");
@@ -598,9 +600,9 @@ export const Connections = ({
             <div>
               <div className="text-xs font-bold tracking-wider text-muted-foreground uppercase mb-2">API KEY</div>
               <div className="flex items-center gap-3 rounded-2xl border-2 border-border bg-card px-4 py-3 shadow-sm">
-                <code className="text-sm flex-1 truncate font-mono font-bold text-foreground">bb_live_sk_8f4x...92ab</code>
+                <code className="text-sm flex-1 truncate font-mono font-bold text-foreground">{exampleApiKey}</code>
                 <button
-                  onClick={() => copy("bb_live_sk_8f4x92ab")}
+                  onClick={() => copy(exampleApiKey)}
                   className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-muted text-muted-foreground hover:bg-muted/80 transition-colors shrink-0"
                 >
                   {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
@@ -611,9 +613,9 @@ export const Connections = ({
             <div>
               <div className="text-xs font-bold tracking-wider text-muted-foreground uppercase mb-2">WEBHOOK URL</div>
               <div className="flex items-center gap-3 rounded-2xl border-2 border-border bg-card px-4 py-3 shadow-sm">
-                <code className="text-sm flex-1 truncate font-mono font-bold text-foreground">https://api.botbetter.ai/v1/hooks/u_a1b2</code>
+                <code className="text-sm flex-1 truncate font-mono font-bold text-foreground">{exampleWebhookUrl}</code>
                 <button
-                  onClick={() => copy("https://api.botbetter.ai/v1/hooks/u_a1b2")}
+                  onClick={() => copy(exampleWebhookUrl)}
                   className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-muted text-muted-foreground hover:bg-muted/80 transition-colors shrink-0"
                 >
                   <Copy className="h-4 w-4" /> Copy
